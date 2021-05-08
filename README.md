@@ -9,4 +9,4 @@ A COM based Framework built entirely in VB6 which supports MVVM and a subset of 
 
 The Framework is based on [VBRichClient](http://www.vbrichclient.com) (version 5)
 
-*A sample project demonstrating the base functionality will be added soon.*
+*A sample project demonstrating the base functionality can be found under the __SampleApp__ sub directory.*
