@@ -1,0 +1,5 @@
+<Window x:Class="ShellWindow" FullScreen="0" BorderStyle="2" BackColor="&HFFFFFF" DesignWidth="800" DesignHeight="600" Caption="Window1">
+	<Button Command="{Binding ButtonClick}" DesignLeft="8" DesignTop="8" DesignWidth="100" DesignHeight="30">
+		<TextBlock HorizontalAlignment="2" Text="Button1"/>
+	</Button>
+</Window>
