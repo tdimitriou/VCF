@@ -1,5 +1,4 @@
-# VCF
-Visual Component Framework
+# Visual Component Framework (VCF)
 
 A COM based Framework built entirely in VB6 which supports MVVM and a subset of XAML.
 
