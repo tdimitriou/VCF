@@ -13,7 +13,7 @@ I started building the framework because I needed to separate the UI from the Bu
 The framework has been built based on WPF and the MVVM pattern, however, I did not strictly follow the original implementations.
 
 
-I am occasionally adding features and performing bug fix and maintenance tasks, according to my needs, but I do not have the time to develop the library on a regular basis. Therefore, I am contributing the sources to the public, hoping that it will be usable to somebody.
+I am occasionally adding features and performing bug fix and maintenance tasks, according to my needs, but I do not have the time to develop the library on a regular basis. Therefore, I am contributing the sources to the public, hoping that it will be useful to somebody.
 
 
 The amaizing job that has been done by [Rubberduck](https://rubberduckvba.com/) - (https://github.com/rubberduck-vba/Rubberduck) has brought the VB6 (and VBA) IDE to the next level. Moreover, the recent release of the pre-alpha version of [twinBasic](https://www.twinbasic.com) - (https://github.com/WaynePhillipsEA/twinbasic) and the upcoming release of [RAD Basic](https://www.radbasic.dev) - (https://github.com/radbasic) have raised the expectations that the Classic VB community will soon have a real successor to VB6. I strongly believe that the time is right for all VB6 developers to contribute any project that might be useful, in order to build a strong community. 
