@@ -7,7 +7,7 @@ A COM based Framework built entirely in VB6 which supports the MVVM pattern and 
 *Code from [vbRichClient/vbWidgets](https://github.com/vbRichClient/vbWidgets) has been used for the implementation of some of the User Controls.*
 
 
-I started building the framework because I needed to separate the UI from the Business Logic of my commercial application (POS). I also wanted to be able to customize the UI easily without the need to recompile the application each time I needed a change.
+I started building the framework because I needed to separate the UI from the Business Logic of my commercial application (POS). I also wanted to be able to customize the UI easily without the need to recompile the application each time I needed a serious change.
 
 
 The framework has been built based on WPF and the MVVM pattern, however, I did not strictly follow the original implementations. A few workarounds were also necessary in order to overcome some limitations of the VB6 language. 
