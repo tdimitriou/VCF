@@ -43,5 +43,5 @@ The amaizing job that has been done by [Rubberduck](https://rubberduckvba.com/) 
 
 
 ### Usage
-*A sample project demonstrating the basic functionality can be found under the __SampleApp__ sub directory.*
+*A sample project demonstrating the basic functionality can be found under the [__SampleApp__](https://github.com/tdimitriou/VCF/tree/main/SampleApp) sub directory.*
 
