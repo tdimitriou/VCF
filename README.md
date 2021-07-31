@@ -38,7 +38,7 @@ The amaizing job that has been done by [Rubberduck](https://rubberduckvba.com/) 
 * Bindings, including Command Bindings - ICommand Interface and Item Templates for List derived controls are supported.
 * Dependency Properties are supported, but partially implemented at the moment.
 * The XAML Parser supports extensions through the IMarkupExtension interface. Bindings and Static Resources have been implemented as built in extensions. 
-* The XAML resources are stored externally (as XML files) and loaded during component initialization.
+* The XAML resources are stored either externally (as XML files), or internally (as application resources) and loaded during component initialization.
 * There are also several other non ui classes which provide extended functionality and easy access to Windows API calls. 
 
 
