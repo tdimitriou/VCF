@@ -15,6 +15,11 @@ Option Explicit
 
 Private m_Resources As ObservableDictionary
 Private m_SuperclassPtr As Long
+Private m_AttachedProperties As ObservableDictionary
+
+Public Property Get AttachedProperties() As ObservableDictionary
+    Set AttachedProperties = m_AttachedProperties
+End Property
 
 Public Property Get Resources() As ObservableDictionary
     Set Resources = m_Resources
@@ -54,6 +59,7 @@ End Function
 
 Private Sub Class_Initialize()
     Set m_Resources = New ObservableDictionary
+    Set m_AttachedProperties = New ObservableDictionary
 End Sub
 
 Friend Sub Initialize(ByVal Superclass As IUIElement)

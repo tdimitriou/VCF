@@ -42,6 +42,10 @@ Public Name As String
 
 
 '#Region IUIElement Inheritance
+    Public Property Get AttachedProperties() As ObservableDictionary
+        Set AttachedProperties = m_BaseUIElement.AttachedProperties
+    End Property
+    
     Public Property Set DataContext(ByVal Value As Object)
         Call m_DependencyProperties.SetValue("DataContext", Value)
         
@@ -174,6 +178,10 @@ Public Name As String
 '#End Region
 
 '#Region IUIElement Interface Implementation
+    Private Property Get IUIElement_AttachedProperties() As ObservableDictionary
+        Set IUIElement_AttachedProperties = m_BaseUIElement.AttachedProperties
+    End Property
+    
     Private Property Get IUIElement_Base() As UIElementBase
         Set IUIElement_Base = m_BaseUIElement
     End Property

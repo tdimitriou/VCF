@@ -40,11 +40,11 @@ Public Name As String
         Set Bindings = m_Bindings
     End Property
     
-    Public Property Let CornerRadius(Value As CornerRadius)
+    Public Property Let CornerRadius(Value As VCF.CornerRadius)
         Call m_DependencyProperties.SetValue("CornerRadius", Value)
     End Property
     
-    Public Property Get CornerRadius() As CornerRadius
+    Public Property Get CornerRadius() As VCF.CornerRadius
         Call API.CopyVariable(m_DependencyProperties.GetValue("CornerRadius"), CornerRadius)
     End Property
 '#End Region
@@ -70,6 +70,10 @@ Public Name As String
 '#End Region
 
 '#Region IUIElement Inheritance
+    Public Property Get AttachedProperties() As ObservableDictionary
+        Set AttachedProperties = m_BaseUIElement.AttachedProperties
+    End Property
+    
     Public Property Set DataContext(ByVal Value As Object)
         Call m_DependencyProperties.SetValue("DataContext", Value)
         
@@ -136,6 +140,17 @@ Public Name As String
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
             Call .Register("ShowGridLines", vbBoolean)
             Call .Register("CornerRadius", vbUserDefinedType, "CornerRadius")
+            
+            Dim Radius As VCF.CornerRadius
+            With Radius
+                .TopLeft = 0
+                .TopRight = 0
+                .BottomLeft = 0
+                .BottomRight = 0
+            End With
+            
+            .SetValue "CornerRadius", Radius
+        
         End With
         
         Set W = Cairo.WidgetBase
@@ -181,8 +196,11 @@ Public Name As String
     End Property
 '#End Region
 
-
 '#Region IUIElement Interface Implementation
+    Private Property Get IUIElement_AttachedProperties() As ObservableDictionary
+        Set IUIElement_AttachedProperties = m_BaseUIElement.AttachedProperties
+    End Property
+    
     Private Property Get IUIElement_Base() As UIElementBase
         Set IUIElement_Base = m_BaseUIElement
     End Property

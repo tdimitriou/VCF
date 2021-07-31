@@ -97,6 +97,10 @@ End Function
 '#End Region
 
 '#Region IUIElement Interface Implementation
+    Private Property Get IUIElement_AttachedProperties() As ObservableDictionary
+        Set IUIElement_AttachedProperties = m_BaseUIElement.AttachedProperties
+    End Property
+    
     Private Property Get IUIElement_Base() As UIElementBase
         Set IUIElement_Base = m_BaseUIElement
     End Property
@@ -155,6 +159,10 @@ End Function
 '#End Region
 
 '#Region IUIElement Inheritance
+    Public Property Get AttachedProperties() As ObservableDictionary
+        Set AttachedProperties = m_BaseUIElement.AttachedProperties
+    End Property
+    
     Public Property Set DataContext(ByVal Value As Object)
         Call m_DependencyProperties.SetValue("DataContext", Value)
         
@@ -331,7 +339,9 @@ Private Sub DrawOn(CC As cCairoContext, Optional ForeColor As Long = -1)
     
         If Len(Me.Text) = 0 Then Exit Sub
         
+        Dim Txt As String
         Dim TextWidth As Double
+        Dim MaxWidth As Double
         Dim FontHeight As Double
         Dim TextHeight As Double
         Dim TextColor As Long
@@ -344,26 +354,32 @@ Private Sub DrawOn(CC As cCairoContext, Optional ForeColor As Long = -1)
         Dim MaxRowWidth As Double
         Dim MaxRowIndex As Long
         Dim Index As Integer
-                
+                        
         TextColor = Me.ForeColor
         If ForeColor <> -1 Then TextColor = ForeColor
         
+        Txt = Me.Text
+        
         CC.SelectFont Me.FontName, Me.FontSize * GetScaleFactor, TextColor, Me.FontBold, Me.FontItalic, Me.FontUnderline, Me.FontStrikeThrough
-        CC.CalcTextRowsInfo Me.Text, m_Width - 4, True, False, RowsCharCount, RowsCharOffset, RowCount, MaxRowExtends
+        CC.CalcTextRowsInfo Txt, m_Width - 4, True, False, RowsCharCount, RowsCharOffset, RowCount, MaxRowExtends
         
         For Index = 0 To RowCount - 1
             If RowsCharCount(Index) > MaxCharsPerRow Then
                 MaxCharsPerRow = RowsCharCount(Index)
                 MaxRowIndex = Index
             End If
+            
+            TextWidth = CC.GetTextExtents(Mid$(Txt, RowsCharOffset(Index) / 2 + 1, RowsCharCount(Index)), FontHeight, TextHeight)
+            If TextWidth > MaxWidth Then MaxWidth = TextWidth
         Next
                
-        TextWidth = CC.GetTextExtents(Mid$(Me.Text, RowsCharOffset(MaxRowIndex) / 2 + 1, RowsCharCount(MaxRowIndex)), FontHeight, TextHeight)
+        'TextWidth = CC.GetTextExtents(Mid$(Me.Text, RowsCharOffset(MaxRowIndex) / 2 + 1, RowsCharCount(MaxRowIndex)), FontHeight, TextHeight)
         
         Const RECT_OFFSET = 2
         Dim R As Thickness
-        Set R = EvalPosition(m_Width, m_Height, TextWidth, FontHeight * RowCount, RECT_OFFSET)
-                
+        'Set R = EvalPosition(m_Width, m_Height, TextWidth, FontHeight * RowCount, RECT_OFFSET)
+        Set R = EvalPosition(m_Width, m_Height, MaxWidth, FontHeight * RowCount, RECT_OFFSET)
+        
         '<Draw Dotted Border Around Text>
         'CC.Save
         'CC.Rectangle m_Left + R.Left, m_Top + R.Top, R.Left + R.Right, R.Top + R.Bottom
@@ -375,7 +391,7 @@ Private Sub DrawOn(CC As cCairoContext, Optional ForeColor As Long = -1)
         '</Draw Dotted Border Around Text>
 
 
-        CC.DrawText m_Left + R.Left, m_Top + R.Top, R.Left + R.Right, R.Top + R.Bottom, Me.Text, , HorizontalAlignment, , 1
+        CC.DrawText m_Left + R.Left, m_Top + R.Top, R.Left + R.Right, R.Top + R.Bottom, Txt, , HorizontalAlignment, , 1
 
         '<Draw Dotted Border Around Available Area>
         'CC.Save
@@ -464,8 +480,11 @@ Catch:
 
 '#Region DependencyPropertiesEvents
     Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
+        On Error Resume Next
+        
         If Parent Is Nothing Then Exit Sub
         If Property.Metadata.AffectsRender Then Parent.Widget.Refresh
+    
     End Sub
 '#End Region
 

@@ -400,10 +400,15 @@ Private Sub SetDependencyProperties(ByVal Dep As IDependencyObject, Attributes A
             API.CopyVariable .GetMarkupValue(Attr.Text, Dep, Attr.Name), Value
         End With
     
-        If Dep.DependencyProperties.Exists(Attr.Name) Then
-            SetDependencyProperty Dep, Attr.Name, Value
+        If InStr(1, Attr.Name, ".") > 0 Then
+            ' It is an Attached Property
+            SetAttachedProperty Obj, Attr.Name, Value
         Else
-            SetProperty Obj, Attr.Name, Value
+            If Dep.DependencyProperties.Exists(Attr.Name) Then
+                SetDependencyProperty Dep, Attr.Name, Value
+            Else
+                SetProperty Obj, Attr.Name, Value
+            End If
         End If
     Next
 End Sub
@@ -412,8 +417,34 @@ Private Sub SetProperties(ByVal Obj As Object, Attributes As cAttributes)
     Dim Attr As cAttribute
     
     For Each Attr In Attributes
-        SetProperty Obj, Attr.Name, Attr.Text
+        If InStr(1, Attr.Name, ".") > 0 Then
+            ' It is an Attached Property
+            SetAttachedProperty Obj, Attr.Name, Attr.Text
+        Else
+            SetProperty Obj, Attr.Name, Attr.Text
+        End If
     Next
+End Sub
+
+Private Sub SetAttachedProperty(ByVal Obj As IUIElement, ByVal PropertyName As String, Value)
+    Dim Dict As ObservableDictionary
+    Dim PropDict As String
+    Dim PropKey As String
+    Dim PropData
+            
+    PropData = Split(PropertyName, ".")
+    PropDict = PropData(0)
+    PropKey = PropData(1)
+    
+    If Obj.AttachedProperties.ContainsKey(PropDict) Then
+        Set Dict = Obj.AttachedProperties(PropDict)
+    Else
+        Set Dict = New ObservableDictionary
+        Obj.AttachedProperties.Add PropDict, Dict
+    End If
+    
+    If Not Dict.ContainsKey(PropKey) Then Dict.Add PropKey, Value
+
 End Sub
 
 Private Sub SetDependencyProperty(ByVal Obj As IDependencyObject, ByVal PropertyName As String, Value)

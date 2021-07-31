@@ -24,7 +24,7 @@ Public Property Get DesignHeight() As Double: End Property
 Public Property Set DataContext(ByVal Value As Object): End Property
 Public Property Get DataContext() As Object: End Property
 Public Property Get Base() As UIElementBase: End Property
-
+Public Property Get AttachedProperties() As ObservableDictionary: End Property
 'Public Property Get ActualLeft() As Double: End Property
 'Public Property Get ActualTop() As Double: End Property
 'Public Property Get ActualWidth() As Double: End Property

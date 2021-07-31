@@ -27,6 +27,7 @@ Private m_ParentPtr As Long
 Private m_BaseUIElement As UIElementBase
 
 Private m_ImageKey As String
+Private m_KeepAspectRatio As Boolean
 Private WithEvents m_DependencyProperties As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As List
@@ -44,6 +45,7 @@ Private m_Bindings As List
         m_DesignTop = 0
         m_DesignWidth = 30
         m_DesignHeight = 30
+        m_KeepAspectRatio = True
         
         NewUIElementBase Me, m_BaseUIElement
     End Sub
@@ -71,6 +73,10 @@ Private m_Bindings As List
 
 
 '#Region IUIElement Interface Implementation
+    Private Property Get IUIElement_AttachedProperties() As ObservableDictionary
+        Set IUIElement_AttachedProperties = m_BaseUIElement.AttachedProperties
+    End Property
+    
     Private Property Get IUIElement_Base() As UIElementBase
         Set IUIElement_Base = m_BaseUIElement
     End Property
@@ -129,6 +135,10 @@ Private m_Bindings As List
 '#End Region
 
 '#Region IUIElement Inheritance
+    Public Property Get AttachedProperties() As ObservableDictionary
+        Set AttachedProperties = m_BaseUIElement.AttachedProperties
+    End Property
+    
     Public Property Set DataContext(ByVal Value As Object)
         Call m_DependencyProperties.SetValue("DataContext", Value)
         
@@ -172,10 +182,46 @@ Private m_Bindings As List
     End Property
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
-        m_Left = Left
-        m_Top = Top
-        m_Width = Width
-        m_Height = Height
+    
+        If Not m_KeepAspectRatio Then
+        
+            ' Just Pass the values given from the parent
+             
+            m_Left = Left
+            m_Top = Top
+            m_Width = Width
+            m_Height = Height
+        
+        Else
+                    
+            'Scale to the smallest (x or y) scale factor
+            
+            Dim xFactor As Double, yFactor As Double
+    
+            xFactor = Width / DesignWidth
+            yFactor = Height / DesignHeight
+    
+            Dim ScaleFactor As Double
+            ' Choose the smallest Scale Factor
+            ScaleFactor = IIf(xFactor > yFactor, yFactor, xFactor)
+    
+            Dim Cnt As IUIElement
+            Set Cnt = Parent
+            Dim VAlignCenter As Boolean
+            VAlignCenter = (Cnt.DesignHeight - DesignHeight = 2 * DesignTop)
+    
+            m_Left = Left
+            m_Width = DesignWidth * ScaleFactor
+            m_Height = DesignHeight * ScaleFactor
+    
+            If VAlignCenter Then
+                m_Top = (Parent.Widget.Height - m_Height) / 2
+            Else
+                m_Top = Top
+            End If
+    
+        End If
+    
     End Sub
 
     Public Property Set Parent(ByVal Value As IControl)
@@ -212,6 +258,14 @@ Private m_Bindings As List
     
     Public Property Get ImageKey() As String
         ImageKey = m_ImageKey
+    End Property
+
+    Public Property Get KeepAspectRatio() As Boolean
+        KeepAspectRatio = m_KeepAspectRatio
+    End Property
+    
+    Public Property Let KeepAspectRatio(ByVal Value As Boolean)
+        m_KeepAspectRatio = Value
     End Property
 '#End Region
 

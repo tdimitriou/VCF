@@ -86,6 +86,10 @@ Public Name As String
 '#End Region
 
 '#Region IUIElement Inheritance
+    Public Property Get AttachedProperties() As ObservableDictionary
+        Set AttachedProperties = m_BaseUIElement.AttachedProperties
+    End Property
+    
     Public Property Let DesignHeight(ByVal Value As Double)
         m_DesignHeight = Value
     End Property
@@ -215,6 +219,10 @@ Public Name As String
 '#End Region
 
 '#Region IUIElement Interface Implementation
+    Private Property Get IUIElement_AttachedProperties() As ObservableDictionary
+        Set IUIElement_AttachedProperties = m_BaseUIElement.AttachedProperties
+    End Property
+    
     Public Property Set DataContext(ByVal Value As Object)
         Call m_DependencyProperties.SetValue("DataContext", Value)
         
@@ -311,20 +319,31 @@ Catch:
     Private Sub MoveChildren()
         Dim MAX_ITEMS As Long
         Dim Index As Long
+        Dim ItemIndex As Long
         Dim RowID As Long, ColID As Long
         
         MAX_ITEMS = m_Rows * m_Columns
     
-        For RowID = 0 To m_Rows - 1
-            For ColID = 0 To m_Columns - 1
-                Index = RowID * m_Columns + ColID
-                If Index > MAX_ITEMS Then Exit Sub
-                If Index > m_Children.Count - 1 Then Exit Sub
-    
-                Call MoveChild(m_Children.Item(Index), GetCoordinates(RowID, ColID))
-            Next
+        Dim Cells
+        ReDim Cells(0 To MAX_ITEMS - 1) As Long
+                        
+        'Dim NextCell As Long
+        'NextCell = 0
+        
+        Dim Child As Object
+        Dim CellPosition As Coordinates
+        For Index = 0 To MAX_ITEMS - 1
+            If Cells(Index) = 0 Then
+                If ItemIndex > m_Children.Count - 1 Then Exit For
+                Set Child = m_Children(ItemIndex)
+            
+                CellPosition = GetGridPosition(Index)
+            
+                Call MoveChild(m_Children(ItemIndex), GetCoordinates(CellPosition.T, CellPosition.L), Index, CellPosition, Cells)
+                ItemIndex = ItemIndex + 1
+            End If
         Next
-    End Sub
+End Sub
     
     Private Function GetGridPosition(ByVal Index As Long) As Coordinates
         'ColID = Index Mod m_Columns
@@ -346,13 +365,45 @@ Catch:
         End With
     End Function
     
-    Private Sub MoveChild(Child As Object, Position As Coordinates)
+    Private Sub MoveChild(Child As Object, Position As Coordinates, StartIndex As Long, CellPosition As Coordinates, Cells)
         On Error Resume Next
         
         If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove Child.Widget.Key
         
+        Dim Obj As IUIElement
+        Set Obj = Child
+        
+        Dim ColSpan As Integer
+        Dim RowSpan As Long
+        ColSpan = 1
+        RowSpan = 1
+        
+        Dim StartRow As Long
+        Dim StartCol As Long
+        StartRow = CellPosition.T
+        StartCol = CellPosition.L
+        
+        Dim GridProps As ObservableDictionary
+        If Obj.AttachedProperties.ContainsKey("Grid") Then
+            Set GridProps = Obj.AttachedProperties("Grid")
+            
+            If GridProps.ContainsKey("ColumnSpan") Then ColSpan = GridProps("ColumnSpan")
+            If GridProps.ContainsKey("RowSpan") Then RowSpan = GridProps("RowSpan")
+        
+            If RowSpan > (m_Rows - StartRow) Then RowSpan = m_Rows - StartRow
+            If ColSpan > (m_Columns - StartCol) Then ColSpan = m_Columns - StartCol
+        End If
+        
+       Dim i As Long
+       Dim j As Long
+       For i = StartIndex To StartIndex + ColSpan - 1
+            For j = 0 To RowSpan - 1
+                Cells((j * m_Columns) + i) = 1
+            Next j
+       Next
+       
         With Position
-            Child.Move .L + Padding.Left, .T + Padding.Top, .W - (Padding.Left + Padding.Right), .H - (Padding.Top + Padding.Bottom)
+            Child.Move .L + Padding.Left, .T + Padding.Top, .W * ColSpan - (Padding.Left + Padding.Right), .H * RowSpan - (Padding.Top + Padding.Bottom)
         End With
     End Sub
     

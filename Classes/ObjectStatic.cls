@@ -14,6 +14,21 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Public Function Equals(Var1, Var2) As Boolean
+
+Try:
+    
+    On Error GoTo Catch
+    
+    If VarType(Var1) = vbUserDefinedType Or VarType(Var2) = vbUserDefinedType Then
+        Equals = False
+        Exit Function
+    End If
+    
+    If IsArray(Var1) Or IsArray(Var2) Then
+        Equals = False
+        Exit Function
+    End If
+    
     If IsObject(Var1) And Not IsObject(Var2) Then
         Equals = False
         Exit Function
@@ -50,5 +65,13 @@ Public Function Equals(Var1, Var2) As Boolean
     End If
     
     Equals = (Var1 = Var2)
+    
+    Exit Function
+    
+Catch:
+    
+    ' Just in case ...
+    Equals = False
+    
 End Function
 
