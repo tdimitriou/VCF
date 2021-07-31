@@ -115,8 +115,3 @@ ThreadPerObject=0
 MaxNumberOfThreads=1
 ThreadingModel=1
 
-[Rubberduck]
-ProjectId=0b804ad1-55f1-405c-bb8a-fd168af790c2
-
-[CodeSMART]
-Task_UID=01_10_19_01_53_12
