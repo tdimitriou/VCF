@@ -14,6 +14,8 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Destination As Any, Source As Any, ByVal Length As Long)
+Private Declare Function SetFocusAPI Lib "user32" Alias "SetFocus" (ByVal hWnd As Long) As Long
+Private Declare Function GetFocusAPI Lib "user32" Alias "GetFocus" () As Long
 
 Public Function ObjFromPtr(ByVal Ptr As Long) As Object
     Dim Obj As Object
@@ -40,6 +42,14 @@ End Function
 
 Public Function CUnk(ByVal Object As IUnknown) As IUnknown
     Set CUnk = Object
+End Function
+
+Public Function SetFocus(ByVal Handle As Long) As Long
+    SetFocus = SetFocusAPI(Handle)
+End Function
+
+Public Function GetFocus() As Long
+    GetFocus = GetFocusAPI
 End Function
 
 
