@@ -38,6 +38,12 @@ Private m_BaseUIElement As UIElementBase
 Private WithEvents m_DependencyProperties As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
 
+Private WithEvents m_Subclass As cSubClass
+Attribute m_Subclass.VB_VarHelpID = -1
+
+Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long, ByVal lParam As Long, _
+                        ByVal Subclass As cSubClass, ByRef CancelDefaultProc As Boolean)
+
 '#Region Form Events
     Private Sub Form_ResizeWithDimensions(ByVal NewWidth As Long, ByVal NewHeight As Long)
         Dim Child As Object
@@ -50,6 +56,7 @@ Attribute m_DependencyProperties.VB_VarHelpID = -1
     Private Sub Form_Unload(Cancel As Integer)
         On Error Resume Next
         
+        m_Subclass.UnHook
         If m_BasePtr <> 0 Then Application.Current.Base.Windows.Remove m_BasePtr
     End Sub
 '#End Region
@@ -299,6 +306,21 @@ Catch:
     End Sub
 '#End Region
 
+'#Region Subclass Events
+    Private Sub m_Subclass_WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long, ByVal lParam As Long)
+        
+        'Enable F10 Key Functionality
+        If Msg = 260 And wParam = 121 Then m_Subclass.CallWindowProc 256, wParam, lParam
+        
+        ' Pass the event to consumers to allow subclassing
+        Dim Cancel As Boolean
+        RaiseEvent WindowProc(Result, Msg, wParam, lParam, m_Subclass, Cancel)
+        If Cancel = False Then m_Subclass.CallWindowProc Msg, wParam, lParam
+    
+        Result = 1
+    End Sub
+'#End Region
+
 '#Region WidgetRoot Events
     Private Sub WRoot_Paint(CC As vbRichClient5.cCairoContext)
         DrawVisualChildren CC
@@ -461,6 +483,10 @@ Catch:
             Else
                 Set Form = Cairo.WidgetForms.CreateChild(ParentWindow.hWnd, , CanGetFocus)
             End If
+            
+            ' Enable subclassing & F10 functionality support
+            Set m_Subclass = New_c.Subclass
+            m_Subclass.Hook Form.hWnd
             
             Set WRoot = Form.WidgetRoot
             WRoot.BackColor = vbWhite

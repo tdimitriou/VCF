@@ -358,10 +358,12 @@ Private Sub DrawOn(CC As cCairoContext, Optional ForeColor As Long = -1)
         TextColor = Me.ForeColor
         If ForeColor <> -1 Then TextColor = ForeColor
         
-        Txt = Me.Text
+        Txt = Replace$(Me.Text, Chr(13), vbCrLf)
+        
+        Const RECT_OFFSET = 2
         
         CC.SelectFont Me.FontName, Me.FontSize * GetScaleFactor, TextColor, Me.FontBold, Me.FontItalic, Me.FontUnderline, Me.FontStrikeThrough
-        CC.CalcTextRowsInfo Txt, m_Width - 4, True, False, RowsCharCount, RowsCharOffset, RowCount, MaxRowExtends
+        CC.CalcTextRowsInfo Txt, m_Width - 2 * RECT_OFFSET, True, False, RowsCharCount, RowsCharOffset, RowCount, MaxRowExtends
         
         For Index = 0 To RowCount - 1
             If RowsCharCount(Index) > MaxCharsPerRow Then
@@ -369,16 +371,13 @@ Private Sub DrawOn(CC As cCairoContext, Optional ForeColor As Long = -1)
                 MaxRowIndex = Index
             End If
             
-            TextWidth = CC.GetTextExtents(Mid$(Txt, RowsCharOffset(Index) / 2 + 1, RowsCharCount(Index)), FontHeight, TextHeight)
+            TextWidth = CC.GetTextExtents(Mid$(Txt, RowsCharOffset(Index) \ 2 + 1, Abs(RowsCharCount(Index))), FontHeight, TextHeight)
+                        
             If TextWidth > MaxWidth Then MaxWidth = TextWidth
         Next
-               
-        'TextWidth = CC.GetTextExtents(Mid$(Me.Text, RowsCharOffset(MaxRowIndex) / 2 + 1, RowsCharCount(MaxRowIndex)), FontHeight, TextHeight)
-        
-        Const RECT_OFFSET = 2
+                               
         Dim R As Thickness
-        'Set R = EvalPosition(m_Width, m_Height, TextWidth, FontHeight * RowCount, RECT_OFFSET)
-        Set R = EvalPosition(m_Width, m_Height, MaxWidth, FontHeight * RowCount, RECT_OFFSET)
+        Set R = EvalPosition(m_Width, m_Height, MaxWidth, (FontHeight + 0) * RowCount, RECT_OFFSET)
         
         '<Draw Dotted Border Around Text>
         'CC.Save
@@ -390,9 +389,9 @@ Private Sub DrawOn(CC As cCairoContext, Optional ForeColor As Long = -1)
         'CC.Restore
         '</Draw Dotted Border Around Text>
 
-
-        CC.DrawText m_Left + R.Left, m_Top + R.Top, R.Left + R.Right, R.Top + R.Bottom, Txt, , HorizontalAlignment, , 1
-
+        
+        CC.DrawText m_Left + R.Left, m_Top + R.Top, R.Left + R.Right, R.Top + R.Bottom, Txt, False, HorizontalAlignment, , 1, dtHasAccelerators
+        
         '<Draw Dotted Border Around Available Area>
         'CC.Save
         'CC.Rectangle m_Left, m_Top, m_Width, m_Height

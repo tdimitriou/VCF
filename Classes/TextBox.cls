@@ -433,4 +433,3 @@ End Sub
 '    mHideSelection = HideSelection
 'End Property
 '</TextBoxBase Properties>
-

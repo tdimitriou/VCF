@@ -434,6 +434,8 @@ Catch:
     End Sub
     
     Private Sub W_MouseDown(Button As Integer, Shift As Integer, ByVal x As Single, ByVal y As Single)
+        If Not W.Enabled Then Exit Sub
+        
         IsMouseDown = (Button = 1)
         Call W_Resize
         W.Refresh
@@ -448,6 +450,8 @@ Catch:
     End Sub
     
     Private Sub W_MouseEnter(ByVal MouseLeaveWidget As vbRichClient5.cWidgetBase)
+        If Not W.Enabled Then Exit Sub
+        
         IsMouseOver = True
         W.Refresh
         
@@ -455,15 +459,20 @@ Catch:
     End Sub
     
     Private Sub W_MouseLeave(ByVal MouseEnterWidget As vbRichClient5.cWidgetBase)
+        If Not W.Enabled Then Exit Sub
+        
         IsMouseOver = False
         W.Refresh
     End Sub
     
     Private Sub W_MouseMove(Button As Integer, Shift As Integer, ByVal x As Single, ByVal y As Single)
+        If Not W.Enabled Then Exit Sub
         '
     End Sub
 
     Private Sub W_MouseUp(Button As Integer, Shift As Integer, ByVal x As Single, ByVal y As Single)
+        If Not W.Enabled Then Exit Sub
+        
         IsMouseDown = False
         
         Call W_Resize

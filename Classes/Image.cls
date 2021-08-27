@@ -32,6 +32,8 @@ Private WithEvents m_DependencyProperties As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As List
 
+Public Name As String
+
 '#Region Class Events
     Private Sub Class_Initialize()
         Set m_Bindings = New List

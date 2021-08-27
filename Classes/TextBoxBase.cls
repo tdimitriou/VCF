@@ -467,6 +467,8 @@ Private Sub VScrollBar_Scroll(ExactValue As Double)
 End Sub
 
 Private Sub W_Click()
+    If Not W.Enabled Then Exit Sub
+    
     RaiseEvent Click
 End Sub
 
@@ -533,6 +535,8 @@ Private Sub W_FontChanged()
 End Sub
 
 Private Sub W_KeyDown(KeyCode As Integer, Shift As Integer)
+    If Not W.Enabled Then Exit Sub
+    
     Dim CtrlDown As Boolean
     Dim NewRow As Long
     Dim NewPos As Long
@@ -623,6 +627,8 @@ Private Sub W_KeyDown(KeyCode As Integer, Shift As Integer)
 End Sub
 
 Private Sub W_KeyPress(KeyAscii As Integer)
+    If Not W.Enabled Then Exit Sub
+    
     RaiseEvent KeyPress(KeyAscii)
     
     On Error Resume Next
@@ -641,6 +647,8 @@ Private Sub W_KeyPress(KeyAscii As Integer)
 End Sub
 
 Private Sub W_KeyUp(KeyCode As Integer, Shift As Integer)
+    If Not W.Enabled Then Exit Sub
+    
     RaiseEvent KeyUp(KeyCode, Shift)
     
     If KeyCode = vbKeyShift Then ShiftDown = False
@@ -885,14 +893,20 @@ Private Sub W_LostFocus()
 End Sub
 
 Private Sub W_MouseEnter(ByVal MouseLeaveWidget As cWidgetBase)
+    If Not W.Enabled Then Exit Sub
+    
     If Not UserdefinedHovering Then W.Refresh
 End Sub
 
 Private Sub W_MouseLeave(ByVal MouseEnterWidget As cWidgetBase)
+    If Not W.Enabled Then Exit Sub
+    
     If Not UserdefinedHovering Then W.Refresh
 End Sub
 
 Private Sub W_MouseDown(Button As Integer, Shift As Integer, ByVal x As Single, ByVal y As Single)
+    If Not W.Enabled Then Exit Sub
+    
     If Button <> 1 Then Exit Sub
     If Button = 1 Then BDown = True
     If Len(mText) = 0 Then Exit Sub
@@ -911,6 +925,13 @@ Private Sub W_MouseDown(Button As Integer, Shift As Integer, ByVal x As Single, 
 End Sub
 
 Private Sub W_MouseMove(Button As Integer, Shift As Integer, ByVal x As Single, ByVal y As Single)
+    If Not W.Enabled Then
+        W.MousePointer = IDC_ARROW
+        Exit Sub
+    End If
+    
+    W.MousePointer = IDC_IBEAM
+    
     Dim i&, dy&
 
     If BDown Then
@@ -938,11 +959,15 @@ Private Sub W_MouseMove(Button As Integer, Shift As Integer, ByVal x As Single, 
 End Sub
 
 Private Sub W_MouseUp(Button As Integer, Shift As Integer, ByVal x As Single, ByVal y As Single)
+    If Not W.Enabled Then Exit Sub
+    
     BDown = False
     Set T = Nothing
 End Sub
 
 Private Sub W_MouseWheel(ByVal MouseKeys As Long, ByVal Rotation As Long, ByVal LineOffset As Long, ByVal xAbs As Single, ByVal yAbs As Single)
+    If Not W.Enabled Then Exit Sub
+    
     If MouseKeys = 0 Then Spin Rotation, LineOffset
 End Sub
 
@@ -1302,7 +1327,7 @@ Private Sub Draw(CC As cCairoContext)
         End If
   
         'Draw Caret
-        If i = CurRow And W.Focused Then
+        If i = CurRow And W.Focused And W.Enabled Then
             If CaretInvertCounter = 0 Then
                 
                 Ext = CC.GetTextExtentPtr(pS + RowsCharOffset(i), CurPos)

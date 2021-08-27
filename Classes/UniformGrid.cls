@@ -298,15 +298,17 @@ Public Name As String
         
 Try:
         
+       W.LockRefresh = True
+       
         If Not e.OldItems Is Nothing Then
             For Each Child In e.OldItems
                 If TypeOf Child Is IControl Then If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove Child.Widget.Key
             Next
         End If
         
-        MoveChildren
+        MoveChildren False
         
-        W.Refresh
+        W.LockRefresh = False
         
         Exit Sub
         
@@ -316,22 +318,21 @@ Catch:
 '#End Region
 
 '#Region Private Methods
-    Private Sub MoveChildren()
+    Private Sub MoveChildren(Optional ByVal LockRefresh As Boolean = True)
         Dim MAX_ITEMS As Long
         Dim Index As Long
         Dim ItemIndex As Long
         Dim RowID As Long, ColID As Long
         
         MAX_ITEMS = m_Rows * m_Columns
-    
+                            
         Dim Cells
         ReDim Cells(0 To MAX_ITEMS - 1) As Long
-                        
-        'Dim NextCell As Long
-        'NextCell = 0
         
         Dim Child As Object
         Dim CellPosition As Coordinates
+        
+        If LockRefresh Then W.LockRefresh = True
         For Index = 0 To MAX_ITEMS - 1
             If Cells(Index) = 0 Then
                 If ItemIndex > m_Children.Count - 1 Then Exit For
@@ -343,11 +344,10 @@ Catch:
                 ItemIndex = ItemIndex + 1
             End If
         Next
+        If LockRefresh Then W.LockRefresh = False
 End Sub
     
     Private Function GetGridPosition(ByVal Index As Long) As Coordinates
-        'ColID = Index Mod m_Columns
-        'RowID = (Index + m_Columns - ColID) / m_Columns - 1
         
         With GetGridPosition
             .L = Index Mod m_Columns
@@ -440,6 +440,7 @@ End Sub
 '#Region DependencyProperties Events
     Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
         DependencyPropertiesStatic.PassPropertyValue m_Children, Property
+        'If Property.Metadata.AffectsRender Then W.Refresh
     End Sub
 '#End Region
 
@@ -452,7 +453,7 @@ End Sub
         
         
         CC.Save
-                
+
 '        CC.Rectangle 0, 0, dx, dy
 '        CC.SetSourceColor W.BackColor, W.Alpha
 '        CC.Fill
@@ -465,7 +466,6 @@ End Sub
     
     Private Sub W_Resize()
         Call MoveChildren
-        'W.Refresh
     End Sub
 '#End Region
 

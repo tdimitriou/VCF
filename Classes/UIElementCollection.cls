@@ -30,8 +30,16 @@ Public Sub Add(Value As Object)
     m_List.Add Value
 End Sub
 
+Public Sub AddRange(List)
+    m_List.AddRange List
+End Sub
+
 Public Sub Remove(Value As Object)
     Call m_List.Remove(Value)
+End Sub
+
+Public Sub RemoveRange(ByVal Index As Long, ByVal Count As Long)
+    Call m_List.RemoveRange(Index, Count)
 End Sub
 
 Public Sub RemoveAt(ByVal Index As Long)
