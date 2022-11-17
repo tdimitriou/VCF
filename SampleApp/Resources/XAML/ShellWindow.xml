@@ -1,5 +1,42 @@
-<Window x:Class="ShellWindow" FullScreen="0" BorderStyle="2" BackColor="&HFFFFFF" DesignWidth="800" DesignHeight="600" Caption="Window1">
+<Window x:Class="ShellWindow" FullScreen="0" BorderStyle="2" BackColor="&H666666" DesignWidth="800" DesignHeight="600" Caption="Window1">
 	<Button Command="{Binding ButtonClick}" DesignLeft="8" DesignTop="8" DesignWidth="100" DesignHeight="30">
 		<TextBlock HorizontalAlignment="2" Text="Button1"/>
 	</Button>
+
+	<Border DesignLeft="116" DesignTop="8" DesignWidth="200" DesignHeight="50" CornerRadius="8">
+		<TextBlock DesignLeft="8" DesignTop="8" DesignWidth="184" DesignHeight="34" Text="{Binding InfoMessage}"/>
+	</Border>
+	
+	<UniformGrid Rows="4" Columns="5" ShowGridLines="1" DesignLeft="8" DesignTop="116" DesignWidth="400" DesignHeight="300">
+		<Button Command="{Binding GridButtonClick}" CommandParameter="{Self}">
+			<TextBlock Text="1"/>
+		</Button>
+		<Button Command="{Binding GridButtonClick}" CommandParameter="{Self}" Grid.ColumnSpan="3" BorderColor="255">
+			<TextBlock Text="2"/>
+		</Button>
+		<Button Command="{Binding GridButtonClick}" CommandParameter="{Self}">
+			<TextBlock Text="3"/>
+		</Button>
+		<Button Command="{Binding GridButtonClick}" CommandParameter="{Self}">
+			<TextBlock Text="4"/>
+		</Button>
+		<Button Command="{Binding GridButtonClick}" CommandParameter="{Self}" Grid.ColumnSpan="3" Grid.RowSpan="2" BorderColor="255">
+			<TextBlock Text="5"/>
+		</Button>
+		<Button Command="{Binding GridButtonClick}" CommandParameter="{Self}">
+			<TextBlock Text="6"/>
+		</Button>
+		<Button Command="{Binding GridButtonClick}" CommandParameter="{Self}">
+			<TextBlock Text="7"/>
+		</Button>
+		<Button Command="{Binding GridButtonClick}" CommandParameter="{Self}">
+			<TextBlock Text="8"/>
+		</Button>
+		<Button Command="{Binding GridButtonClick}" CommandParameter="{Self}">
+			<TextBlock Text="9"/>
+		</Button>
+		<Button Command="{Binding GridButtonClick}" CommandParameter="{Self}" Grid.ColumnSpan="6">
+			<TextBlock Text="10"/>
+		</Button>
+	</UniformGrid>
 </Window>
