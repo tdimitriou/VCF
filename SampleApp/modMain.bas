@@ -14,5 +14,4 @@ Sub Main()
     
     IApp.Resources.Add "Hello", "World!"
     IApp.Run ShellWindow
-
 End Sub

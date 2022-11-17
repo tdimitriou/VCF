@@ -1,7 +1,7 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\..\..\..\Windows\System32\stdole2.tlb#OLE Automation
-Reference=*\G{C79C91A4-10F5-4F71-A490-3B7915514344}#2.7#0#..\..\..\..\..\Documents\Visual Studio 6\Frameworks\VBRichClient\bin\V5\vbRichClient5.dll#vbRichClient5
-Reference=*\G{74362769-B3CB-467E-988C-B7461D864D8D}#114.0#0#..\..\bin\Demac.VCF.dll#
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#\\?\C:\Windows\SysWow64\stdole2.tlb#OLE Automation
+Reference=*\G{C79C91A4-10F5-4F71-A490-3B7915514344}#2.7#0#..\..\..\..\..\..\..\..\..\Program Files (x86)\Demac\DeNovo Point of Sales\vbRichClient5.dll#vbRichClient5
+Reference=*\G{74362769-B3CB-467E-988C-B7461D864D8D}#115.5#0#..\..\..\..\..\..\..\..\..\Program Files (x86)\Demac\DeNovo Point of Sales\Demac.VCF.dll#
 Class=ShellWindow; ShellWindow.cls
 Module=modMain; modMain.bas
 Class=MyApp; MyApp.cls
