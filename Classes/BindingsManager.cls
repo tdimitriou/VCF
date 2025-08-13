@@ -91,10 +91,10 @@ Try:
     On Error GoTo Catch
     
     Dim Props
-    Dim Prop
+    Dim Prop As String
     Dim Key As String
-    Dim Value
-    Dim Body
+    Dim Value As String
+    Dim eqPos As Long
     Dim Pair As KeyValuePair
     Dim Literals
     Dim Ext As MarkupExtensions
@@ -106,37 +106,30 @@ Try:
     Props = Split(MarkupProperties, ",")
     
     For Each Prop In Props
-        Body = Split(Trim$(Prop), "=")
-        Ext.RestoreLiterals Body(0), Literals
-        
-        If UBound(Body) = 0 Then
+        Prop = Trim$(Prop)
+        eqPos = InStr(1, Prop, "=")
+        If eqPos = 0 Then
             'It is an Argument
-            
             If IsEmpty(ArgList) Then
                 ReDim ArgList(0 To 0) As Variant
             Else
                 ReDim Preserve ArgList(0 To UBound(ArgList) + 1) As Variant
             End If
-                        
-            API.CopyVariable Ext.GetMarkupValue(Body(0), Target), ArgList(UBound(ArgList))
-        ElseIf UBound(Body) = 1 Then
+            Ext.RestoreLiterals Prop, Literals
+            API.CopyVariable Ext.GetMarkupValue(Prop, Target), ArgList(UBound(ArgList))
+        Else
             'It is a Property
-            
-            Ext.RestoreLiterals Body(1), Literals
-            
             If IsEmpty(PropList) Then
                 ReDim PropList(0 To 0) As Variant
             Else
                 ReDim Preserve PropList(0 To UBound(PropList) + 1) As Variant
             End If
-            
-            Key = Trim$(Body(0))
-            Value = Trim$(Body(1))
-            
+            Key = Trim$(Left$(Prop, eqPos - 1))
+            Value = Trim$(Mid$(Prop, eqPos + 1))
+            Ext.RestoreLiterals Value, Literals
             Pair.Key = Key
             API.CopyVariable Ext.GetMarkupValue(Value, Target), Pair.Value
             PropList(UBound(PropList)) = Pair
-            
         End If
     Next
 

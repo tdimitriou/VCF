@@ -520,7 +520,13 @@ Private ItemTemplates                           As List
         Text = Data
         If Err Then Text = "{" & TypeName(Data) & "}"
         
-        W.SelectFontSettingsInto CC, IIf(Index = m_Base.ListIndex, vbWhite, -1)
+        Dim colorSel As Long
+        If Index = m_Base.ListIndex Then
+            colorSel = vbWhite
+        Else
+            colorSel = -1
+        End If
+        W.SelectFontSettingsInto CC, colorSel
             
         CC.DrawText 0, 0, CDbl(dx), CDbl(dy), Text, , , , 1
     End Sub
@@ -649,32 +655,20 @@ Private ItemTemplates                           As List
         ' 2. Nothing: Already searched but nothing found. No further action
         ' 3. DataTemplateObject: Already searched, found and saved to the collection. No further action
         
-        On Error Resume Next
+        Dim v
+        API.CopyVariable ItemTemplates(Index), v
         
-        Err.Clear
-        
-        Set FindDataTemplate = ItemTemplates(Index)
-        
-        ' The Template has already been Created, so the call to the
-        ' ItemTemplates(Index) has returned Object ( or Nothing).
-        ' We are good to go!!!
-        If Err.Number = 0 Then Exit Function
-        
-        Err.Clear
-        
-        ' The Template is still empty.
-        ' We must create, save for future use and return the result.
-        Set FindDataTemplate = CreateDataTemplate(m_ItemsSource(Index))
-        
-        If Err Then
-            Err.Clear
+        If IsObject(v) Then
+            Set FindDataTemplate = v
             Exit Function
         End If
-        ' Do not save in the case that an error has occured,
-        ' in order to be able to create for it again.
         
-        Set ItemTemplates(Index) = FindDataTemplate
-    
+        If IsEmpty(v) Then
+            Set FindDataTemplate = CreateDataTemplate(m_ItemsSource(Index))
+            If Not FindDataTemplate Is Nothing Then
+                Set ItemTemplates(Index) = FindDataTemplate
+            End If
+        End If
     End Function
     
     Private Function CreateDataTemplate(Item) As DataTemplate

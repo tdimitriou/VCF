@@ -87,21 +87,27 @@ End Function
 
 Private Sub SetProperties(ByVal Ext As IMarkupExtension, ByVal MarkupProperties As String)
     Dim Props
-    Dim Prop
+    Dim Prop As String
     Dim Key As String
     Dim Value
     Dim Literals
+    Dim eqPos As Long
     
     ParseLiterals MarkupProperties, Literals
     
     Props = Split(MarkupProperties, ",")
     
     For Each Prop In Props
-        
+        Prop = Trim$(Prop)
         RestoreLiterals Prop, Literals
-        
-        Key = Trim$(Split(Trim$(Prop), "=")(0))
-        Value = Trim$(Split(Trim$(Prop), "=")(1))
+        eqPos = InStr(1, Prop, "=")
+        If eqPos > 0 Then
+            Key = Trim$(Left$(Prop, eqPos - 1))
+            Value = Trim$(Mid$(Prop, eqPos + 1))
+        Else
+            Key = Prop
+            Value = ""
+        End If
         
         API.CopyVariable GetMarkupValue(Value), Value
         

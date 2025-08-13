@@ -30,7 +30,7 @@ Event ScrollIndexChange()
 Event HScrollChange()
 Event MouseUpClick()
 Event MouseMoveOnListItem(ByVal HoverIndex As Long, ByVal RelX As Single, ByVal RelY As Single)
-Event SelectedAll() 'Jürgen
+Event SelectedAll() 'Jï¿½rgen
 Event DimensionsAdjusted()
 Event ListIndexChanged()
 
@@ -206,7 +206,7 @@ Public Function GetListIndexFromMouseXY(ByVal x As Long, ByVal y As Long) As Lon
 Dim CurYvirt As Long, TotalYvirt As Long
 Dim Posx As Long, PosY As Long, Index As Long
 
-  'Klick außerhalb der Spalten?
+  'Klick auï¿½erhalb der Spalten?
   If x > mVisibleCols * mColWidth Then
     GetListIndexFromMouseXY = -1
     Exit Function
@@ -608,6 +608,7 @@ End Sub
 Public Sub AdjustDimensions()
 Dim Rows As Long, Cols As Long, Zoom As Single
 Dim R As Long
+Dim hVisible As Boolean
 
   If dx = 0 Then dx = W.Width
   If dy = 0 Then dy = W.Height
@@ -621,10 +622,19 @@ Dim R As Long
     R = Int(mListCount Mod Cols)
     If R > 0 Then R = 1
   End If
-  mVisibleRows = (dy - 3 - mHeaderHeight - IIf(HScrollBar.Widget.Visible, mScrollerSize, 0)) \ mRowHeight
+  
+  hVisible = HScrollBar.Widget.Visible
+  
+  Dim extra As Long
+  If hVisible Then
+    extra = mScrollerSize
+  Else
+    extra = 0
+  End If
+  
+  mVisibleRows = (dy - 3 - mHeaderHeight - extra) \ mRowHeight
   If mVisibleRows = 0 And mListCount > 0 Then mVisibleRows = 1
   If mVisibleRows > 1 Then VScrollBar.LargeChange = mVisibleRows '- 1
-  
   
   If ImageView = True Then
     If mVisibleRows * Cols - 1 > mListCount Then Rows = (mListCount \ Cols) + R Else Rows = mVisibleRows - 1
@@ -636,13 +646,17 @@ Dim R As Long
   
 
   If VScrollBar.Max > 0 Then
-    VScrollBar.Widget.Move dx - mScrollerSize - 2, 0, mScrollerSize, dy - 2 - IIf(HScrollBar.Widget.Visible, mScrollerSize, 0)
+    VScrollBar.Widget.Move dx - mScrollerSize - 2, 0, mScrollerSize, dy - 2 - extra
     VScrollBar.Widget.Visible = True
   Else 'make invisible
     VScrollBar.Widget.Visible = False
   End If
   
-  HScrollBar.BottomRightEdgeWidth = IIf(VScrollBar.Widget.Visible, mScrollerSize, 0)
+  If VScrollBar.Widget.Visible Then
+    HScrollBar.BottomRightEdgeWidth = mScrollerSize
+  Else
+    HScrollBar.BottomRightEdgeWidth = 0
+  End If
   HScrollBar.Widget.Move 0, dy - mScrollerSize - 3, dx - 2, mScrollerSize
   
   mVisibleCols = Cols
@@ -670,22 +684,48 @@ Dim OldSelIdx&, i&
         Exit Sub
       End If
     Case vbKeyLeft: ChangeListIndex mListIndex - 1
-    Case vbKeyUp: ChangeListIndex IIf(ImageView, mListIndex - mVisibleCols, mListIndex - 1)
+    Case vbKeyUp
+      If ImageView Then
+        ChangeListIndex mListIndex - mVisibleCols
+      Else
+        ChangeListIndex mListIndex - 1
+      End If
     Case vbKeyRight: ChangeListIndex mListIndex + 1
-    Case vbKeyDown: ChangeListIndex IIf(ImageView, mListIndex + mVisibleCols, mListIndex + 1)
+    Case vbKeyDown
+      If ImageView Then
+        ChangeListIndex mListIndex + mVisibleCols
+      Else
+        ChangeListIndex mListIndex + 1
+      End If
     Case vbKeyHome: ChangeListIndex 0
     Case vbKeyEnd: ChangeListIndex mListCount - 1
     Case vbKeyPageUp
       If ImageView Then
-        ChangeListIndex mListIndex - IIf(VScrollBar.LargeChange < mListCount \ mVisibleCols, VScrollBar.LargeChange * mVisibleCols, mListCount)
+        If VScrollBar.LargeChange < mListCount \ mVisibleCols Then
+          ChangeListIndex mListIndex - VScrollBar.LargeChange * mVisibleCols
+        Else
+          ChangeListIndex mListIndex - mListCount
+        End If
       Else
-        ChangeListIndex mListIndex - IIf(VScrollBar.LargeChange < mListCount, VScrollBar.LargeChange, mListCount)
+        If VScrollBar.LargeChange < mListCount Then
+          ChangeListIndex mListIndex - VScrollBar.LargeChange
+        Else
+          ChangeListIndex mListIndex - mListCount
+        End If
       End If
     Case vbKeyPageDown
       If ImageView Then
-        ChangeListIndex mListIndex + IIf(VScrollBar.LargeChange < mListCount, VScrollBar.LargeChange * mVisibleCols, mListCount)
+        If VScrollBar.LargeChange < mListCount Then
+          ChangeListIndex mListIndex + VScrollBar.LargeChange * mVisibleCols
+        Else
+          ChangeListIndex mListIndex + mListCount
+        End If
       Else
-        ChangeListIndex mListIndex + IIf(VScrollBar.LargeChange < mListCount \ mVisibleCols, VScrollBar.LargeChange, mListCount)
+        If VScrollBar.LargeChange < mListCount \ mVisibleCols Then
+          ChangeListIndex mListIndex + VScrollBar.LargeChange
+        Else
+          ChangeListIndex mListIndex + mListCount
+        End If
       End If
   End Select
   If OldSelIdx <> mListIndex Then
@@ -919,7 +959,7 @@ FinalizeSelection:
   W.RaiseBubblingEvent Me, "Click"
   RaiseEvent MouseUpClick
   W.RaiseBubblingEvent Me, "MouseUpClick"
-  If mImageView = True Then EnsureVisibleSelection 'Aus MouseDown hierhin verlegt, damit bei halbverdeckten Items nicht mehrere Items ausgewählt werden JS 29.11.2016
+  If mImageView = True Then EnsureVisibleSelection 'Aus MouseDown hierhin verlegt, damit bei halbverdeckten Items nicht mehrere Items ausgewï¿½hlt werden JS 29.11.2016
 End Sub
 
 Private Sub W_MouseWheel(ByVal MouseKeys As Long, ByVal Rotation As Long, ByVal LineOffset As Long, ByVal xAbs As Single, ByVal yAbs As Single)
@@ -939,7 +979,7 @@ End Sub
 
 Private Sub W_DblClick()
   If bDblClick Then
-    mSelFirstState = True 'Für Löschen über DBL_Click
+    mSelFirstState = True 'Fï¿½r Lï¿½schen ï¿½ber DBL_Click
     RaiseEvent DblClick
     W.RaiseBubblingEvent Me, "DblClick"
   End If
@@ -967,7 +1007,11 @@ Dim i As Long, j As Long, c As Long, ArrowSize As Long, Width As Single, Pat As 
   If ImageView = True Then
     Width = mColWidth
   Else
-    Width = dx - 4 - IIf(VScrollBar.Widget.Visible, mScrollerSize, 0)
+    If VScrollBar.Widget.Visible Then
+      Width = dx - 4 - mScrollerSize
+    Else
+      Width = dx - 4
+    End If
   End If
   If Not ImageView Then mColWidth = Width
   W.SelectFontSettingsInto CC
@@ -996,7 +1040,21 @@ Dim i As Long, j As Long, c As Long, ArrowSize As Long, Width As Single, Pat As 
     
     W.SelectFontSettingsInto CC
     
-    For i = 0 To IIf(mVisibleRows = 1, 0, mVisibleRows)
+    Dim maxRows As Long
+    If mVisibleRows = 1 Then
+      maxRows = 0
+    Else
+      maxRows = mVisibleRows
+    End If
+    
+    Dim translateX As Single
+    If ImageView Then
+      translateX = -mVisibleCols * Width
+    Else
+      translateX = 0
+    End If
+    
+    For i = 0 To maxRows
       For c = 0 To mVisibleCols - 1
         j = i * mVisibleCols + c + (ScrollIndex * mVisibleCols)
   
@@ -1039,7 +1097,6 @@ Dim i As Long, j As Long, c As Long, ArrowSize As Long, Width As Single, Pat As 
               End If
             End If
    
-'            If (Selected(j) And mShowSelection) Or (mVisibleRows = 1 And W.Root.MouseKeyDown > 0) Then
             If mShowSelection And mVisibleRows = 1 Then 'typically the case in e.g. Up/Down-Widgets
               If (W.Root.MouseKeyDown > 0 And i = 0) Or j = mListIndex Then Cairo.Theme.DrawTo CC, W, thmTypeListSelection, 0, 0, 0, Width, mRowHeight + 1, 3
             ElseIf mShowSelection And Selected(j) Then
@@ -1059,7 +1116,7 @@ Dim i As Long, j As Long, c As Long, ArrowSize As Long, Width As Single, Pat As 
         End If
       Next c
       
-      CC.TranslateDrawings IIf(ImageView, -mVisibleCols * Width, 0), mRowHeight
+      CC.TranslateDrawings translateX, mRowHeight
       
     Next i
   CC.Restore
@@ -1107,7 +1164,11 @@ Dim i As Long, xx As Long, DW As Long
     For i = UBound(mColWidths) To 0 Step -1
       xx = xx + ColumnWidth(i)
       If xx > DW Then
-        HScrollBar.Max = IIf(i + 1 < UBound(mColWidths), i + 1, UBound(mColWidths))
+        If i + 1 < UBound(mColWidths) Then
+          HScrollBar.Max = i + 1
+        Else
+          HScrollBar.Max = UBound(mColWidths)
+        End If
         Exit For
       End If
     Next i

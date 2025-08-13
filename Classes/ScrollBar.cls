@@ -58,10 +58,23 @@ Public Property Get Widgets() As cWidgets
 End Property
  
 Public Sub SetParams(ByVal pValue As Double, ByVal pMin As Double, ByVal pMax As Double, ByVal pSmallChange As Double, ByVal pLargeChange As Double)
-   mMin = pMin: mMax = IIf(pMax < pMin, pMin, pMax)
-   mSmallChange = IIf(pSmallChange > mMax - mMin, 1, pSmallChange)
+   mMin = pMin
+   If pMax < pMin Then
+     mMax = pMin
+   Else
+     mMax = pMax
+   End If
+   If pSmallChange > mMax - mMin Then
+     mSmallChange = 1
+   Else
+     mSmallChange = pSmallChange
+   End If
    mLargeChange = pLargeChange
-   mValue = IIf(pValue < mMin Or pValue > mMax, mMin, pValue)
+   If pValue < mMin Or pValue > mMax Then
+     mValue = mMin
+   Else
+     mValue = pValue
+   End If
    W_Resize
 End Sub
 
@@ -128,7 +141,13 @@ Dim Alpha As Double
    CC.SetSourceColor W.BackColor, mAlpha * 0.6: CC.Paint
    If mMouseDownElement > 3 Then
       Alpha = W.Alpha: W.Alpha = 0.4
-      Cairo.Theme.DrawTo CC, W, thmTypeButtonFace, thmStatePressed Or thmStateHovered, 0, mScrollThumbY + mScrollThumbH / 2, mWidth, IIf(mMouseDownElement = eScrollTrackAbove, -mHeight, mHeight), 1.5, thmDirectionRight
+      Dim heightArg As Double
+      If mMouseDownElement = eScrollTrackAbove Then
+        heightArg = -mHeight
+      Else
+        heightArg = mHeight
+      End If
+      Cairo.Theme.DrawTo CC, W, thmTypeButtonFace, thmStatePressed Or thmStateHovered, 0, mScrollThumbY + mScrollThumbH / 2, mWidth, heightArg, 1.5, thmDirectionRight
       W.Alpha = Alpha
    End If
    CC.SetLineWidth 1
@@ -143,10 +162,34 @@ Dim DrawState As enmThemeDrawingState, ArrowSize As Double
    If mMouseOverElement > eNone Or mMouseDownElement > eNone Then
       Cairo.Theme.DrawTo CC, W, thmTypeButtonFace, DrawState, 0, y, mWidth - 0.7, mWidth, 1.5, thmDirectionRight
       Cairo.Theme.DrawTo CC, W, thmTypeShine, DrawState, 0, y + 1, mWidth - 1.5, mWidth - 2, 1.5, thmDirectionRight
-      DrawOuterBorder CC, 0, y, mWidth, mButtonSize, W.BorderColor, mAlpha * IIf(DrawState, 0.7, 0.5)
-      DrawOuterBorder CC, 0, y, mWidth, mButtonSize, IIf(DrawState, W.FocusColor, W.BorderColor), 0.5
+      Dim borderAlpha As Double
+      If DrawState <> 0 Then
+        borderAlpha = 0.7
+      Else
+        borderAlpha = 0.5
+      End If
+      DrawOuterBorder CC, 0, y, mWidth, mButtonSize, W.BorderColor, mAlpha * borderAlpha
+      Dim borderColor As Long
+      If DrawState <> 0 Then
+        borderColor = W.FocusColor
+      Else
+        borderColor = W.BorderColor
+      End If
+      DrawOuterBorder CC, 0, y, mWidth, mButtonSize, borderColor, 0.5
    End If
-   Cairo.Theme.DrawTo CC, W, thmTypeArrow, DrawState, (mWidth - ArrowSize) * 0.5, y + (mButtonSize - ArrowSize) * 0.5 + IIf(y, 0.75, -0.75), ArrowSize, ArrowSize, 0, IIf(Element = eTopButton, thmDirectionUp, thmDirectionDown)
+   Dim arrowYOffset As Double
+   If y <> 0 Then
+     arrowYOffset = 0.75
+   Else
+     arrowYOffset = -0.75
+   End If
+   Dim arrowDir As enmThemeDirection
+   If Element = eTopButton Then
+     arrowDir = thmDirectionUp
+   Else
+     arrowDir = thmDirectionDown
+   End If
+   Cairo.Theme.DrawTo CC, W, thmTypeArrow, DrawState, (mWidth - ArrowSize) * 0.5, y + (mButtonSize - ArrowSize) * 0.5 + arrowYOffset, ArrowSize, ArrowSize, 0, arrowDir
 End Sub
 Private Sub DrawScrollThumb(CC As cCairoContext)
 Dim DrawState As enmThemeDrawingState
@@ -155,9 +198,27 @@ Dim DrawState As enmThemeDrawingState
    CC.SetLineWidth 1
    Cairo.Theme.DrawTo CC, W, thmTypeButtonFace, DrawState, 0, mScrollThumbY, mWidth - 0.7, mScrollThumbH, 1.5, thmDirectionRight
    Cairo.Theme.DrawTo CC, W, thmTypeShine, DrawState, 0, mScrollThumbY + 1, mWidth - 1.5, mScrollThumbH - 2, 1.5, thmDirectionRight
-   Cairo.Theme.DrawTo CC, W, thmTypeScrollBarGripperMarks, IIf(DrawState, thmStateHovered, 0), 0, mScrollThumbY, mWidth, Int(mScrollThumbH), 0, thmDirectionVert
-   DrawOuterBorder CC, 0, mScrollThumbY, mWidth, mScrollThumbH, W.BorderColor, mAlpha * IIf(DrawState, 0.7, 0.5)
-   DrawOuterBorder CC, 0, mScrollThumbY, mWidth, mScrollThumbH, IIf(DrawState, W.FocusColor, W.BorderColor), 0.3
+   Dim gripperState As enmThemeDrawingState
+   If DrawState <> 0 Then
+     gripperState = thmStateHovered
+   Else
+     gripperState = 0
+   End If
+   Cairo.Theme.DrawTo CC, W, thmTypeScrollBarGripperMarks, gripperState, 0, mScrollThumbY, mWidth, Int(mScrollThumbH), 0, thmDirectionVert
+   Dim borderAlpha2 As Double
+   If DrawState <> 0 Then
+     borderAlpha2 = 0.7
+   Else
+     borderAlpha2 = 0.5
+   End If
+   DrawOuterBorder CC, 0, mScrollThumbY, mWidth, mScrollThumbH, W.BorderColor, mAlpha * borderAlpha2
+   Dim borderColor2 As Long
+   If DrawState <> 0 Then
+     borderColor2 = W.FocusColor
+   Else
+     borderColor2 = W.BorderColor
+   End If
+   DrawOuterBorder CC, 0, mScrollThumbY, mWidth, mScrollThumbH, borderColor2, 0.3
 End Sub
 Private Sub DrawOuterBorder(CC As cCairoContext, ByVal x As Long, ByVal y As Long, ByVal dx As Long, ByVal dy As Long, ByVal BorderColor As Long, ByVal BorderAlpha As Double)
   CC.SetLineWidth 1
@@ -223,7 +284,13 @@ Private Sub W_Resize()
    Else
       mWidth = W.Height: mHeight = W.Width - mBottomRightEdgeWidth
    End If
-   mButtonSize = IIf(mWidth * 2 < mHeight, mWidth, mHeight \ 2 + 1)
+   Dim btnSize As Double
+   If mWidth * 2 < mHeight Then
+     btnSize = mWidth
+   Else
+     btnSize = mHeight \ 2 + 1
+   End If
+   mButtonSize = btnSize
    If mMin <> mMax Then
       If mLargeChange < 1 Then mLargeChange = 1
       mScrollThumbH = ((mHeight - mWidth * 2) / (mMax - mMin + mLargeChange)) * mLargeChange
@@ -258,7 +325,11 @@ Private Sub mTimer_Timer()
          Case eScrollTrackBelow: UpdateValue mValue + mLargeChange, True
       End Select
    End If
-   mTimer.Interval = IIf(mTimer.Enabled, 50, 500)  'handle a repeat delay
+   If mTimer.Enabled Then
+     mTimer.Interval = 50
+   Else
+     mTimer.Interval = 500
+   End If  'handle a repeat delay
 End Sub
 
 

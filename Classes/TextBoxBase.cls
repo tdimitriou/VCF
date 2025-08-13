@@ -558,9 +558,17 @@ Private Sub W_KeyDown(KeyCode As Integer, Shift As Integer)
         Case vbKeyDown:
             MoveCursor 1, movecursor_Row
         Case vbKeyRight
-            MoveCursor 1, IIf(CtrlDown, movecursor_Word, movecursor_Char)
+            If CtrlDown Then
+                MoveCursor 1, movecursor_Word
+            Else
+                MoveCursor 1, movecursor_Char
+            End If
         Case vbKeyLeft
-            MoveCursor -1, IIf(CtrlDown, movecursor_Word, movecursor_Char)
+            If CtrlDown Then
+                MoveCursor -1, movecursor_Word
+            Else
+                MoveCursor -1, movecursor_Char
+            End If
         Case vbKeyPageUp
             If mMultiLine Then
                 MoveCursor -mVisibleRows + 1, movecursor_Row
@@ -835,12 +843,26 @@ Private Sub MoveCursor(ByVal Offs&, Optional ByVal MoveType As eMoveCursorType =
                     Case Else   ' Non-wordbreak character
                         If WhitespaceCount > 0 Then
                             ' Set cursor position here
-                            NewCaretPos = i - IIf(Offs < 0, 0, 1)
+                            If Offs < 0 Then
+                                NewCaretPos = i - 0
+                            Else
+                                NewCaretPos = i - 1
+                            End If
           
                             MoveCount = MoveCount + LoopStep
-                            If MoveCount = IIf(Offs < 0, -1, 1) Or NewCaretPos = 0 Then
+                            Dim required As Long
+                            If Offs < 0 Then
+                                required = -1
+                            Else
+                                required = 1
+                            End If
+                            If MoveCount = required Or NewCaretPos = 0 Then
                                 ' We've moved the requisite number of words, so short-circuit the loop
-                                NewCaretPos = NewCaretPos + IIf(Offs < 0, WhitespaceCount, 0)
+                                If Offs < 0 Then
+                                    NewCaretPos = NewCaretPos + WhitespaceCount
+                                Else
+                                    NewCaretPos = NewCaretPos + 0
+                                End If
                                 Exit For
                             End If
           
@@ -996,7 +1018,13 @@ Private Sub CalcCaretPosFromMouseCoords(ByVal x As Single, ByVal y As Single)
     If mRowCount = 0 Then mRowCount = 1
     
     If mVCenter Then
-        VOffs = (dy - mInnerSpace - BorderOffs - mRowCount * RowHeight - IIf(HScrollBar Is Nothing, 0, mScrollerSize)) / 2
+        Dim addScroll As Single
+        If HScrollBar Is Nothing Then
+            addScroll = 0
+        Else
+            addScroll = mScrollerSize
+        End If
+        VOffs = (dy - mInnerSpace - BorderOffs - mRowCount * RowHeight - addScroll) / 2
         If mBorder Then
             If VOffs < -1 Then VOffs = -1
         Else
@@ -1093,8 +1121,12 @@ Private Sub T_Timer()
     dy = (mVisibleRows - 1) * RowHeight
     If (dyy Mod RowHeight) Then dy = (mVisibleRows - 2) * RowHeight
     
-    x = Split(T.Tag, "_")(0)
-    y = Split(T.Tag, "_")(1)
+    Dim posSep As Long
+    posSep = InStr(1, T.Tag, "_")
+    If posSep > 0 Then
+        x = Val(Left$(T.Tag, posSep - 1))
+        y = Val(Mid$(T.Tag, posSep + 1))
+    End If
 
     ShiftDown = True
     
@@ -1169,7 +1201,11 @@ Private Sub AdjustDimensions()
     If mScrollBars And vbHorizontal Then
         If mScrollerSize < dyy Then Hdy = mScrollerSize Else Hdy = dyy
       
-        HScrollBar.BottomRightEdgeWidth = IIf(VScrollBar.Widget.Visible, mScrollerSize, 0)
+        If VScrollBar.Widget.Visible Then
+            HScrollBar.BottomRightEdgeWidth = mScrollerSize
+        Else
+            HScrollBar.BottomRightEdgeWidth = 0
+        End If
         HScrollBar.Widget.Move BorderOffs + 0.5, dy - Hdy - BorderOffs, dx - 2 * BorderOffs, Hdy
         HScrollBar.LargeChange = dxx
         HScrollBar.Widget.Refresh
@@ -1234,18 +1270,32 @@ Private Sub Draw(CC As cCairoContext)
         End If
     End If
   
-    Color = IIf(W.Focused, W.SelectionColor, W.ShadeColor(W.DisabledColor, 1.3))
+    If W.Focused Then
+        Color = W.SelectionColor
+    Else
+        Color = W.ShadeColor(W.DisabledColor, 1.3)
+    End If
 
     If mSelLength Then
         CalcCoords mSelStart, SelStartRow, SelStartPos
         CalcCoords mSelStart + mSelLength, SelEndRow, SelEndPos
     End If
 
-    MaxIdx = IIf(VSValue + mVisibleRows > mRowCount, mRowCount - 1, VSValue + mVisibleRows - 1)
+    If VSValue + mVisibleRows > mRowCount Then
+        MaxIdx = mRowCount - 1
+    Else
+        MaxIdx = VSValue + mVisibleRows - 1
+    End If
     pS = StrPtr(mText)
     
     If mVCenter Then
-        VOffs = (dy - BorderOffs - 1 - mInnerSpace - mRowCount * RowHeight - IIf(HScrollBar Is Nothing, 0, mScrollerSize)) \ 2
+        Dim addScroll2 As Long
+        If HScrollBar Is Nothing Then
+            addScroll2 = 0
+        Else
+            addScroll2 = mScrollerSize
+        End If
+        VOffs = (dy - BorderOffs - 1 - mInnerSpace - mRowCount * RowHeight - addScroll2) \ 2
 
         If mBorder Then
             If VOffs < -1 Then VOffs = -1
@@ -1351,7 +1401,13 @@ Private Sub Draw(CC As cCairoContext)
     Next i
   
     If Len(mText) = 0 And Len(mCueBannerText) > 0 Then 'Shows the CueBanner Text
-        CC.SelectFont W.FontName, W.FontSize, W.ShadeColor(W.DisabledColor, IIf(W.Focused, 1.2, 1)), , True
+        Dim focusShade As Double
+        If W.Focused Then
+            focusShade = 1.2
+        Else
+            focusShade = 1
+        End If
+        CC.SelectFont W.FontName, W.FontSize, W.ShadeColor(W.DisabledColor, focusShade), , True
                 
         '<CueBannerText Position>
         ' Calculate Horizontal Offset of CueBannerText (assumed single line)

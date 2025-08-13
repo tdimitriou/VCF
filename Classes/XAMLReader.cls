@@ -250,61 +250,71 @@ Private Function NewObject(Node As cElement) As Object
     Err.Clear
     
     Dim Namespace As String, Class As String
+    Dim objNew As Object
     
     Namespace = Node.Prefix
     If Len(Namespace) = 0 Then Namespace = "VCF"
     
     Class = Node.BaseName
-
-    Set NewObject = CreateInstance(Namespace, Class) 'CreateObject(Namespace & "." & Class)
     
-    If NewObject Is Nothing Then Exit Function
+    Set objNew = CreateInstance(Namespace, Class) 'CreateObject(Namespace & "." & Class)
     
-    SetObjectProperties NewObject, Node.Attributes
-        
-    If Node.HasChildElements = False Then Exit Function
+    If objNew Is Nothing Then Exit Function
+    
+    SetObjectProperties objNew, Node.Attributes
+    
+    If Node.HasChildElements = False Then
+        Set NewObject = objNew
+        Exit Function
+    End If
     
     Dim Child As cElement
     Dim Prop As Variant
+    Dim objTypeName As String
+    objTypeName = TypeName(objNew)
     
     For Each Child In Node.ChildElements
-        If InStr(1, Child.BaseName, ".") > 0 Then
-            If Split(Child.BaseName, ".")(0) = TypeName(NewObject) Then
+        Dim childName As String
+        Dim dotPos As Long
+        childName = Child.BaseName
+        dotPos = InStr(1, childName, ".")
+        
+        If dotPos > 0 Then
+            If Left$(childName, dotPos - 1) = objTypeName Then
+                
+                Dim propName As String
+                propName = Mid$(childName, dotPos + 1)
                 
                 Err.Clear
                 
-                Call API.CopyVariable(CallByName(NewObject, Split(Child.BaseName, ".")(1), VbGet), Prop)
-                                                
-                If Err Then GoTo SKIP_PROP
-                    
-                If IsObject(Prop) And Child.HasChildElements Then
-
-                    If Not Prop Is Nothing Then
-                        If TypeOf Prop Is ObservableDictionary Or _
-                            TypeOf Prop Is ObservableCollection Or _
-                            TypeOf Prop Is List Then
-
-                            AddPropertyList Prop, Child.ChildElements
+                Call API.CopyVariable(CallByName(objNew, propName, VbGet), Prop)
+                                                     
+                If Err.Number = 0 Then
+                    If IsObject(Prop) And Child.HasChildElements Then
                         
+                        If Not Prop Is Nothing Then
+                            If TypeOf Prop Is ObservableDictionary Or _
+                                TypeOf Prop Is ObservableCollection Or _
+                                TypeOf Prop Is List Then
+                                
+                                AddPropertyList Prop, Child.ChildElements
+                            
+                            Else
+                                CallByName objNew, propName, VbSet, NewObject(Child.ChildElements(0))
+                            End If
                         Else
-                            CallByName NewObject, Split(Child.BaseName, ".")(1), VbSet, NewObject(Child.ChildElements(0))
+                            CallByName objNew, propName, VbSet, NewObject(Child.ChildElements(0))
                         End If
-                    Else
-                        CallByName NewObject, Split(Child.BaseName, ".")(1), VbSet, NewObject(Child.ChildElements(0))
                     End If
-
+                Else
+                    Err.Clear
                 End If
-            
-            End If
-            
-SKIP_PROP:
-            If Err Then
-                Err.Clear
             End If
         Else
-            NewObject.Children.Add NewObject(Child)
+            objNew.Children.Add NewObject(Child)
         End If
     Next
+    Set NewObject = objNew
 End Function
 
 Private Sub AddPropertyList(ByVal Property As Object, ByVal Elements As cElements)
@@ -392,13 +402,13 @@ Private Sub SetDependencyProperties(ByVal Dep As IDependencyObject, Attributes A
     Dim Attr As cAttribute
     Dim Value As Variant
     Dim Obj As Object
+    Dim ext As MarkupExtensions
     
     Set Obj = API.CObj(Dep)
+    Set ext = New MarkupExtensions
     
     For Each Attr In Attributes
-        With New MarkupExtensions
-            API.CopyVariable .GetMarkupValue(Attr.Text, Dep, Attr.Name), Value
-        End With
+        API.CopyVariable ext.GetMarkupValue(Attr.Text, Dep, Attr.Name), Value
     
         If InStr(1, Attr.Name, ".") > 0 Then
             ' It is an Attached Property
@@ -432,9 +442,11 @@ Private Sub SetAttachedProperty(ByVal Obj As IUIElement, ByVal PropertyName As S
     Dim PropKey As String
     Dim PropData
             
-    PropData = Split(PropertyName, ".")
-    PropDict = PropData(0)
-    PropKey = PropData(1)
+    Dim dotPos As Long
+    dotPos = InStr(1, PropertyName, ".")
+    If dotPos <= 0 Then Exit Sub
+    PropDict = Left$(PropertyName, dotPos - 1)
+    PropKey = Mid$(PropertyName, dotPos + 1)
     
     If Obj.AttachedProperties.ContainsKey(PropDict) Then
         Set Dict = Obj.AttachedProperties(PropDict)
@@ -465,7 +477,7 @@ Private Sub SetProperty(ByVal Obj As Object, ByVal Name As String, ByVal Value A
     
     Err.Clear
     
-    If LCase$(Name) = "imagekey" Then
+    If StrComp(Name, "imagekey", vbTextCompare) = 0 Then
         If Not TypeOf Obj Is cWidgetBase Then
             With New XAMLImagePropertyManager
                 Value = .LoadImage(Value)
