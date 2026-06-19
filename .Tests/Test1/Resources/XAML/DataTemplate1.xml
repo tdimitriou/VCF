@@ -1,0 +1,4 @@
+<DataTemplate>
+	<TextBlock VerticalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="100" DesignHeight="30" Text="{Binding FirstName}" ForeColor="&H000000" FontName="Calibri" FontSize="10" FontBold="1"/>
+	<TextBlock VerticalAlignment="2" DesignLeft="100" DesignTop="0" DesignWidth="100" DesignHeight="30" Text="{Binding LastName}" ForeColor="&H0000FF" FontName="Calibri" FontSize="10" FontBold="1"/>
+</DataTemplate>

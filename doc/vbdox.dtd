@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<!--
+	Incomplete version of the vbdox XML schema
+	This is an early test version
+-->
+
+<!--ENTITY nbsp " "-->
+
+<!ELEMENT type (#PCDATA)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT product-name (#PCDATA)>
+<!ELEMENT product-version (#PCDATA)>
+<!ELEMENT version-comments (#PCDATA)>
+<!ELEMENT copyright (#PCDATA)>
+<!ELEMENT documentation (#PCDATA)>
+<!ELEMENT key (#PCDATA)>
+<!ELEMENT sub-type (#PCDATA)>
+<!ELEMENT return-type (#PCDATA)>
+<!ELEMENT default (#PCDATA)>
+<!ELEMENT declaration (#PCDATA)>
+<!ELEMENT private EMPTY>
+<!ELEMENT public EMPTY>
+
+<!ELEMENT vbdox (group)>
+
+<!ELEMENT group (project+)>
+<!ATTLIST group
+	name CDATA #IMPLIED
+>
+
+<!ELEMENT project (type,name,product-name?,product-version?,version-comments?,copyright?,module*)>
+<!ATTLIST project
+	name CDATA #REQUIRED
+>
+
+<!ELEMENT module (type,name,documentation,entry*)>
+<!ATTLIST module
+	name CDATA #REQUIRED
+>
+
+<!ELEMENT entry (key,name,type,sub-type,return-type,default,(private|public),declaration,documentation)>
+<!ATTLIST entry
+	name CDATA #REQUIRED
+>

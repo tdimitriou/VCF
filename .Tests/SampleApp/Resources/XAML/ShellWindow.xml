@@ -1,0 +1,38 @@
+<Window x:Class="ShellWindow" Style="{StaticResource MyStyle}" Caption="Window1" DesignWidth="800" DesignHeight="600" Width="1024" Height="768" FullScreen="1">
+	<Button Command="{Binding ButtonClick}" DesignLeft="8" DesignTop="8" DesignWidth="100" DesignHeight="30" BackColor="255">
+		<TextBlock Style="{StaticResource ButtonText}" Text="Click Me!"/>
+	</Button>
+	<Border DesignLeft="116" DesignTop="8" DesignWidth="200" DesignHeight="50"/>
+	<UniformGrid Rows="4" Columns="5" DesignLeft="8" DesignTop="116" DesignWidth="400" DesignHeight="300">
+		<Button Style="{StaticResource ResourceKey=Submit}">
+			<TextBlock Style="{StaticResource ButtonText}" Text="1"/>
+		</Button>
+		<Button Grid.ColumnSpan="3" BorderColor="255">
+			<TextBlock Text="2"/>
+		</Button>
+		<Button Style="{StaticResource ResourceKey=SubmitA}">
+			<TextBlock Text="3"/>
+		</Button>
+		<Button Style="{StaticResource ResourceKey=SubmitB}">
+			<TextBlock Text="4"/>
+		</Button>
+		<Button  Grid.ColumnSpan="3" Grid.RowSpan="2" BorderColor="255">
+			<TextBlock Text="5"/>
+		</Button>
+		<Button>
+			<TextBlock Text="6"/>
+		</Button>
+		<Button>
+			<TextBlock Text="7"/>
+		</Button>
+		<Button>
+			<TextBlock Text="8"/>
+		</Button>
+		<Button>
+			<TextBlock Text="9"/>
+		</Button>
+		<Button Grid.ColumnSpan="6">
+			<TextBlock Text="10"/>
+		</Button>
+	</UniformGrid>	
+</Window>

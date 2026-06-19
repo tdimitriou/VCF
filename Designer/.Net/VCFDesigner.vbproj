@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <RootNamespace>VCFDesigner</RootNamespace>
+    <AssemblyName>VCFDesigner</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Demac.VCF">
+      <HintPath>..\..\bin\Demac.VCF.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Classes\PropertyItem.vb" />
+    <Compile Include="Classes\DesignApplication.vb" />
+    <Compile Include="Classes\DesignWindow.vb" />
+    <Compile Include="Classes\DesignSurface.vb" />
+    <Compile Include="Classes\DesignerToolbox.vb" />
+    <Compile Include="Classes\DesignerSelectionManager.vb" />
+    <Compile Include="Classes\PropertyEditor.vb" />
+    <Compile Include="Classes\XAMLWriter.vb" />
+    <Compile Include="Forms\frmDesigner.vb" />
+    <Compile Include="Modules\Module1.vb" />
+  </ItemGroup>
+
+</Project>
+

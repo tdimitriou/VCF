@@ -1,0 +1,26 @@
+<Application x:Class="MyApp" StartupURI="ShellWindow">
+	<Application.Resources>
+		<Style TargetType="Button">
+			<Setter Name="BorderColor" Value="&HFFFFFF"/>
+			<Setter Name="BackColor" Value="&HEF892D"/>
+			<Setter Name="CornerRadius" Value="8"/>
+			<Setter Name="Alpha" Value="1"/>
+			<Setter Name="GradientBackground" Value="0"/>
+		</Style>
+		<Style TargetType="Button" x:Key="Submit">
+			<Setter Name="BackColor" Value="&H008000"/>
+		</Style>
+		<Style TargetType="TextBlock">
+			<Setter Name="HorizontalAlignment" Value="0"/>
+			<Setter Name="ForeColor" Value="&H000000"/>
+			<Setter Name="FontName" Value="Segoe UI"/>
+			<Setter Name="FontSize" Value="9"/>
+			<Setter Name="FontBold" Value="1"/>
+			<Setter Name="ScaleFont" Value="0"/>
+		</Style>
+		<Style TargetType="TextBlock" x:Key="ButtonText">
+			<Setter Name="HorizontalAlignment" Value="2"/>
+			<Setter Name="ForeColor" Value="&HFFFFFF"/>
+		</Style>	
+	</Application.Resources>
+</Application>

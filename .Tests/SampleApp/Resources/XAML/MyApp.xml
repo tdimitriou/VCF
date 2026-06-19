@@ -1,0 +1,275 @@
+<Application x:Class="MyApp">
+	<Application.Resources>
+		<ThemesManager x:Key="ThemesManager">
+			<ObservableDictionary x:Key="Default">
+				<String x:Key="BorderWidth" Value="2"/>
+				<SolidColorBrush x:Key="ButtonBackground" Color="&HEF892D"/>
+			</ObservableDictionary>
+			<ObservableDictionary x:Key="Dark">
+				<String x:Key="BorderWidth" Value="2"/>
+				<SolidColorBrush x:Key="ButtonBackground" Color="#333333"/>
+			</ObservableDictionary>
+		</ThemesManager>
+		<String Key="MyString" Value="MyStringValue"/>
+		<ObservableDictionary Key="MyDict"/>
+		<!--START OF DEFAULT STYLES-->
+		<Style TargetType="Border">
+			<Setter Property="Alpha" Value="1"/>
+			<Setter Property="AlphaNoInherit" Value="0"/>
+			<Setter Property="BackColor" Value="15461355"/>
+			<Setter Property="CanGetFocus" Value="0"/>
+			<Setter Property="DisabledColor" Value="10921638"/>
+			<Setter Property="FocusColor" Value="12815360"/>
+			<Setter Property="FontBold" Value="0"/>
+			<Setter Property="FontItalic" Value="0"/>
+			<Setter Property="FontName" Value="Arial"/>
+			<Setter Property="FontSize" Value="9"/>
+			<Setter Property="FontStrikeThrough" Value="0"/>
+			<Setter Property="FontUnderline" Value="0"/>
+			<Setter Property="ForeColor" Value="1973790"/>
+			<Setter Property="HoverColor" Value="16770238"/>
+			<Setter Property="MousePointer" Value="32512"/>
+			<Setter Property="SelectionColor" Value="16766642"/>
+			<Setter Property="ToolTipDelay" Value="1000"/>
+			<Setter Property="ToolTipDuration" Value="10000"/>
+		</Style>
+		<Style TargetType="Button">
+			<Setter Property="Alpha" Value="1"/>
+			<Setter Property="AlphaNoInherit" Value="0"/>
+			<Setter Property="BackColor" Value="15461355"/>
+			<Setter Property="BorderColorA" Value="6448999"/>
+			<Setter Property="CanGetFocus" Value="0"/>
+			<Setter Property="DisabledColor" Value="10921638"/>
+			<Setter Property="FocusColor" Value="12815360"/>
+			<Setter Property="FontBold" Value="0"/>
+			<Setter Property="FontItalic" Value="0"/>
+			<Setter Property="FontName" Value="Arial"/>
+			<Setter Property="FontSize" Value="9"/>
+			<Setter Property="FontStrikeThrough" Value="0"/>
+			<Setter Property="FontUnderline" Value="0"/>
+			<Setter Property="ForeColor" Value="1973790"/>
+			<Setter Property="HoverColor" Value="-1"/>
+			<Setter Property="MousePointer" Value="32512"/>
+			<Setter Property="SelectionColor" Value="16766642"/>
+			<Setter Property="ToolTipDelay" Value="1000"/>
+			<Setter Property="ToolTipDuration" Value="10000"/>
+		</Style>
+		<Style TargetType="ListView">
+			<Setter Property="Alpha" Value="1"/>
+			<Setter Property="AlphaNoInherit" Value="0"/>
+			<Setter Property="BackColor" Value="16777215"/>
+			<Setter Property="BorderColor" Value="6448999"/>
+			<Setter Property="CanGetFocus" Value="0"/>
+			<Setter Property="DisabledColor" Value="10921638"/>
+			<Setter Property="FocusColor" Value="12815360"/>
+			<Setter Property="FontBold" Value="0"/>
+			<Setter Property="FontItalic" Value="0"/>
+			<Setter Property="FontName" Value="Arial"/>
+			<Setter Property="FontSize" Value="9"/>
+			<Setter Property="FontStrikeThrough" Value="0"/>
+			<Setter Property="FontUnderline" Value="0"/>
+			<Setter Property="ForeColor" Value="1973790"/>
+			<Setter Property="HoverColor" Value="16770238"/>
+			<Setter Property="MousePointer" Value="32512"/>
+			<Setter Property="SelectionColor" Value="16766642"/>
+			<Setter Property="ToolTipDelay" Value="1000"/>
+			<Setter Property="ToolTipDuration" Value="10000"/>
+		</Style>
+		<Style TargetType="Panel">
+			<Setter Property="Alpha" Value="1"/>
+			<Setter Property="AlphaNoInherit" Value="0"/>
+			<Setter Property="BackColor" Value="15461355"/>
+			<Setter Property="BorderColor" Value="6448999"/>
+			<Setter Property="CanGetFocus" Value="0"/>
+			<Setter Property="DisabledColor" Value="10921638"/>
+			<Setter Property="FocusColor" Value="12815360"/>
+			<Setter Property="FontBold" Value="0"/>
+			<Setter Property="FontItalic" Value="0"/>
+			<Setter Property="FontName" Value="Arial"/>
+			<Setter Property="FontSize" Value="9"/>
+			<Setter Property="FontStrikeThrough" Value="0"/>
+			<Setter Property="FontUnderline" Value="0"/>
+			<Setter Property="ForeColor" Value="1973790"/>
+			<Setter Property="HoverColor" Value="16770238"/>
+			<Setter Property="MousePointer" Value="32512"/>
+			<Setter Property="SelectionColor" Value="16766642"/>
+			<Setter Property="ToolTipDelay" Value="1000"/>
+			<Setter Property="ToolTipDuration" Value="10000"/>
+		</Style>
+		<Style TargetType="Scene">
+			<Setter Property="Alpha" Value="1"/>
+			<Setter Property="AlphaNoInherit" Value="0"/>
+			<Setter Property="BackColor" Value="15461355"/>
+			<Setter Property="BorderColor" Value="6448999"/>
+			<Setter Property="CanGetFocus" Value="0"/>
+			<Setter Property="DisabledColor" Value="10921638"/>
+			<Setter Property="FocusColor" Value="12815360"/>
+			<Setter Property="FontBold" Value="0"/>
+			<Setter Property="FontItalic" Value="0"/>
+			<Setter Property="FontName" Value="Arial"/>
+			<Setter Property="FontSize" Value="9"/>
+			<Setter Property="FontStrikeThrough" Value="0"/>
+			<Setter Property="FontUnderline" Value="0"/>
+			<Setter Property="ForeColor" Value="1973790"/>
+			<Setter Property="HoverColor" Value="16770238"/>
+			<Setter Property="MousePointer" Value="32512"/>
+			<Setter Property="SelectionColor" Value="16766642"/>
+			<Setter Property="ToolTipDelay" Value="1000"/>
+			<Setter Property="ToolTipDuration" Value="10000"/>
+		</Style>
+		<Style TargetType="TextBlock">
+			<Setter Property="Alpha" Value="1"/>
+			<Setter Property="AlphaNoInherit" Value="0"/>
+			<Setter Property="BackColor" Value="15461355"/>
+			<Setter Property="BorderColor" Value="6448999"/>
+			<Setter Property="CanGetFocus" Value="1"/>
+			<Setter Property="DisabledColor" Value="10921638"/>
+			<Setter Property="FocusColor" Value="12815360"/>
+			<Setter Property="FontBold" Value="0"/>
+			<Setter Property="FontItalic" Value="0"/>
+			<Setter Property="FontName" Value="Arial"/>
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="FontStrikeThrough" Value="0"/>
+			<Setter Property="FontUnderline" Value="0"/>
+			<Setter Property="ForeColor" Value="0"/>
+			<Setter Property="HorizontalAlignment" Value="0"/>
+			<Setter Property="HoverColor" Value="16770238"/>
+			<Setter Property="MousePointer" Value="32512"/>
+			<Setter Property="ScaleFont" Value="1"/>
+			<Setter Property="SelectionColor" Value="16766642"/>
+			<Setter Property="ToolTipDelay" Value="1000"/>
+			<Setter Property="ToolTipDuration" Value="10000"/>
+			<Setter Property="VerticalAlignment" Value="0"/>
+		</Style>
+		<Style TargetType="TextBox">
+			<Setter Property="Alpha" Value="1"/>
+			<Setter Property="AlphaNoInherit" Value="0"/>
+			<Setter Property="BackColor" Value="16777215"/>
+			<Setter Property="BorderColor" Value="6448999"/>
+			<Setter Property="CanGetFocus" Value="1"/>
+			<Setter Property="DisabledColor" Value="10921638"/>
+			<Setter Property="FocusColor" Value="12815360"/>
+			<Setter Property="FontBold" Value="0"/>
+			<Setter Property="FontItalic" Value="0"/>
+			<Setter Property="FontName" Value="Arial"/>
+			<Setter Property="FontSize" Value="9"/>
+			<Setter Property="FontStrikeThrough" Value="0"/>
+			<Setter Property="FontUnderline" Value="0"/>
+			<Setter Property="ForeColor" Value="1973790"/>
+			<Setter Property="HoverColor" Value="16770238"/>
+			<Setter Property="MousePointer" Value="32513"/>
+			<Setter Property="SelectionColor" Value="16766642"/>
+			<Setter Property="ToolTipDelay" Value="1000"/>
+			<Setter Property="ToolTipDuration" Value="10000"/>
+		</Style>
+		<Style TargetType="UnboundListView">
+			<Setter Property="Alpha" Value="1"/>
+			<Setter Property="AlphaNoInherit" Value="0"/>
+			<Setter Property="BackColor" Value="16777215"/>
+			<Setter Property="BorderColor" Value="6448999"/>
+			<Setter Property="CanGetFocus" Value="0"/>
+			<Setter Property="DisabledColor" Value="10921638"/>
+			<Setter Property="FocusColor" Value="12815360"/>
+			<Setter Property="FontBold" Value="0"/>
+			<Setter Property="FontItalic" Value="0"/>
+			<Setter Property="FontName" Value="Arial"/>
+			<Setter Property="FontSize" Value="9"/>
+			<Setter Property="FontStrikeThrough" Value="0"/>
+			<Setter Property="FontUnderline" Value="0"/>
+			<Setter Property="ForeColor" Value="1973790"/>
+			<Setter Property="HoverColor" Value="16770238"/>
+			<Setter Property="MousePointer" Value="32512"/>
+			<Setter Property="SelectionColor" Value="16766642"/>
+			<Setter Property="ToolTipDelay" Value="1000"/>
+			<Setter Property="ToolTipDuration" Value="10000"/>
+		</Style>
+		<Style TargetType="UniformGrid">
+			<Setter Property="Alpha" Value="1"/>
+			<Setter Property="AlphaNoInherit" Value="0"/>
+			<Setter Property="BackColor" Value="15461355"/>
+			<Setter Property="BorderColor" Value="6448999"/>
+			<Setter Property="CanGetFocus" Value="0"/>
+			<Setter Property="DisabledColor" Value="10921638"/>
+			<Setter Property="FocusColor" Value="12815360"/>
+			<Setter Property="FontBold" Value="0"/>
+			<Setter Property="FontItalic" Value="0"/>
+			<Setter Property="FontName" Value="Arial"/>
+			<Setter Property="FontSize" Value="9"/>
+			<Setter Property="FontStrikeThrough" Value="0"/>
+			<Setter Property="FontUnderline" Value="0"/>
+			<Setter Property="ForeColor" Value="1973790"/>
+			<Setter Property="HoverColor" Value="16770238"/>
+			<Setter Property="MousePointer" Value="32512"/>
+			<Setter Property="SelectionColor" Value="16766642"/>
+			<Setter Property="ToolTipDelay" Value="1000"/>
+			<Setter Property="ToolTipDuration" Value="10000"/>
+		</Style>
+		<Style TargetType="Window">
+			<Setter Property="BackColor" Value="16777215"/>
+			<Setter Property="MousePointer" Value="32512"/>
+		</Style>
+		<Style TargetType="WindowsFormsHost">
+			<Setter Property="Alpha" Value="1"/>
+			<Setter Property="AlphaNoInherit" Value="0"/>
+			<Setter Property="BackColor" Value="15461355"/>
+			<Setter Property="BorderColor" Value="6448999"/>
+			<Setter Property="DisabledColor" Value="10921638"/>
+			<Setter Property="FocusColor" Value="12815360"/>
+			<Setter Property="FontBold" Value="0"/>
+			<Setter Property="FontItalic" Value="0"/>
+			<Setter Property="FontName" Value="Arial"/>
+			<Setter Property="FontSize" Value="9"/>
+			<Setter Property="FontStrikeThrough" Value="0"/>
+			<Setter Property="FontUnderline" Value="0"/>
+			<Setter Property="ForeColor" Value="1973790"/>
+			<Setter Property="MousePointer" Value="32512"/>
+			<Setter Property="SelectionColor" Value="16766642"/>
+			<Setter Property="ToolTipDelay" Value="1000"/>
+			<Setter Property="ToolTipDuration" Value="10000"/>
+		</Style>
+		<!--END OF DEFAULT STYLES-->
+		<Style TargetType="Window">
+			<Setter Property="BackColorW" Value="&H666666"/>
+		</Style>
+		<Style TargetType="Window" x:Key="MyStyle">
+			<Setter Property="BorderStyle" Value="0"/>
+		</Style>
+		<Style TargetType="Button">
+			<Setter Property="BorderColor" Value="&HFFFFFF"/>
+			<Setter Property="BackColor" Value="{ThemeResource ButtonBackground}"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="Alpha" Value="1"/>
+			<Setter Property="GradientBackground" Value="0"/>
+		</Style>
+		<Style TargetType="Button" x:Key="Submit">
+			<Setter Property="BackColor" Value="&H008000"/>
+		</Style>
+		<Style TargetType="Button" x:Key="SubmitA" BasedOn="{StaticResource ResourceKey=Submit}">
+			<Setter Property="Alpha" Value="0.50"/>
+		</Style>
+		<Style TargetType="Button" x:Key="SubmitB" BasedOn="{StaticResource ResourceKey=Submit}">
+			<Setter Property="BackColor" Value="-1"/>
+		</Style>
+		<Style TargetType="TextBlock">
+			<Setter Property="HorizontalAlignment" Value="0"/>
+			<Setter Property="ForeColor" Value="&H000000"/>
+			<Setter Property="FontName" Value="Segoe UI"/>
+			<Setter Property="FontBold" Value="1"/>
+			<Setter Property="ScaleFont" Value="0"/>
+		</Style>
+		<Style TargetType="TextBlock" x:Key="ButtonText">
+			<Setter Property="HorizontalAlignment" Value="2"/>
+			<Setter Property="VerticalAlignment" Value="2"/>
+			<Setter Property="ForeColor" Value="&HFFFFFF"/>
+		</Style>	
+		<Style TargetType="Border">
+			<Setter Property="CornerRadius" Value="0"/>
+			<Setter Property="BackColor" Value="&HFFFF00"/>
+		</Style>
+		<Style TargetType="UniformGrid">
+			<Setter Property="ShowGridLines" Value="0"/>
+			<Setter Property="Padding" Value="10"/>
+		</Style>
+
+	</Application.Resources>
+</Application>

@@ -1,0 +1,125 @@
+<Scene Name="MainMenu" DataContext="SampleDataContext" ImageKey="Resources\MainMenu.png">
+	<Border DesignLeft="40" DesignTop="0" DesignWidth="400" DesignHeight="100" CornerRadius="0" BorderColor="-1" BackColor="&HB1A200" Alpha="0">
+		<TextBlock VerticalAlignment="0" DesignLeft="0" DesignTop="73" DesignWidth="400" DesignHeight="100" Text="{Binding Text, Converter=TestValueConverter, StringFormat = {€#,##0.00##}}" ForeColor="&HFFFFFF" FontName="Calibri" FontSize="20" FontBold="1"/>
+	</Border>
+	<Border DesignLeft="38" DesignTop="29" DesignWidth="283" DesignHeight="56" CornerRadius="0" BorderColor="-1" BackColor="&HB1A200" Alpha="0">
+		<TextBlock HorizontalAlignment="0" VerticalAlignment="0" DesignLeft="5" DesignTop="0" DesignWidth="273" DesignHeight="34" Padding="0" Text="D e N o v o" ForeColor="&HB1A200" FontName="Calibri" FontSize="20" FontBold="1"/>
+		<TextBlock HorizontalAlignment="0" VerticalAlignment="2" DesignLeft="5" DesignTop="28" DesignWidth="273" DesignHeight="34" Padding="0" Text="Retail Point Of Sales" ForeColor="&HFFFFFF" FontName="Sans Serif" FontSize="16" FontBold="0"/>
+	</Border>
+	<Border DesignLeft="386" DesignTop="8" DesignWidth="610" DesignHeight="185" CornerRadius="20,20,0,0" BorderColor="&HFFFFFF" BackColor="&H00FF00" Alpha="0">
+		<Border DesignLeft="0" DesignTop="0" DesignWidth="610" DesignHeight="45" CornerRadius="20,20,0,0" BorderColor="&HFFFFFF" BackColor="&HB1A200" Alpha="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="610" DesignHeight="45" Rows="1" Columns="1" Padding="0" Text="ΠΩΛΗΣΕΙΣ" ForeColor="&HFFFFFF" FontSize="18" FontBold="1"/>
+		</Border>
+		<UniformGrid ShowGridLines="0" DesignLeft="10" DesignTop="55" DesignWidth="590" DesignHeight="120" Rows="1" Columns="3" Padding="15,0">
+			<Button Command="{Binding MyCommand}" CommandParameter="cmd" ClickMode="0" DesignLeft="30" DesignTop="60" DesignWidth="137" DesignHeight="113" BorderWidth="1" CornerRadius="32" BackColor="11290370" HoverColor="11290370" GradientBackground="1" BorderColor="&HFFFFFF" Alpha="1" ToolTip="Πωλήσεις">
+				<Image DesignLeft="26" DesignTop="5" DesignWidth="85" DesignHeight="65" ImageKey="Resources\POS.png"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="80" DesignWidth="137" DesignHeight="30" Text="Πωλήσεις" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button ClickMode="1" Command="TestCommandObj" DesignLeft="238" DesignTop="60" DesignWidth="137" DesignHeight="113"  BorderWidth="1" CornerRadius="32" BackColor="11290370" HoverColor="11290370" GradientBackground="1" BorderColor="&HFFFFFF" Alpha="1">
+				<Image DesignLeft="26" DesignTop="5" DesignWidth="85" DesignHeight="65" ImageKey="Resources\XReport.png"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="80" DesignWidth="137" DesignHeight="30" Text="Έκθεση Χ" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Name="PO" Command="{Binding SwapContent}" DesignLeft="464" DesignTop="60" DesignWidth="137" DesignHeight="113"  BorderWidth="1" CornerRadius="32" BackColor="11290370" HoverColor="11290370" GradientBackground="1" BorderColor="&HFFFFFF" Alpha="1">
+				<Image DesignLeft="26" DesignTop="5" DesignWidth="85" DesignHeight="65" ImageKey="Resources\ZReport.png"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="80" DesignWidth="137" DesignHeight="30" Text="Έκθεση Ζ" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+		</UniformGrid>
+	</Border>
+	<Border DesignLeft="40" DesignTop="124" DesignWidth="300" DesignHeight="82" CornerRadius="20" BorderColor="&HFFFFFF" BackColor="&H00FF00" Alpha="0">
+		<TextBlock HorizontalAlignment="0" Text="Χρήστης:" DesignLeft="8" DesignTop="16" DesignWidth="65" DesignHeight="24" BackColor="-2147483633" Alpha="1" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+		<Border DesignLeft="70" DesignTop="16" DesignWidth="220" DesignHeight="24" CornerRadius="20" BorderColor="&HFFFFFF" BackColor="&HFFFFFF" Alpha="1">
+			<TextBlock HorizontalAlignment="0" Text="{LanguageManager Name={Θεόδωρος, Α.}, Lastname=Δημητρίου}" DesignLeft="10" DesignTop="0" DesignWidth="200" DesignHeight="24" BackColor="-2147483633" Alpha="1" ForeColor="255" FontSize="10" FontBold="1"/>
+		</Border>
+		<TextBlock HorizontalAlignment="2" Text="lb_date" DesignLeft="50" DesignTop="52" DesignWidth="97" DesignHeight="17" Text="{Binding Info}" BackColor="-2147483633" Alpha="1" ForeColor="0" FontSize="10" FontBold="1"/>
+		<TextBlock HorizontalAlignment="2" Text="lb_time" DesignLeft="200" DesignTop="52" DesignWidth="97" DesignHeight="17" BackColor="-2147483633" Alpha="1" ForeColor="0" FontSize="10" FontBold="1"/>
+	</Border>
+	<Border DesignLeft="386" DesignTop="214" DesignWidth="610" DesignHeight="460" CornerRadius="20,20,0,0" BorderColor="&HFFFFFF" BackColor="&H00FF00" Alpha="0">
+		<Border DesignLeft="0" DesignTop="0" DesignWidth="610" DesignHeight="45" CornerRadius="20,20,0,0" BorderColor="&HFFFFFF" BackColor="&HB1A200" Alpha="1">
+			<TextBlock HorizontalAlignment="2" VerticalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="610" DesignHeight="45" Padding="0" Text="ΔΙΑΧΕΙΡΙΣΗ" ForeColor="&HFFFFFF" FontSize="18" FontBold="1"/>
+		</Border>
+		<UniformGrid ShowGridLines="0" DesignLeft="10" DesignTop="55" DesignWidth="590" DesignHeight="395" Rows="4" Columns="4" Padding="5">
+			<Button Command="bt_products" DesignLeft="440" DesignTop="384" DesignWidth="113" DesignHeight="73" BorderWidth="1" CornerRadius="16" BackColor="11290370" HoverColor="11290370" GradientBackground="1" BorderColor="&HFFFFFF" Alpha="1">
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45" ImageKey="Resources\Products.png"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Προϊόντα" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Command="btnListBrands" DesignLeft="568" DesignTop="384" DesignWidth="113" DesignHeight="73" DesignHeight="73" BorderWidth="1" CornerRadius="16" BackColor="11290370" HoverColor="11290370" GradientBackground="1" BorderColor="&HFFFFFF" Alpha="1">
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45" ImageKey="Resources\Brands.png"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Φίρμες" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Command="btnListCategories" DesignLeft="704" DesignTop="384" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" CornerRadius="16" BackColor="11290370" HoverColor="11290370" GradientBackground="1" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45" ImageKey="Resources\Categories.png"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Κατηγορίες" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Command="bt_vat_rates" DesignLeft="832" DesignTop="384" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" CornerRadius="16" BackColor="11290370" HoverColor="11290370" GradientBackground="1" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45" ImageKey="Resources\VatRates.png"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Κωδικοί Φ.Π.Α." ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Command="bt_stock_control" DesignLeft="440" DesignTop="464" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" CornerRadius="16" BackColor="11290370" HoverColor="11290370" GradientBackground="1" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45" ImageKey="Resources\StockControl.png"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Αποθήκη" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Command="bt_suppliers" DesignLeft="568" DesignTop="464" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" CornerRadius="16" BackColor="11290370" HoverColor="11290370" GradientBackground="1" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45" ImageKey="Resources\Suppliers.png"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Προμηθευτές" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Command="bt_users" DesignLeft="704" DesignTop="464" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" CornerRadius="16" BackColor="11290370" HoverColor="11290370" GradientBackground="1" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45" ImageKey="Resources\Users.png"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Χρήστες" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Command="bt_reports" DesignLeft="832" DesignTop="464" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" CornerRadius="16" BackColor="11290370" HoverColor="11290370" GradientBackground="1" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45" ImageKey="Resources\Reports.png"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Εκθέσεις" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Command="bt_sys_maintenance" DesignLeft="48" DesignTop="112" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+				<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="SYSTEM MAINTENANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Command="bt_del_man" DesignLeft="216" DesignTop="112" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="33023" Alpha="1" GradientBackground="1">
+				<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="DELIVERY MANAGEMENT" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Command="TouchButton22" DesignLeft="48" DesignTop="176" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+				<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="SYSTEM MAINTENANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Command="bt_time_attendance" DesignLeft="216" DesignTop="176" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+				<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="TIME ATTENDANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+		</UniformGrid>
+	</Border>
+	<UniformGrid Visible="True" ShowGridLines="0" DesignLeft="180" DesignTop="250" DesignWidth="160" DesignHeight="400" Rows="6" Columns="1" Padding="4">
+		<Button Command="bt_sys_maintenance" DesignLeft="48" DesignTop="112" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="SYSTEM MAINTENANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+		</Button>
+		<Button Command="bt_del_man" DesignLeft="216" DesignTop="112" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="33023" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="DELIVERY MANAGEMENT" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+		</Button>
+		<Button Command="TouchButton22" DesignLeft="48" DesignTop="176" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="SYSTEM MAINTENANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+		</Button>
+		<Button Command="bt_time_attendance" DesignLeft="216" DesignTop="176" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="TIME ATTENDANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+		</Button>
+		<Image DesignLeft="0" DesignTop="0" DesignWidth="121" DesignHeight="129" ImageKey="Resources\Close.png"/>
+		<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="TIME ATTENDANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+	</UniformGrid>
+	<UniformGrid ShowGridLines="0" DesignLeft="386" DesignTop="682" DesignWidth="610" DesignHeight="76" Rows="1" Columns="8" Padding="4">
+		<Button ToolTip="Remote Support" Command="ShellExecCommand" CommandParameter="C:\Users\Doros\Desktop\TeamViewer\TeamViewer.exe" DesignLeft="950" DesignTop="8" DesignWidth="64" DesignHeight="64" Alpha="0">
+			<Image DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64" ImageKey="Resources\TeamViewer.png"/>
+		</Button>
+		<Button ToolTip="Google Chrome" Command="ShellExecCommand" CommandParameter="C:\Program Files\Google\Chrome\Application\chrome.exe" DesignLeft="950" DesignTop="8" DesignWidth="64" DesignHeight="64" Alpha="0">
+			<Image DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64" ImageKey="Resources\GoogleChrome.png"/>
+		</Button>
+		<Button Command="bt_exit" ToolTip="Settings" DesignLeft="950" DesignTop="8" DesignWidth="64" DesignHeight="64" Alpha="0">
+			<Image DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64" ImageKey="Resources\Settings-Gear2.png"/>
+		</Button>
+		<Panel/>
+		<Button Command="{Binding MyLogoutCommand, Source={StaticResource ResourceKey=AppCommands}}" DesignLeft="950" DesignTop="8" DesignWidth="64" DesignHeight="64" Alpha="0">
+			<Image DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64" ImageKey="Resources\Lock.png"/>
+		</Button>
+		<Panel/>
+		<Button Margin="2,3,2,6" Command="{Binding MyLogoutCommand, Source={StaticResource ResourceKey=AppCommands}}" DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64"  ToolTip="Minimize Window" BackColor="&HFF9999" Alpha="1" GradientBackground="1" CornerRadius="8" HoverColor="&HFFAAAA" BorderWidth="0">
+			<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="60" Text="_" FontName="Verdana" ForeColor="&HFFFFFF" FontSize="40" FontBold="1"/>
+		</Button>
+		<Button Command="" DesignLeft="950" DesignTop="8" DesignWidth="64" DesignHeight="64" Alpha="0">
+			<Image DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64" ImageKey="Resources\Close.png"/>
+		</Button>
+	</UniformGrid>
+</Scene>

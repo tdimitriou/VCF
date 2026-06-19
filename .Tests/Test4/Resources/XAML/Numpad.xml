@@ -1,0 +1,3 @@
+<Window x:Class="Form1" FullScreen="0" BorderStyle="0" BackColor="&H0000FF" DesignWidth="640" DesignHeight="480">
+	<Button/>
+</Window>

@@ -1,0 +1,56 @@
+/* HxLink.css - standard style sheet for Help links */
+
+/* ========================= */
+/* MSHelp\:link - Help links */
+/* ========================= */
+
+/* Attach the behavior to link elements. */
+MSHelp\:link {behavior:url(ms-help://hx/hxruntime/hxlink.htc)}
+
+MSHelp\:ktable {behavior:url(ms-help://hx/hxruntime/hxktable.htc)}
+
+Table.HxLinkTable {behavior:url(ms-help://hx/hxruntime/hxlinktable.htc)}
+
+/* */
+/* DIV.HxLinkMenu - The frame of Popup menus used for disambiguators. */
+/* */
+
+/* Attach the behavior to menu */
+DIV.HxLinkMenu 	{behavior:url(ms-help://hx/hxruntime/hxlinkmenu.htc)} 
+/* Start out invisible. It'll be made visible after it is positioned */
+DIV.HxLinkMenu 	{visibility:hidden}
+
+/* Define the look of the menu */
+DIV.HxLinkMenu 	{position:absolute;
+			 font-family:Arial;
+			 font-size:9pt;
+			 height:auto;
+			 padding:2px;
+  			 border:2px outset menu;
+			 background:threedface}
+
+/* */
+/* A.HxLinkMenu - Menu items of Popup menus used for disambiguators. */
+/* */
+
+/* Attach the behavior to menu items */
+A.HxLinkMenu 	  {behavior:url(ms-help://hx/hxruntime/hxlinkmenuitem.htc)}
+
+/* Define the look of menu items */
+A.HxLinkMenu      {text-decoration:none;
+			color:menutext;
+ 			padding-left:5px;
+			padding-right:5px;
+			Background:threedface}
+/* Define the "visited" look. Here it's the same as unvisited. */
+A:visited.HxLinkMenu      {text-decoration:none;
+				color:menutext;
+ 				padding-left:5px;
+				padding-right:5px;
+				Background:threedface}
+
+/* Define the "focused" look. */
+A:hover:active.HxLinkMenu 	{text-decoration:none;
+                                 color:highlighttext;
+				 background:highlight}
+

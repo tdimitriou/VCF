@@ -1,0 +1,18 @@
+# VB6 IDE / build artifacts
+*.vbw
+*.csi
+*.lvw
+*.log
+*.exe
+*.dll
+*.oca
+*.exp
+*.lib
+bin/
+
+# .NET designer build output
+Designer/.Net/bin/
+Designer/.Net/obj/
+
+# User-specific
+*.vbproj.user

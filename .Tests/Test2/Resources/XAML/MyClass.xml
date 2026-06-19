@@ -1,0 +1,125 @@
+<UserControl x:Class="MyClass" DesignWidth="1024" DesignHeight="768" DataContext="" ImageKey="Resources\MainMenu.png">
+	<Border DesignLeft="40" DesignTop="0" DesignWidth="400" DesignHeight="100" CornerRadius="8" BorderColor="-1" BackColor="&HB1A200" Alpha="0">
+		<TextBlock VerticalAlignment="0" DesignLeft="0" DesignTop="73" DesignWidth="400" DesignHeight="100" Text="" ForeColor="&HFFFFFF" FontName="Calibri" FontSize="20" FontBold="1"/>
+	</Border>
+	<Border DesignLeft="38" DesignTop="29" DesignWidth="283" DesignHeight="56" CornerRadius="8" BorderColor="-1" BackColor="&HB1A200" Alpha="0">
+		<TextBlock HorizontalAlignment="0" VerticalAlignment="0" DesignLeft="5" DesignTop="0" DesignWidth="273" DesignHeight="34" Padding="0" Text="D e N o v o" ForeColor="&HB1A200" FontName="Calibri" FontSize="20" FontBold="1"/>
+		<TextBlock HorizontalAlignment="0" VerticalAlignment="2" DesignLeft="5" DesignTop="28" DesignWidth="273" DesignHeight="34" Padding="0" Text="Retail Point Of Sales" ForeColor="&HFFFFFF" FontName="Sans Serif" FontSize="16" FontBold="0"/>
+	</Border>
+	<Border DesignLeft="386" DesignTop="8" DesignWidth="610" DesignHeight="185" CornerRadius="8,8,0,0" BorderColor="&HB1A200" BackColor="&H00FF00" Alpha="0">
+		<Border DesignLeft="0" DesignTop="0" DesignWidth="610" DesignHeight="45" CornerRadius="8,8,0,0" BorderColor="&HB1A200" BackColor="&HB1A200" Alpha="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="610" DesignHeight="45" Rows="1" Columns="1" Padding="0" Text="ΠΩΛΗΣΕΙΣ!!!" ForeColor="&HFFFFFF" FontSize="18" FontBold="1"/>
+		</Border>
+		<UniformGrid ShowGridLines="0" DesignLeft="10" DesignTop="55" DesignWidth="590" DesignHeight="120" Rows="1" Columns="3" Padding="15,0">
+			<Button ClickMode="0" DesignLeft="30" DesignTop="60" DesignWidth="137" DesignHeight="113" BorderWidth="1" BackColor="11290370" HoverColor="11290370" BorderColor="&HFFFFFF" Alpha="1" ToolTip="Πωλήσεις">
+				<Image DesignLeft="26" DesignTop="5" DesignWidth="85" DesignHeight="65"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="80" DesignWidth="137" DesignHeight="30" Text="Πωλήσεις" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button ClickMode="1" DesignLeft="238" DesignTop="60" DesignWidth="137" DesignHeight="113"  BorderWidth="1" BackColor="11290370" HoverColor="11290370" BorderColor="&HFFFFFF" Alpha="1">
+				<Image DesignLeft="26" DesignTop="5" DesignWidth="85" DesignHeight="65" />
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="80" DesignWidth="137" DesignHeight="30" Text="Έκθεση Χ" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button Name="PO" DesignLeft="464" DesignTop="60" DesignWidth="137" DesignHeight="113"  BorderWidth="1" BackColor="11290370" HoverColor="11290370" BorderColor="&HFFFFFF" Alpha="1">
+				<Image DesignLeft="26" DesignTop="5" DesignWidth="85" DesignHeight="65"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="80" DesignWidth="137" DesignHeight="30" Text="Έκθεση Ζ" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+		</UniformGrid>
+	</Border>
+	<Border DesignLeft="40" DesignTop="124" DesignWidth="300" DesignHeight="82" CornerRadius="8" BorderColor="&HB1A200" BackColor="&H00FF00" Alpha="0">
+		<TextBlock HorizontalAlignment="0" Text="Χρήστης:" DesignLeft="8" DesignTop="16" DesignWidth="65" DesignHeight="24" BackColor="-2147483633" Alpha="1" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+		<Border DesignLeft="70" DesignTop="16" DesignWidth="220" DesignHeight="24" CornerRadius="8" BorderColor="&HB1A200" BackColor="&HFFFFFF" Alpha="1">
+			<TextBlock HorizontalAlignment="0" DesignLeft="10" DesignTop="0" DesignWidth="200" DesignHeight="24" BackColor="-2147483633" Alpha="1" ForeColor="255" FontSize="10" FontBold="1"/>
+		</Border>
+		<TextBlock HorizontalAlignment="2" Text="lb_date" DesignLeft="50" DesignTop="52" DesignWidth="97" DesignHeight="17" BackColor="-2147483633" Alpha="1" ForeColor="0" FontSize="10" FontBold="1"/>
+		<TextBlock HorizontalAlignment="2" Text="lb_time" DesignLeft="200" DesignTop="52" DesignWidth="97" DesignHeight="17" BackColor="-2147483633" Alpha="1" ForeColor="0" FontSize="10" FontBold="1"/>
+	</Border>
+	<Border DesignLeft="386" DesignTop="214" DesignWidth="610" DesignHeight="460" CornerRadius="8,8,0,0" BorderColor="&HB1A200" BackColor="&H00FF00" Alpha="0">
+		<Border DesignLeft="0" DesignTop="0" DesignWidth="610" DesignHeight="45" CornerRadius="8,8,0,0" BorderColor="&HB1A200" BackColor="&HB1A200" Alpha="1">
+			<TextBlock HorizontalAlignment="2" VerticalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="610" DesignHeight="45" Padding="0" Text="ΔΙΑΧΕΙΡΙΣΗ" ForeColor="&HFFFFFF" FontSize="18" FontBold="1"/>
+		</Border>
+		<UniformGrid ShowGridLines="0" DesignLeft="10" DesignTop="55" DesignWidth="590" DesignHeight="395" Rows="4" Columns="4" Padding="5">
+			<Button DesignLeft="440" DesignTop="384" DesignWidth="113" DesignHeight="73" BorderWidth="1" BackColor="11290370" HoverColor="11290370" BorderColor="&HFFFFFF" Alpha="1">
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Προϊόντα" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button DesignLeft="568" DesignTop="384" DesignWidth="113" DesignHeight="73" DesignHeight="73" BorderWidth="1" BackColor="11290370" HoverColor="11290370" BorderColor="&HFFFFFF" Alpha="1">
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Φίρμες" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button DesignLeft="704" DesignTop="384" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" BackColor="11290370" HoverColor="11290370" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Κατηγορίες" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button DesignLeft="832" DesignTop="384" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" BackColor="11290370" HoverColor="11290370" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Κωδικοί Φ.Π.Α." ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button DesignLeft="440" DesignTop="464" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" BackColor="11290370" HoverColor="11290370" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Αποθήκη" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button DesignLeft="568" DesignTop="464" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" BackColor="11290370" HoverColor="11290370" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Προμηθευτές" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button DesignLeft="704" DesignTop="464" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" BackColor="11290370" HoverColor="11290370" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Χρήστες" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button DesignLeft="832" DesignTop="464" DesignWidth="113" DesignHeight="73"  DesignHeight="73" BorderWidth="1" BackColor="11290370" HoverColor="11290370" BorderColor="&HFFFFFF" Alpha="1">>
+				<Image DesignLeft="28.5" DesignTop="5" DesignWidth="56" DesignHeight="45"/>
+				<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="50" DesignWidth="113" DesignHeight="20" Text="Εκθέσεις" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button DesignLeft="48" DesignTop="112" DesignWidth="113" DesignHeight="57" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1">
+				<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="SYSTEM MAINTENANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button DesignLeft="216" DesignTop="112" DesignWidth="113" DesignHeight="57" BorderColor="&HFFFFFF" BackColor="33023" Alpha="1">
+				<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="DELIVERY MANAGEMENT" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button DesignLeft="48" DesignTop="176" DesignWidth="113" DesignHeight="57" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1">
+				<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="SYSTEM MAINTENANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+			<Button DesignLeft="216" DesignTop="176" DesignWidth="113" DesignHeight="57" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1">
+				<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="TIME ATTENDANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+			</Button>
+		</UniformGrid>
+	</Border>
+	<UniformGrid Visible="True" ShowGridLines="0" DesignLeft="180" DesignTop="250" DesignWidth="160" DesignHeight="400" Rows="6" Columns="1" Padding="4">
+		<Button DesignLeft="48" DesignTop="112" DesignWidth="113" DesignHeight="57" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="SYSTEM MAINTENANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+		</Button>
+		<Button DesignLeft="216" DesignTop="112" DesignWidth="113" DesignHeight="57" BorderColor="&HFFFFFF" BackColor="33023" Alpha="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="DELIVERY MANAGEMENT" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+		</Button>
+		<Button DesignLeft="48" DesignTop="176" DesignWidth="113" DesignHeight="57" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="SYSTEM MAINTENANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+		</Button>
+		<Button DesignLeft="216" DesignTop="176" DesignWidth="113" DesignHeight="57" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="TIME ATTENDANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+		</Button>
+		<Image DesignLeft="0" DesignTop="0" DesignWidth="121" DesignHeight="129"/>
+		<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="TIME ATTENDANCE" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+	</UniformGrid>
+	<UniformGrid ShowGridLines="0" DesignLeft="386" DesignTop="682" DesignWidth="610" DesignHeight="76" Rows="1" Columns="8" Padding="4">
+		<Button ToolTip="Remote Support" DesignLeft="950" DesignTop="8" DesignWidth="64" DesignHeight="64" Alpha="0">
+			<Image DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64"/>
+		</Button>
+		<Button ToolTip="Google Chrome" DesignLeft="950" DesignTop="8" DesignWidth="64" DesignHeight="64" Alpha="0">
+			<Image DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64"/>
+		</Button>
+		<Button ToolTip="Settings" DesignLeft="950" DesignTop="8" DesignWidth="64" DesignHeight="64" Alpha="0">
+			<Image DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64"/>
+		</Button>
+		<Panel/>
+		<Button DesignLeft="950" DesignTop="8" DesignWidth="64" DesignHeight="64" Alpha="0">
+			<Image DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64"/>
+		</Button>
+		<Panel/>
+		<Button Margin="2,3,2,6" DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64"  ToolTip="Minimize Window" BackColor="&HFF9999" Alpha="1" HoverColor="&HFFAAAA" BorderWidth="0">
+			<TextBlock HorizontalAlignment="2" VerticalAlignment="1" DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="60" Text="_" FontName="Verdana" ForeColor="&HFFFFFF" FontSize="40" FontBold="1"/>
+		</Button>
+		<Button DesignLeft="950" DesignTop="8" DesignWidth="64" DesignHeight="64" Alpha="0">
+			<Image DesignLeft="0" DesignTop="0" DesignWidth="64" DesignHeight="64"/>
+		</Button>
+	</UniformGrid>
+</Scene>

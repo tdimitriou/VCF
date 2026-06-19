@@ -1,0 +1,110 @@
+[OPTIONS]
+Compatibility=1.1 or later
+Compiled file=VCF.chm
+Contents file=contents.hhc
+Default Window=Help Viewer
+Default topic=VCF.html
+Display compile progress=No
+Full-text search=Yes
+Index file=index.hhk
+Language=0x409 English (United States)
+Title=VCF
+
+[WINDOWS]
+Help Viewer=,"contents.hhc","index.hhk","VCF.html","VCF.html",,,,,0x33520,,0x10387e,,,,,,,,0
+
+[FILES]
+backsdk3.css
+backsdk4.css
+seealso.gif
+requirements.gif
+filter.gif
+langref.js
+linkcss.js
+VCF.html
+API.html
+Application.html
+ApplicationStatic.html
+Binding.html
+BindingsManager.html
+Border.html
+Button.html
+CollectionChangedEvent.html
+CollectionChangedEventArgs.html
+CollectionViewSource.html
+Color.html
+Constructor.html
+DataTemplate.html
+DependencyObjectBase.html
+DependencyProperties.html
+DependencyPropertiesStatic.html
+DependencyProperty.html
+DependencyPropertyMetadata.html
+Environment.html
+Function.html
+IApplication.html
+ICloneable.html
+ICommand.html
+IControl.html
+IDependencyObject.html
+IDependencyPropertyCallbackListener.html
+IItemsControl.html
+Image.html
+IMarkupExtension.html
+Information.html
+INotifyCollectionChanged.html
+INotifyPropertyChanged.html
+Interaction.html
+IObjectConstructor.html
+IUIElement.html
+IUserControl.html
+IValueConverter.html
+IVisualChild.html
+IWindow.html
+List.html
+ListCollectionView.html
+ListView.html
+ListViewBase.html
+ListViewPropertyChangedHandler.html
+MarkupExtensions.html
+modConstructors.html
+modInformation.html
+modStaticClasses.html
+modUDFConstructors.html
+modVisibilityHelper.html
+modWindowsFormsHostHelper.html
+NamingManager.html
+NestedProperty.html
+ObjectStatic.html
+ObservableCollection.html
+ObservableDictionary.html
+Panel.html
+PropertyChangedEvent.html
+Scene.html
+ScrollBar.html
+SelfBinding.html
+StaticClasses.html
+StaticResourceExtension.html
+StringConversion.html
+StringProcessor.html
+Style.html
+StyleManager.html
+TextBlock.html
+TextBox.html
+TextBoxBase.html
+Thickness.html
+UIElementBase.html
+UIElementCollection.html
+UnboundListView.html
+UniformGrid.html
+UserControl.html
+Window.html
+WindowsFormsHost.html
+XAMLDependencyPropertyManager.html
+XAMLImagePropertyManager.html
+XAMLReader.html
+XAMLStyleReader.html
+XAMLThicknessConstructor.html
+
+[INFOTYPES]
+

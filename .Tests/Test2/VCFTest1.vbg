@@ -1,0 +1,4 @@
+VBGROUP 5.0
+StartupProject=Test1.vbp
+Project=MyLib.vbp
+Project=..\..\Demac.VCF.vbp

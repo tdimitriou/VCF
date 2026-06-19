@@ -1,0 +1,36 @@
+		<Panel DesignWidth="512" DesignHeight="768" Visibility="0">
+			<Border DesignLeft="4" DesignTop="8" DesignWidth="500" DesignHeight="605" CornerRadius="8" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="1">
+				<Border Name="MenuPanel" DesignLeft="8" DesignTop="8" DesignWidth="484" DesignHeight="589" CornerRadius="0" BorderColor="-1" BackColor="&HFFFFFF" Alpha="0"/>
+			</Border>
+			<UniformGrid ShowGridLines="0" DesignLeft="0" DesignTop="617" DesignWidth="408" DesignHeight="123" Rows="2" Columns="4" Padding="4">
+				<Button DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+					<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="Command 1" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+				</Button>
+				<Button Command="" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+					<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="Command 1" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+				</Button>
+				<Button Command="" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+					<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="Command 1" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+				</Button>
+				<Button Command="" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+					<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="Command 1" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+				</Button>
+				<Button Command="" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+					<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="Command 1" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+				</Button>
+				<Button Command="" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+					<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="Command 1" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+				</Button>
+				<Button Command="" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+					<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="Command 1" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+				</Button>
+				<Button Command="" DesignWidth="113" DesignHeight="57" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+					<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="113" DesignHeight="57" Text="Command 1" ForeColor="&HFFFFFF" FontSize="10" FontBold="1"/>
+				</Button>
+			</UniformGrid>
+			<Button Command="{Binding SwapContent}" DesignLeft="412" DesignTop="621" DesignWidth="92" DesignHeight="115" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="&H008000" Alpha="1" GradientBackground="1">
+				<Image DesignLeft="8" DesignTop="19.5" DesignWidth="76" DesignHeight="76" ImageKey="Resources\Home.png"/>
+			</Button>
+			<Border DesignLeft="4" DesignTop="742" DesignWidth="500" DesignHeight="22" CornerRadius="4" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="1">
+			</Border>
+		</Panel>

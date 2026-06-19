@@ -1,0 +1,3 @@
+<Panel DesignWidth="200" DesignHeight="100">
+	<Button DesignLeft="8" DesignTop="8" DesignWidth="80" DesignHeight="32" Text="OK"/>
+</Panel>

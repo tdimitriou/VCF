@@ -1,0 +1,21 @@
+<Style TargetType="TextBox">
+	<Setter Name="Alpha" Value="1"/>
+	<Setter Name="AlphaNoInherit" Value="0"/>
+	<Setter Name="BackColor" Value="16777215"/>
+	<Setter Name="BorderColor" Value="6448999"/>
+	<Setter Name="CanGetFocus" Value="1"/>
+	<Setter Name="DisabledColor" Value="10921638"/>
+	<Setter Name="FocusColor" Value="12815360"/>
+	<Setter Name="FontBold" Value="0"/>
+	<Setter Name="FontItalic" Value="0"/>
+	<Setter Name="FontName" Value="Arial"/>
+	<Setter Name="FontSize" Value="9"/>
+	<Setter Name="FontStrikeThrough" Value="0"/>
+	<Setter Name="FontUnderline" Value="0"/>
+	<Setter Name="ForeColor" Value="1973790"/>
+	<Setter Name="HoverColor" Value="16770238"/>
+	<Setter Name="MousePointer" Value="32513"/>
+	<Setter Name="SelectionColor" Value="16766642"/>
+	<Setter Name="ToolTipDelay" Value="1000"/>
+	<Setter Name="ToolTipDuration" Value="10000"/>
+</Style>

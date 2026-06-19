@@ -1,0 +1,40 @@
+<UserControl x:Class="Numpad">
+	<UniformGrid ShowGridLines="0" DesignLeft="0" DesignTop="0" DesignWidth="204" DesignHeight="248" Rows="4" Columns="3" Padding="4">
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1" ToolTip="{StaticResource ResourceKey=TheKey}">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="7" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="8" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="9" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="4" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="5" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="6" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="1" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="2" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="3" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="0" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="." ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+		<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+			<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="00" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+		</Button>
+	</UniformGrid>
+</UserControl>

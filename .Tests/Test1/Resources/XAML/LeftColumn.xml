@@ -1,0 +1,61 @@
+		<Panel DesignWidth="512" DesignHeight="768">
+			<Border DesignLeft="8" DesignTop="8" DesignWidth="410" DesignHeight="400" CornerRadius="8" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="1">
+				<Border DesignLeft="0" DesignTop="0" DesignWidth="410" DesignHeight="35" CornerRadius="8,8,0,0" BorderColor="&H666666" BackColor="&HAC4702" Alpha="1">
+					<Border DesignLeft="0" DesignTop="0" DesignWidth="410" DesignHeight="35" CornerRadius="8,8,0,0" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="0.2">
+					</Border>
+				</Border>
+				<ListView ItemsSource="{Binding MyList}" Name="OrderItems" RowHeight="30" BackColor="&HFFFFFF" BorderColor="-1" DesignLeft="4" DesignTop="39" DesignWidth="402" DesignHeight="357">
+					<ListView.Resources>
+						<DataTemplate DataType="ObservableItem">
+							<TextBlock VerticalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="100" DesignHeight="30" Text="{Binding FirstName}" ForeColor="&H000000" FontName="Calibri" FontSize="10" FontBold="1"/>
+							<TextBlock VerticalAlignment="2" DesignLeft="100" DesignTop="0" DesignWidth="100" DesignHeight="30" Text="{Binding LastName}" ForeColor="&H004000" FontName="Calibri" FontSize="10" FontBold="1"/>
+						</DataTemplate>
+						<DataTemplate DataType="SampleListItem">
+							<TextBlock HorizontalAlignment="1" VerticalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="30" DesignHeight="30" Text="  >>  " ForeColor="&H0000FF" FontName="Calibri" FontSize="10" FontBold="1"/>
+							<TextBlock VerticalAlignment="2" DesignLeft="45" DesignTop="0" DesignWidth="100" DesignHeight="30" Text="{Binding ID}" ForeColor="&HFF0000" FontName="Calibri" FontSize="10" FontBold="1"/>
+						</DataTemplate>
+					</ListView.Resources>
+					<ListView.ItemTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="100" DesignHeight="30" Text="{Binding FirstName}" ForeColor="&H000000" FontName="Calibri" FontSize="10" FontBold="1"/>
+							<TextBlock VerticalAlignment="2" DesignLeft="100" DesignTop="0" DesignWidth="100" DesignHeight="30" Text="{Binding LastName}" ForeColor="&H0000FF" FontName="Calibri" FontSize="10" FontBold="1"/>
+						</DataTemplate>
+					</ListView.ItemTemplate>
+				</ListView>
+			</Border>
+			<UniformGrid ShowGridLines="0" DesignLeft="424" DesignTop="5" DesignWidth="84" DesignHeight="406" Rows="7" Columns="1" Padding="0,3">
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+			</UniformGrid>
+			<UniformGrid ShowGridLines="0" DesignLeft="4" DesignTop="416" DesignWidth="508" DesignHeight="54" Rows="1" Columns="5" Padding="4,2">
+				<Button Command="{Binding SwapContent}" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1">
+					<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" Text="Swap" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>				
+				</Button>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+			</UniformGrid>
+			<Border DesignLeft="8" DesignTop="478" DesignWidth="196" DesignHeight="36" CornerRadius="8" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="1">
+				<TextBox Text="{Binding MyText}" CueBanner="Hello" Alignment="2" Focused="1" Border="0" DesignLeft="4" DesignTop="4" DesignWidth="188" DesignHeight="28" FontSize="12" FontBold="1"/>
+			</Border>
+			<Border DesignLeft="210" DesignTop="478" DesignWidth="94" DesignHeight="36" CornerRadius="8" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="1">
+			</Border>
+			<Border DesignLeft="312" DesignTop="478" DesignWidth="196" DesignHeight="220" CornerRadius="8" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="1">
+			</Border>
+			<Test1:Numpad DesignLeft="4" DesignTop="518" DesignWidth="204" DesignHeight="248" Rows="4" Columns="3" Padding="4"/>
+			<UniformGrid ShowGridLines="0" DesignLeft="210" DesignTop="518" DesignWidth="94" DesignHeight="248" Rows="4" Columns="1" Padding="0,4">
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+			</UniformGrid>
+			<Button Command="" DesignLeft="312" DesignTop="706" DesignWidth="196" DesignHeight="56" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="&H008000" Alpha="1" GradientBackground="1">
+				<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="200" DesignHeight="56" Text="{Binding MyText}" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+			</Button>
+		</Panel>

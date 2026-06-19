@@ -1,0 +1,55 @@
+		<Panel DesignWidth="512" DesignHeight="768">
+			<Border DesignLeft="8" DesignTop="8" DesignWidth="410" DesignHeight="400" CornerRadius="8" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="1">
+				<Border DesignLeft="0" DesignTop="0" DesignWidth="410" DesignHeight="35" CornerRadius="8,8,0,0" BorderColor="&H666666" BackColor="&HAC4702" Alpha="1">
+					<Border DesignLeft="0" DesignTop="0" DesignWidth="410" DesignHeight="35" CornerRadius="8,8,0,0" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="0.2">
+					</Border>
+				</Border>
+				<ListView BorderColor="-1" DesignLeft="4" DesignTop="39" DesignWidth="402" DesignHeight="357"/>
+			</Border>
+			<UniformGrid ShowGridLines="0" DesignLeft="424" DesignTop="5" DesignWidth="84" DesignHeight="406" Rows="7" Columns="1" Padding="0,3">
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+			</UniformGrid>
+			<UniformGrid ShowGridLines="0" DesignLeft="4" DesignTop="416" DesignWidth="508" DesignHeight="54" Rows="1" Columns="5" Padding="4,2">
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+			</UniformGrid>
+			<Border DesignLeft="8" DesignTop="478" DesignWidth="196" DesignHeight="36" CornerRadius="8" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="1">
+				<TextBox Focused="1" Border="0" DesignLeft="4" DesignTop="4" DesignWidth="188" DesignHeight="28" FontSize="12" FontBold="1"/>
+			</Border>
+			<Border DesignLeft="210" DesignTop="478" DesignWidth="94" DesignHeight="36" CornerRadius="8" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="1">
+			</Border>
+			<Border DesignLeft="312" DesignTop="478" DesignWidth="196" DesignHeight="220" CornerRadius="8" BorderColor="&H666666" BackColor="&HFFFFFF" Alpha="1">
+			</Border>
+			<UniformGrid ShowGridLines="0" DesignLeft="4" DesignTop="518" DesignWidth="204" DesignHeight="248" Rows="4" Columns="3" Padding="4">
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+			</UniformGrid>
+			<UniformGrid ShowGridLines="0" DesignLeft="210" DesignTop="518" DesignWidth="94" DesignHeight="248" Rows="4" Columns="1" Padding="0,4">
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+				<Button CornerRadius="8" BorderColor="&HFFFFFF" BackColor="11290370" Alpha="1" GradientBackground="1"/>
+			</UniformGrid>
+			<Button Command="" DesignLeft="312" DesignTop="706" DesignWidth="196" DesignHeight="56" CornerRadius="8" BorderColor="&HFFFFFF" BackColor="&H008000" Alpha="1" GradientBackground="1">
+				<TextBlock HorizontalAlignment="2" DesignLeft="0" DesignTop="0" DesignWidth="200" DesignHeight="56" Text="Cash Payment" ForeColor="&HFFFFFF" FontSize="12" FontBold="1"/>
+			</Button>
+		</Panel>

@@ -1,0 +1,4 @@
+<Style TargetType="Window">
+	<Setter Name="BackColor" Value="16777215"/>
+	<Setter Name="MousePointer" Value="32512"/>
+</Style>
