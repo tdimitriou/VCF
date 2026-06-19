@@ -30,7 +30,38 @@
 
 ---
 
-## [Unreleased] — planned (Phases 1–7)
+## [2.1.0] — 2026-06-20 — Phase 1 (layout core — partial)
+
+### Added
+
+- **`DependencyPropertyRegistry`** — shared DP metadata per type; `ApplyTo` registers layout properties once per instance.
+- **`FrameworkElement`** — composed layout helper (Measure/Arrange, Visibility DP, legacy scale layout default).
+- **`modLayoutEngine`** — layout rects, `Design*` XAML alias helper, collapsed visibility checks.
+- **`Panel`** — first control migrated: `Width`, `Height`, `Margin`, `Visibility` DPs; `DesignWidth`/`DesignHeight` forward to `Width`/`Height`.
+
+### XAML (transitional — non-breaking)
+
+- **`DesignWidth` → `Width`**, **`DesignHeight` → `Height`** when target type registers layout DPs (Panel today; more controls in 2.2.x).
+- **`DesignLeft` / `DesignTop`** unchanged — still scale-layout until Margin-based arrange (set `FrameworkElement.LegacyScaleLayout = False` when ready).
+
+### Deprecated
+
+- Public **`DesignWidth` / `DesignHeight`** on migrated controls — use **`Width` / `Height`** in new XAML and VB6.
+- **`Visible` bool DP** on Button — migrate to **`Visibility`** enum when Button is migrated (Phase 1b).
+
+### Behavior
+
+- **`Visibility=Collapsed`** on Panel — child omitted from widget tree (layout-aware); Hidden still hides widget (legacy Cairo; full Hidden semantics Phase 2).
+
+### Not yet in 2.1.0
+
+- Button, Border, Window, UserControl, UniformGrid migration to `FrameworkElement`.
+- Full removal of public `Design*`.
+- `DependencyProperty` shared instance store (registry metadata only in 2.1.0).
+
+---
+
+## [Unreleased] — planned (Phases 1b–7)
 
 See [VCF_FRAMEWORK_REWRITE_SPEC.md](./VCF_FRAMEWORK_REWRITE_SPEC.md) and [VCF_BREAKING_CHANGES_TEMPLATE.md](./VCF_BREAKING_CHANGES_TEMPLATE.md).
 

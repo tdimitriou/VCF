@@ -15,12 +15,14 @@ Public Sub RunAll()
     If Not Phase0Bench_DualListCollectionView() Then Failed = Failed + 1
     If Not Phase0Bench_StrictMalformedXaml() Then Failed = Failed + 1
     If Not Phase0Bench_StrictUnknownType() Then Failed = Failed + 1
+    If Not Phase1Bench_LayoutWidthXaml() Then Failed = Failed + 1
+    If Not Phase1Bench_PanelVisibilityCollapsed() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (5 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (7 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
-        MsgBox Failed & " Phase 0 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
+        MsgBox Failed & " Phase 0/1 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
-        MsgBox "All Phase 0 tests passed.", vbInformation, "Phase0"
+        MsgBox "All Phase 0/1 tests passed.", vbInformation, "Phase0"
     End If
 End Sub
 
@@ -170,6 +172,55 @@ Fail:
         Debug.Print "FAIL  B-STRICT Unknown — " & Err.Description
         Phase0Bench_StrictUnknownType = False
     End If
+End Function
+
+Public Function Phase1Bench_LayoutWidthXaml() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As Panel
+    Dim Xml As String
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Xml = LoadTextFile(App.Path & "\Resources\LayoutPanelWidth.xml")
+    Set Root = Reader.Load(Xml)
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "Layout XAML returned Nothing"
+    If Root.Width <> 400# Then Err.Raise vbObjectError, , "Expected Width=400, got " & Root.Width
+    If Root.Height <> 200# Then Err.Raise vbObjectError, , "Expected Height=200, got " & Root.Height
+
+    LogResult "P1-WIDTH", 0, "OK Width=" & Root.Width & " Height=" & Root.Height
+    Debug.Print "PASS  P1-WIDTH Layout Width/Height XAML"
+    Phase1Bench_LayoutWidthXaml = True
+    Exit Function
+
+Fail:
+    LogResult "P1-WIDTH", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-WIDTH — " & Err.Description
+    Phase1Bench_LayoutWidthXaml = False
+End Function
+
+Public Function Phase1Bench_PanelVisibilityCollapsed() As Boolean
+    Dim P As Panel
+
+    On Error GoTo Fail
+
+    Set P = New Panel
+    P.Visibility = VisibilityCollapsed
+
+    If P.Visibility <> VisibilityCollapsed Then
+        Err.Raise vbObjectError, , "Visibility DP not set to Collapsed"
+    End If
+
+    LogResult "P1-VIS", 0, "OK Collapsed stored"
+    Debug.Print "PASS  P1-VIS Panel Visibility=Collapsed"
+    Phase1Bench_PanelVisibilityCollapsed = True
+    Exit Function
+
+Fail:
+    LogResult "P1-VIS", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-VIS — " & Err.Description
+    Phase1Bench_PanelVisibilityCollapsed = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

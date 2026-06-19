@@ -16,6 +16,36 @@
 
 ---
 
+## Upgrading to 2.1.0 (Phase 1 — layout core)
+
+### DLL pin
+
+Update reference to **`v2.1.0-wpf-alignment-p1`** (or 2.1.x build).
+
+### XAML (recommended, not required yet)
+
+| Before | After (Panel and future migrated types) |
+|--------|----------------------------------------|
+| `DesignWidth="200"` | `Width="200"` |
+| `DesignHeight="40"` | `Height="40"` |
+
+**Shim:** XAML reader still accepts `DesignWidth`/`DesignHeight` on types with layout DPs (aliased automatically).
+
+### VB6 code (Panel)
+
+| Before | After |
+|--------|-------|
+| `panel.DesignWidth = 100` | `panel.Width = 100` (preferred) |
+| `panel.DesignWidth = 100` | Still works — forwards to `Width` on Panel |
+
+### Verification checklist
+
+- [ ] `.Tests/Phase0` passes (includes P1-WIDTH, P1-VIS)
+- [ ] POS screens using `Panel` layout unchanged (legacy scale layout default)
+- [ ] Optional: new XAML uses `Width`/`Height` on Panel
+
+---
+
 ## Upgrading to 2.0.0 (Phase 0)
 
 ### DLL pin

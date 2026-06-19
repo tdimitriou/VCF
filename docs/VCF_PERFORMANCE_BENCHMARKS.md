@@ -30,6 +30,8 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | B-LCV | Two simultaneous `ListCollectionView` init | `Phase0Bench_DualListCollectionView` | **pass** | must not raise |
 | B-STRICT-MALFORM | Malformed XAML raises `XamlLoadException` | `Phase0Bench_StrictMalformedXaml` | **pass** | must raise |
 | B-STRICT-UNKNOWN | Unknown type raises `XamlLoadException` | `Phase0Bench_StrictUnknownType` | **pass** | must raise |
+| P1-WIDTH | Panel `Width`/`Height` from XAML | `Phase1Bench_LayoutWidthXaml` | *TBD* | — |
+| P1-VIS | Panel `Visibility=Collapsed` DP | `Phase1Bench_PanelVisibilityCollapsed` | **pass** | must store Collapsed |
 | B-RESZ | Window resize nested UniformGrid 50× | *Phase 1+* | — | deferred |
 | B-NAV | 50× view navigation binding leak | *Phase 4+* | — | deferred |
 

@@ -15,6 +15,7 @@ Public StringProcessor                  As New StringProcessor
 Public Color                            As New VCF.Color
 Public Environment                      As New VCF.Environment
 Public TypeRegistry                     As New TypeRegistry
+Public DependencyPropertyRegistry       As New DependencyPropertyRegistry
 
 
 ' Internal Use Only

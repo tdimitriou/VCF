@@ -467,20 +467,22 @@ Private Sub SetDependencyProperties(ByVal Dep As IDependencyObject, Attributes A
     Dim Attr As cAttribute
     Dim Value As Variant
     Dim Obj As Object
+    Dim PropName As String
     
     Set Obj = API.CObj(Dep)
     
     For Each Attr In Attributes
+        PropName = MapDesignPropertyAlias(Dep, Attr.Name)
+
         With New MarkupExtensions
-            API.CopyVariable .GetMarkupValue(Attr.Text, Dep, Attr.Name), Value
+            API.CopyVariable .GetMarkupValue(Attr.Text, Dep, PropName), Value
         End With
         
-        If InStr(1, Attr.Name, ".") > 0 Then
-            ' It is an Attached Property
-            SetAttachedProperty Obj, Attr.Name, Value
+        If InStr(1, PropName, ".") > 0 Then
+            SetAttachedProperty Obj, PropName, Value
         Else
-            If Dep.DependencyProperties.Exists(Attr.Name) Then
-                SetDependencyProperty Dep, Attr.Name, Value
+            If Dep.DependencyProperties.Exists(PropName) Then
+                SetDependencyProperty Dep, PropName, Value
             Else
                 SetProperty Obj, Attr.Name, Value
             End If
