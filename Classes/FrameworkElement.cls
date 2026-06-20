@@ -124,11 +124,32 @@ Public Sub Arrange(ByVal FinalLeft As Single, ByVal FinalTop As Single, ByVal Fi
     UIHost.Move FinalLeft, FinalTop, FinalWidth, FinalHeight
 End Sub
 
-Public Sub ArrangeChildren(ByVal Children As UIElementCollection, ByVal HostWidget As cWidgetBase)
+Public Sub ArrangeChildren( _
+    ByVal Children As UIElementCollection, _
+    ByVal HostWidget As cWidgetBase, _
+    Optional ByVal OverrideHostWidth As Single = 0, _
+    Optional ByVal OverrideHostHeight As Single = 0)
+
     Dim Child As Object
     Dim R As LayoutRect
     Dim ChildUI As IUIElement
     Dim ChildVis As Visibility
+    Dim HostWidth As Single
+    Dim HostHeight As Single
+
+    If Children Is Nothing Then Exit Sub
+    If HostWidget Is Nothing Then Exit Sub
+
+    If OverrideHostWidth > 0 Then
+        HostWidth = OverrideHostWidth
+    Else
+        HostWidth = HostWidget.Width
+    End If
+    If OverrideHostHeight > 0 Then
+        HostHeight = OverrideHostHeight
+    Else
+        HostHeight = HostWidget.Height
+    End If
 
     For Each Child In Children
         If Not TypeOf Child Is IUIElement Then GoTo NextChild
@@ -136,9 +157,13 @@ Public Sub ArrangeChildren(ByVal Children As UIElementCollection, ByVal HostWidg
 
         ChildVis = ReadChildVisibility(Child)
         If IsLayoutCollapsed(ChildVis) Then
-            If HostWidget.Widgets.Exists(Child.Widget.Key) Then HostWidget.Widgets.Remove Child.Widget.Key
+            If TypeOf Child Is IControl Then
+                If HostWidget.Widgets.Exists(Child.Widget.Key) Then HostWidget.Widgets.Remove Child.Widget.Key
+            End If
             GoTo NextChild
         End If
+
+        If Not TypeOf Child Is IControl Then GoTo NextChild
 
         If HostWidget.Widgets.Exists(Child.Widget.Key) Then HostWidget.Widgets.Remove Child.Widget.Key
         If Not HostWidget.Widgets.Exists(Child.Widget.Key) Then
@@ -148,7 +173,7 @@ Public Sub ArrangeChildren(ByVal Children As UIElementCollection, ByVal HostWidg
         If m_LegacyScaleLayout Then
             R = LayoutRectFromDesign( _
                 ChildUI.DesignLeft, ChildUI.DesignTop, ChildUI.DesignWidth, ChildUI.DesignHeight, _
-                HostWidget.Width, HostWidget.Height, Width, Height)
+                HostWidth, HostHeight, Width, Height)
         Else
             R = LayoutRectFromMargin(ReadChildMargin(Child), ReadChildWidth(Child), ReadChildHeight(Child))
         End If
@@ -160,8 +185,13 @@ NextChild:
     Next
 End Sub
 
-Public Sub OnHostResize(ByVal Children As UIElementCollection, ByVal HostWidget As cWidgetBase)
-    ArrangeChildren Children, HostWidget
+Public Sub OnHostResize( _
+    ByVal Children As UIElementCollection, _
+    ByVal HostWidget As cWidgetBase, _
+    Optional ByVal OverrideHostWidth As Single = 0, _
+    Optional ByVal OverrideHostHeight As Single = 0)
+
+    ArrangeChildren Children, HostWidget, OverrideHostWidth, OverrideHostHeight
 End Sub
 
 Public Function HandlesLayoutProperty(ByVal PropertyName As String) As Boolean
@@ -171,12 +201,18 @@ Public Function HandlesLayoutProperty(ByVal PropertyName As String) As Boolean
     End Select
 End Function
 
-Public Sub OnLayoutPropertyChanged(ByVal PropertyName As String, ByVal Children As UIElementCollection, ByVal HostWidget As cWidgetBase)
+Public Sub OnLayoutPropertyChanged( _
+    ByVal PropertyName As String, _
+    ByVal Children As UIElementCollection, _
+    ByVal HostWidget As cWidgetBase, _
+    Optional ByVal OverrideHostWidth As Single = 0, _
+    Optional ByVal OverrideHostHeight As Single = 0)
+
     Select Case PropertyName
         Case "Visibility"
             ApplyVisibilityToWidget
         Case "Width", "Height", "Margin"
-            OnHostResize Children, HostWidget
+            OnHostResize Children, HostWidget, OverrideHostWidth, OverrideHostHeight
     End Select
 End Sub
 
@@ -187,7 +223,11 @@ Private Sub SetDefaultLayoutValues()
         If .Exists("MinWidth") Then .SetCurrentValue "MinWidth", 0#
         If .Exists("MinHeight") Then .SetCurrentValue "MinHeight", 0#
         If .Exists("Visibility") Then .SetCurrentValue "Visibility", CLng(VisibilityVisible)
-        If .Exists("Margin") Then .SetValue "Margin", NewThickness(0)
+        If .Exists("Margin") Then
+            Dim DefaultMargin As Thickness
+            Set DefaultMargin = NewThickness(0)
+            .SetCurrentValue "Margin", DefaultMargin
+        End If
     End With
 End Sub
 
@@ -214,18 +254,27 @@ Private Function ReadChildVisibility(ByVal Child As Object) As Visibility
             ReadChildVisibility = CLng(Child.DependencyProperties.GetValue("Visibility"))
             Exit Function
         End If
+        If Child.DependencyProperties.Exists("Visible") Then
+            If CBool(Child.DependencyProperties.GetValue("Visible")) Then
+                ReadChildVisibility = VisibilityVisible
+            Else
+                ReadChildVisibility = VisibilityHidden
+            End If
+            Exit Function
+        End If
     End If
     If TypeOf Child Is IUIElement Then
-        If TypeName(Child) = "Panel" Or TypeName(Child) = "Button" Then
+        If TypeName(Child) = "Panel" Or TypeName(Child) = "UserControl" Then
             ReadChildVisibility = Child.Visibility
+            Exit Function
         End If
     End If
     ReadChildVisibility = VisibilityVisible
 End Function
 
 Private Function ReadChildMargin(ByVal Child As Object) As Thickness
-    Dim Empty As Thickness
-    Set ReadChildMargin = Empty
+    Dim DefaultMargin As Thickness
+    Set ReadChildMargin = DefaultMargin
     On Error Resume Next
     If Child.DependencyProperties.Exists("Margin") Then
         Set ReadChildMargin = Child.DependencyProperties.GetValue("Margin")

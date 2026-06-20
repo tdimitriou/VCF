@@ -184,6 +184,8 @@ Public Name As String
         Set W = Cairo.WidgetBase
         W.CanGetFocus = False
         
+        Set m_Children = NewUIElementCollection(Me)
+        
         Set m_Layout = New FrameworkElement
         m_Layout.Initialize Me, Me, W
         m_Layout.RegisterLayoutProperties "Panel"
@@ -199,8 +201,6 @@ Public Name As String
         'EnumerateProperties Me
         
         Set Style = GetBaseStyle
-        
-        Set m_Children = NewUIElementCollection(Me)
     End Sub
 '#End Region
 
@@ -335,8 +335,10 @@ End Sub
         Select Case Property.Name
             Case "Style":           ApplyStyle
             Case Else
-                If m_Layout.HandlesLayoutProperty(Property.Name) Then
-                    m_Layout.OnLayoutPropertyChanged Property.Name, m_Children, W
+                If Not m_Children Is Nothing Then
+                    If m_Layout.HandlesLayoutProperty(Property.Name) Then
+                        m_Layout.OnLayoutPropertyChanged Property.Name, m_Children, W
+                    End If
                 End If
         End Select
         

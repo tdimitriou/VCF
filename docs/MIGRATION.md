@@ -16,6 +16,23 @@
 
 ---
 
+## Upgrading to 2.2.0 (Phase 1b — Border, UserControl, Window, Button)
+
+### DLL pin
+
+Update reference to **`v2.2.0-wpf-alignment-p1b`**.
+
+### XAML
+
+`Width` / `Height` now resolve on **Border**, **UserControl**, and **Window** (in addition to Panel). **Button** supports layout DPs internally; public `Width`/`Height` available on Button.
+
+### Verification
+
+- [ ] `.Tests/Phase0` — **8/8** pass (includes P1-BORDER)
+- [ ] POS smoke unchanged on screens using Border/UserControl shells
+
+---
+
 ## Upgrading to 2.1.0 (Phase 1 — layout core)
 
 ### DLL pin

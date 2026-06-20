@@ -17,8 +17,9 @@ Public Sub RunAll()
     If Not Phase0Bench_StrictUnknownType() Then Failed = Failed + 1
     If Not Phase1Bench_LayoutWidthXaml() Then Failed = Failed + 1
     If Not Phase1Bench_PanelVisibilityCollapsed() Then Failed = Failed + 1
+    If Not Phase1Bench_BorderWidthXaml() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (7 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (8 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -221,6 +222,31 @@ Fail:
     LogResult "P1-VIS", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P1-VIS — " & Err.Description
     Phase1Bench_PanelVisibilityCollapsed = False
+End Function
+
+Public Function Phase1Bench_BorderWidthXaml() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As Border
+    Dim Xml As String
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Xml = LoadTextFile(App.Path & "\Resources\LayoutBorderWidth.xml")
+    Set Root = Reader.Load(Xml)
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "Border XAML returned Nothing"
+    If Root.Width <> 320# Then Err.Raise vbObjectError, , "Expected Width=320, got " & Root.Width
+
+    LogResult "P1-BORDER", 0, "OK Width=" & Root.Width
+    Debug.Print "PASS  P1-BORDER Border Width XAML"
+    Phase1Bench_BorderWidthXaml = True
+    Exit Function
+
+Fail:
+    LogResult "P1-BORDER", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-BORDER — " & Err.Description
+    Phase1Bench_BorderWidthXaml = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

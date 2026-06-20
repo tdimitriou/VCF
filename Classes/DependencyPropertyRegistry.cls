@@ -56,6 +56,11 @@ Public Sub ApplyTo(ByVal TypeName As String, ByVal Props As DependencyProperties
     Dim Defs As cCollection
     Dim Entry As Variant
     Dim Meta As DependencyPropertyMetadata
+    Dim PropName As String
+    Dim PropType As VbVarType
+    Dim PropTypeName As String
+    Dim ProgId As String
+    Dim BindingModeValue As BindingMode
 
     EnsureBuiltInTypes
 
@@ -68,9 +73,16 @@ Public Sub ApplyTo(ByVal TypeName As String, ByVal Props As DependencyProperties
     End If
 
     For Each Entry In Defs
-        If Not Props.Exists(Entry(0)) Then
-            Set Meta = NewDependencyPropertyMetadata(CBool(Entry(4)), CBool(Entry(5)), CBool(Entry(6)), Entry(7))
-            Call Props.Register(Entry(0), Entry(1), Entry(2), Entry(3), , Meta)
+        PropName = CStr(Entry(0))
+        PropTypeName = vbNullString
+        ProgId = vbNullString
+        If Not Props.Exists(PropName) Then
+            PropType = Entry(1)
+            If Len(CStr(Entry(2))) > 0 Then PropTypeName = CStr(Entry(2))
+            If Len(CStr(Entry(3))) > 0 Then ProgId = CStr(Entry(3))
+            BindingModeValue = Entry(7)
+            Set Meta = NewDependencyPropertyMetadata(CBool(Entry(4)), CBool(Entry(5)), CBool(Entry(6)), BindingModeValue)
+            Call Props.Register(PropName, PropType, PropTypeName, ProgId, , Meta)
         End If
     Next
 End Sub
@@ -90,6 +102,11 @@ Private Sub RegisterFrameworkElementType()
 
     RegisterType "Panel", "FrameworkElement", _
         Array("ShowGridLines", vbBoolean, vbNullString, vbNullString, False, True, False, OneWay)
+
+    RegisterType "Border", "FrameworkElement"
+    RegisterType "UserControl", "FrameworkElement"
+    RegisterType "Button", "FrameworkElement"
+    RegisterType "Window", "FrameworkElement"
 End Sub
 
 Private Sub ApplyInheritedDefs(ByVal Defs As cCollection, ByVal BaseTypeName As String)

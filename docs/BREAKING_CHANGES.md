@@ -30,6 +30,30 @@
 
 ---
 
+## [2.2.0] — 2026-06-20 — Phase 1b (layout core — shell controls)
+
+### Added
+
+- **`FrameworkElement`** on **Border**, **UserControl**, **Window**, **Button** — layout DPs (`Width`, `Height`, `Margin`, `Visibility` where applicable).
+- **Window** child layout uses form client scale (`Form.ScaleWidth` / `ScaleHeight`) via `ArrangeChildren` overrides.
+- **Registry types:** `Border`, `UserControl`, `Button`, `Window` extend `FrameworkElement`.
+
+### XAML
+
+- `Width` / `Height` accepted on migrated types (Panel, Border, UserControl, Window; Button width/height via DPs).
+- `DesignWidth` / `DesignHeight` still accepted (alias when layout DPs registered).
+
+### Notes
+
+- **Button** retains custom `MoveChild` inset logic for content/overlay; layout DPs drive scale factors.
+- **Phase 1 compile/runtime fixes** included (ByRef registry, `IsWidgetVisible`, UDT ByRef, init order, `Empty` reserved word).
+
+### Test
+
+- **P1-BORDER** — Border `Width="320"` from XAML (`.Tests/Phase0`).
+
+---
+
 ## [2.1.0] — 2026-06-20 — Phase 1 (layout core — partial)
 
 ### Added

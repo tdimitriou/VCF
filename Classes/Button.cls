@@ -26,8 +26,6 @@ Attribute ActiveStyle.VB_VarHelpID = -1
 
 Private m_DesignLeft                            As Single
 Private m_DesignTop                             As Single
-Private m_DesignWidth                           As Single
-Private m_DesignHeight                          As Single
 Private m_ParentPtr                             As Long
 
 Private IsMouseOver                             As Boolean
@@ -42,6 +40,7 @@ Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings                              As VCF.List
 Private m_BaseUIElement                         As UIElementBase
 Private m_OverlayWidget                         As OverlayWidget
+Private m_Layout                                As FrameworkElement
 
 Private Const OVERLAY_ALPHA                     As Single = 0.25
 Private Const OVERLAY_COLOR                     As Long = vbBlack
@@ -162,11 +161,11 @@ Attribute TmrRelease.VB_VarHelpID = -1
     End Property
     
     Public Property Let DesignHeight(ByVal Value As Double)
-        m_DesignHeight = Value
+        m_Layout.Height = Value
     End Property
     
     Public Property Get DesignHeight() As Double
-        DesignHeight = m_DesignHeight
+        DesignHeight = m_Layout.Height
     End Property
     
     Public Property Let DesignLeft(ByVal Value As Double)
@@ -186,11 +185,27 @@ Attribute TmrRelease.VB_VarHelpID = -1
     End Property
     
     Public Property Let DesignWidth(ByVal Value As Double)
-        m_DesignWidth = Value
+        m_Layout.Width = Value
     End Property
     
     Public Property Get DesignWidth() As Double
-        DesignWidth = m_DesignWidth
+        DesignWidth = m_Layout.Width
+    End Property
+
+    Public Property Get Width() As Double
+        Width = m_Layout.Width
+    End Property
+
+    Public Property Let Width(ByVal Value As Double)
+        m_Layout.Width = Value
+    End Property
+
+    Public Property Get Height() As Double
+        Height = m_Layout.Height
+    End Property
+
+    Public Property Let Height(ByVal Value As Double)
+        m_Layout.Height = Value
     End Property
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
@@ -268,13 +283,14 @@ Attribute TmrRelease.VB_VarHelpID = -1
         W.HoverColor = -1
         W.CanGetFocus = False
         
-        ' Initialize the Default metrics
-        ' Important for any resize operations
-        ' especially in the inner widgets
+        Set m_Layout = New FrameworkElement
+        m_Layout.Initialize Me, Me, W
+        m_Layout.RegisterLayoutProperties "Button"
+        
         m_DesignLeft = 0
         m_DesignTop = 0
-        m_DesignWidth = 100
-        m_DesignHeight = 30
+        m_Layout.Width = 100
+        m_Layout.Height = 30
                 
         NewUIElementBase Me, m_BaseUIElement
                 
@@ -440,8 +456,8 @@ Catch:
         Offs = m_BorderWidth
         If IsMouseDown Then Offs = BorderWidth + 1
         
-        xFactor = W.Width / DesignWidth
-        yFactor = W.Height / DesignHeight
+        xFactor = W.Width / m_Layout.Width
+        yFactor = W.Height / m_Layout.Height
         
         
         'If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove Child.Widget.Key

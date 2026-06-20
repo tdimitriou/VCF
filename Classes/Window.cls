@@ -29,13 +29,12 @@ Attribute m_Children.VB_VarHelpID = -1
 
 Private m_DesignLeft As Single
 Private m_DesignTop As Single
-Private m_DesignWidth As Single
-Private m_DesignHeight As Single
 Private m_NamedChildren As ObservableDictionary
 Private m_Bindings As List
 Private m_DialogResult As Boolean
 Private m_BasePtr As Long
 Private m_BaseUIElement As UIElementBase
+Private m_Layout As FrameworkElement
 
 Private m_W As Long, m_H As Long
 
@@ -54,9 +53,7 @@ Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long,
                 
         If m_Children Is Nothing Then Exit Sub
         
-        For Each Child In m_Children
-            Call MoveChild(Child)
-        Next
+        m_Layout.OnHostResize m_Children, WRoot, Form.ScaleWidth, Form.ScaleHeight
     End Sub
     
     Private Sub Form_Unload(Cancel As Integer)
@@ -194,7 +191,7 @@ Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long,
     End Property
     
     Public Property Let DesignHeight(ByVal Value As Double)
-        m_DesignHeight = Value
+        m_Layout.Height = Value
         If m_H = 0 Then
             m_H = DesignHeight
             If Not Form Is Nothing Then Form.Height = m_H
@@ -202,7 +199,7 @@ Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long,
     End Property
     
     Public Property Get DesignHeight() As Double
-        DesignHeight = m_DesignHeight
+        DesignHeight = m_Layout.Height
     End Property
     
     Public Property Let DesignLeft(ByVal Value As Double)
@@ -222,7 +219,7 @@ Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long,
     End Property
     
     Public Property Let DesignWidth(ByVal Value As Double)
-        m_DesignWidth = Value
+        m_Layout.Width = Value
         If m_W = 0 Then
             m_W = DesignWidth
             If Not Form Is Nothing Then Form.Width = m_W
@@ -230,7 +227,23 @@ Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long,
     End Property
     
     Public Property Get DesignWidth() As Double
-        DesignWidth = m_DesignWidth
+        DesignWidth = m_Layout.Width
+    End Property
+
+    Public Property Get Width() As Double
+        Width = m_Layout.Width
+    End Property
+
+    Public Property Let Width(ByVal Value As Double)
+        m_Layout.Width = Value
+    End Property
+
+    Public Property Get Height() As Double
+        Height = m_Layout.Height
+    End Property
+
+    Public Property Let Height(ByVal Value As Double)
+        m_Layout.Height = Value
     End Property
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
@@ -335,6 +348,12 @@ Catch:
                         Form.BorderStyle = Property.GetValue
                     End If
                 End If
+            Case Else
+                If Not m_Children Is Nothing Then
+                    If m_Layout.HandlesLayoutProperty(Property.Name) Then
+                        m_Layout.OnLayoutPropertyChanged Property.Name, m_Children, WRoot, Form.ScaleWidth, Form.ScaleHeight
+                    End If
+                End If
         End Select
         
         If Not m_Children Is Nothing Then DependencyPropertiesStatic.PassPropertyValue m_Children, Property
@@ -357,18 +376,7 @@ Catch:
 
 '#Region Private Methods
     Private Sub MoveChild(Child As Object)
-        On Error Resume Next
-        
-        Dim xFactor As Double, yFactor As Double
-        
-        xFactor = Form.ScaleWidth / DesignWidth
-        yFactor = Form.ScaleHeight / DesignHeight
-        
-        If Not Widgets.Exists(Child.Widget.Key) Then Widgets.Add Child, "_" & ObjPtr(Child)
-        
-        With Child
-            .Move .DesignLeft * xFactor, .DesignTop * yFactor, .DesignWidth * xFactor, .DesignHeight * yFactor
-        End With
+        m_Layout.ArrangeChildren m_Children, WRoot, Form.ScaleWidth, Form.ScaleHeight
     End Sub
 
     Public Sub SetFocus()
@@ -496,12 +504,14 @@ Catch:
                 
                 .SetCurrentValue "BorderStyle", vbSizable   ' The default window border style
             End With
-                        
-            m_DesignWidth = 1024
-            m_DesignHeight = 768
+            
+            Dim DefaultW As Double
+            Dim DefaultH As Double
+            DefaultW = 1024
+            DefaultH = 768
             
             If ParentWindow Is Nothing Then
-                Set Form = Cairo.WidgetForms.Create(vbSizable, , , DesignWidth, DesignHeight)
+                Set Form = Cairo.WidgetForms.Create(vbSizable, , , DefaultW, DefaultH)
             Else
                 Set Form = Cairo.WidgetForms.CreateChild(ParentWindow.hWnd, , CanGetFocus)
             End If
@@ -517,8 +527,14 @@ Catch:
             Set m_Children = NewUIElementCollection(Me)
             Set m_NamedChildren = New ObservableDictionary
             
-            Form.Width = m_DesignWidth
-            Form.Height = m_DesignHeight
+            Set m_Layout = New FrameworkElement
+            m_Layout.Initialize Me, Me, WRoot
+            m_Layout.RegisterLayoutProperties "Window"
+            m_Layout.Width = DefaultW
+            m_Layout.Height = DefaultH
+            
+            Form.Width = DefaultW
+            Form.Height = DefaultH
             
             NewUIElementBase Me, m_BaseUIElement
             

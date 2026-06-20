@@ -26,13 +26,12 @@ Attribute ActiveStyle.VB_VarHelpID = -1
 
 Private m_DesignLeft As Single
 Private m_DesignTop As Single
-Private m_DesignWidth As Single
-Private m_DesignHeight As Single
 Private m_ParentPtr As Long
 Private WithEvents m_DependencyProperties As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As VCF.List
 Private m_BaseUIElement As UIElementBase
+Private m_Layout As FrameworkElement
 
 Public BorderColor As Long
 Public Name As String
@@ -95,11 +94,11 @@ Public Name As String
     End Property
     
     Public Property Let DesignHeight(ByVal Value As Double)
-        m_DesignHeight = Value
+        m_Layout.Height = Value
     End Property
     
     Public Property Get DesignHeight() As Double
-        DesignHeight = m_DesignHeight
+        DesignHeight = m_Layout.Height
     End Property
     
     Public Property Let DesignLeft(ByVal Value As Double)
@@ -119,11 +118,35 @@ Public Name As String
     End Property
     
     Public Property Let DesignWidth(ByVal Value As Double)
-        m_DesignWidth = Value
+        m_Layout.Width = Value
     End Property
     
     Public Property Get DesignWidth() As Double
-        DesignWidth = m_DesignWidth
+        DesignWidth = m_Layout.Width
+    End Property
+
+    Public Property Get Width() As Double
+        Width = m_Layout.Width
+    End Property
+
+    Public Property Let Width(ByVal Value As Double)
+        m_Layout.Width = Value
+    End Property
+
+    Public Property Get Height() As Double
+        Height = m_Layout.Height
+    End Property
+
+    Public Property Let Height(ByVal Value As Double)
+        m_Layout.Height = Value
+    End Property
+
+    Public Property Get Margin() As Thickness
+        Set Margin = m_Layout.Margin
+    End Property
+
+    Public Property Set Margin(ByVal Value As Thickness)
+        Set m_Layout.Margin = Value
     End Property
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
@@ -171,15 +194,19 @@ Public Name As String
         Set W = Cairo.WidgetBase
         W.CanGetFocus = False
         
-        DesignLeft = 0
-        DesignTop = 0
-        DesignWidth = 300
-        DesignHeight = 300
-            
-        NewUIElementBase Me, m_BaseUIElement
-                
         Set m_Children = NewUIElementCollection(Me)
         Set m_Bindings = New List
+        
+        Set m_Layout = New FrameworkElement
+        m_Layout.Initialize Me, Me, W
+        m_Layout.RegisterLayoutProperties "Border"
+        
+        DesignLeft = 0
+        DesignTop = 0
+        m_Layout.Width = 300
+        m_Layout.Height = 300
+            
+        NewUIElementBase Me, m_BaseUIElement
     
         'EnumerateProperties Me
         
@@ -308,18 +335,7 @@ Catch:
 
 '#Region Private Methods
     Private Sub MoveChild(Child As Object)
-        On Error Resume Next
-        
-        Dim xFactor As Double, yFactor As Double
-        xFactor = W.Width / DesignWidth
-        yFactor = W.Height / DesignHeight
-        
-        If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove Child.Widget.Key
-        If Not W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Add Child, "_" & ObjPtr(Child)
-        With Child
-        '    W.Widgets.Add Child, "_" & ObjPtr(Child), .DesignLeft * xFactor, .DesignTop * yFactor, .DesignWidth * xFactor, .DesignHeight * yFactor, True ' Child.Widget.Visible
-            .Move .DesignLeft * xFactor, .DesignTop * yFactor, .DesignWidth * xFactor, .DesignHeight * yFactor
-        End With
+        m_Layout.ArrangeChildren m_Children, W
     End Sub
 '#End Region
 
@@ -327,6 +343,12 @@ Catch:
     Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
         Select Case Property.Name
             Case "Style":           ApplyStyle
+            Case Else
+                If Not m_Children Is Nothing Then
+                    If m_Layout.HandlesLayoutProperty(Property.Name) Then
+                        m_Layout.OnLayoutPropertyChanged Property.Name, m_Children, W
+                    End If
+                End If
         End Select
         
         DependencyPropertiesStatic.PassPropertyValue m_Children, Property
@@ -381,13 +403,8 @@ Catch:
     End Sub
     
     Private Sub W_Resize()
-        Dim Child As Object
-        
         W.Widgets.RemoveAll
-        For Each Child In m_Children
-            Call MoveChild(Child)
-        Next
-    
+        m_Layout.ArrangeChildren m_Children, W
     End Sub
 '#End Region
 

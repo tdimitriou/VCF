@@ -52,12 +52,16 @@ Public Function LayoutRectFromMargin( _
     End With
 End Function
 
-Public Sub ApplyLayoutRectToElement(ByVal Element As IUIElement, ByVal R As LayoutRect)
+Public Sub ApplyLayoutRectToElement(ByVal Element As IUIElement, R As LayoutRect)
     Element.Move R.Left, R.Top, R.Width, R.Height
 End Sub
 
 Public Function IsLayoutCollapsed(ByVal Value As Visibility) As Boolean
     IsLayoutCollapsed = (Value = VisibilityCollapsed)
+End Function
+
+Public Function IsWidgetVisible(ByVal Value As Visibility) As Boolean
+    IsWidgetVisible = (Value = VisibilityVisible)
 End Function
 
 Public Function MapDesignPropertyAlias(ByVal Dep As IDependencyObject, ByVal Name As String) As String

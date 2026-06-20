@@ -1,6 +1,6 @@
 # Demac.VCF — performance benchmarks (Phase 0 baseline)
 
-**Status:** Baselines recorded — **v2.0.0-wpf-alignment-p0**  
+**Status:** Baselines recorded — **v2.1.0-wpf-alignment-p1** validated  
 **Runner:** `.Tests/Phase0` (`modPhase0Bench`)  
 **Threshold policy:** Regressions > 10% vs previous tag require explanation in release notes.
 
@@ -10,12 +10,12 @@
 
 | Field | Value |
 |-------|-------|
-| DLL version | 2.0.0-wpf-alignment-p0 |
+| DLL version | 2.1.0-wpf-alignment-p1 (validated build) |
 | OS | Windows 10/11 x64 (build 26200) |
 | vbRichClient5 | v5 (path in test `.vbp`) |
 | Process bitness | 32-bit (VB6) |
 | Recorded | 2026-06-20 |
-| Phase0 result | 5 passed, 0 failed |
+| Phase0/1 result | **7 passed, 0 failed** |
 
 Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whether POS video secondary display is active (exclude from UI benchmarks).
 
@@ -26,12 +26,13 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | ID | Scenario | Method | Baseline (ms) | Threshold |
 |----|----------|--------|---------------|-----------|
 | B-GOLD | Golden XAML load (minimal tree) | `Phase0Bench_GoldenXamlLoad` | **14** | ≤ 16 (10% margin) |
-| B-COLL | 1000× `ObservableCollection.Add` | `Phase0Bench_CollectionAdd1000` | **16** | ≤ 18 (10% margin) |
+| B-COLL | 1000× `ObservableCollection.Add` | `Phase0Bench_CollectionAdd1000` | **19** | ≤ 21 (10% margin) |
 | B-LCV | Two simultaneous `ListCollectionView` init | `Phase0Bench_DualListCollectionView` | **pass** | must not raise |
 | B-STRICT-MALFORM | Malformed XAML raises `XamlLoadException` | `Phase0Bench_StrictMalformedXaml` | **pass** | must raise |
 | B-STRICT-UNKNOWN | Unknown type raises `XamlLoadException` | `Phase0Bench_StrictUnknownType` | **pass** | must raise |
-| P1-WIDTH | Panel `Width`/`Height` from XAML | `Phase1Bench_LayoutWidthXaml` | *TBD* | — |
+| P1-WIDTH | Panel `Width`/`Height` from XAML | `Phase1Bench_LayoutWidthXaml` | **pass** | — |
 | P1-VIS | Panel `Visibility=Collapsed` DP | `Phase1Bench_PanelVisibilityCollapsed` | **pass** | must store Collapsed |
+| P1-BORDER | Border `Width` from XAML | `Phase1Bench_BorderWidthXaml` | *TBD* | — |
 | B-RESZ | Window resize nested UniformGrid 50× | *Phase 1+* | — | deferred |
 | B-NAV | 50× view navigation binding leak | *Phase 4+* | — | deferred |
 
@@ -64,3 +65,4 @@ Normal POS process **< 100 MB** without secondary customer-display video. Framew
 |------|--------|
 | 2026-06-20 | Initial scaffold for Phase 0 |
 | 2026-06-20 | Baselines recorded: B-GOLD 14 ms, B-COLL 16 ms; all Phase0 tests pass |
+| 2026-06-20 | Validated build: B-COLL 19 ms; P1-WIDTH/P1-VIS pass (7/7) |
