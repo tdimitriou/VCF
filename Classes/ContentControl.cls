@@ -33,6 +33,8 @@ Private m_Bindings As List
 Private m_BaseUIElement As UIElementBase
 Private m_Layout As FrameworkElement
 
+Public Name As String
+
 Public Property Get Content() As Object
     If m_Children.Count > 0 Then
         Set Content = m_Children(0)
@@ -52,8 +54,6 @@ Public Property Set Content(ByVal Value As Object)
         End If
     End If
 End Property
-
-Public Name As String
 
 '#Region Public Properties
     Public Property Get Bindings() As VCF.List
@@ -394,7 +394,7 @@ End Sub
 
 Private Function GetBaseStyle() As Style
     Dim Style
-    API.CopyVariable m_BaseUIElement.TryFindResource(Typename(Me) & ".BaseStyle"), Style
+    API.CopyVariable m_BaseUIElement.TryFindResource(TypeName(Me) & ".BaseStyle"), Style
     
     If Not IsObject(Style) Then Exit Function
     If TypeOf Style Is Style Then Set GetBaseStyle = Style

@@ -17,3 +17,10 @@ Public Sub RaiseXamlLoad( _
     Ex.Initialize Message, ElementName, PropertyName, Line, Column, InnerCode
     Ex.Raise
 End Sub
+
+Public Function IsStrictWidgetFallbackProperty(ByVal Name As String) As Boolean
+    Select Case LCase$(Trim$(Name))
+        Case "text", "caption", "tooltip", "imagekey", "tag", "enabled", "visible", "name"
+            IsStrictWidgetFallbackProperty = True
+    End Select
+End Function

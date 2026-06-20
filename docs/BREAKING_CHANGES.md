@@ -30,6 +30,32 @@
 
 ---
 
+## [2.4.0] — 2026-06-20 — Phase 3 (resources)
+
+### Breaking (when `StrictXamlLoad = True`)
+
+- **`IApplication.Resources`** and **`IUIElement.Resources`** are now **`ResourceDictionary`** (was **`ObservableDictionary`**). **Migration:** Change property types; use **`Resources.LocalResources`** where flat dictionary access is required; **`Merge`** / **`MergedDictionaries`** for WPF-style includes.
+- **Unknown XAML attributes** on **`IDependencyObject`** types raise **`XamlLoadException`** instead of **`CallByName`** / widget fallback. **Migration:** Use registered dependency properties only; set **`VCF.StrictXamlLoad = False`** temporarily for legacy XAML.
+
+### Added
+
+- **`ResourceDictionary`** — local resources + **`MergedDictionaries`** + lazy **`Source=`** load.
+- **`XamlResourceResolver`** — load dictionary fragments from disk (`BasePath` + relative **`Source`**).
+- **`DynamicResourceExtension`** — **`{DynamicResource Key}`** markup; **`{ThemeResource}`** routes here (deprecated alias).
+- **`XAMLReader.LoadElement`** — public node instantiation for resource entries.
+- **`Application.Resources` / element tree** — merged lookup via **`TryGetResource`**.
+
+### Deprecated
+
+- **`ThemeResource`** class — use **`{DynamicResource}`** in new XAML.
+- Flat **`ObservableDictionary`** on **`Application.Resources`** — use **`ResourceDictionary`** + merge.
+
+### Test
+
+- **P3-MERGE**, **P3-SOURCE**, **P3-DYNAMIC**, **P3-STRICT-PROP** in `.Tests/Phase0` (target **15/15** with Phase 0–2).
+
+---
+
 ## [2.3.0] — 2026-06-20 — Phase 2 (panels)
 
 ### Added

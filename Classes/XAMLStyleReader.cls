@@ -14,7 +14,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 'CSEH: ErrMsgBox
-Public Sub LoadStyle(ByVal ResourceDictionary As ObservableDictionary, Node As cElement)
+Public Sub LoadStyle(ByVal Resources As ResourceDictionary, Node As cElement)
     If Node.BaseName <> "Style" Then Exit Sub
     
     Dim NewStyle As Style
@@ -22,8 +22,8 @@ Public Sub LoadStyle(ByVal ResourceDictionary As ObservableDictionary, Node As c
     
     Dim Style As Style
     
-    If ResourceDictionary.ContainsKey(NewStyle.Key) Then
-        Set Style = ResourceDictionary(NewStyle.Key)
+    If Resources.ContainsKey(NewStyle.Key) Then
+        Set Style = Resources(NewStyle.Key)
         
         Dim e
         Dim Setter As KeyValuePair
@@ -35,7 +35,7 @@ Public Sub LoadStyle(ByVal ResourceDictionary As ObservableDictionary, Node As c
             Style.SetSetter Setter.Key, Setter.Value
         Next
     Else
-        ResourceDictionary.Add NewStyle.Key, NewStyle
+        Resources.Add NewStyle.Key, NewStyle
     End If
     
 End Sub

@@ -1,0 +1,3 @@
+<ResourceDictionary>
+	<string x:Key="Greeting" Value="Phase3"/>
+</ResourceDictionary>

@@ -32,7 +32,7 @@ Attribute m_Base.VB_VarHelpID = -1
         End With
     End Sub
 
-    Public Property Get Resources() As ObservableDictionary
+    Public Property Get Resources() As ResourceDictionary
         Set Resources = m_Base.Resources
     End Property
     
@@ -62,7 +62,7 @@ Attribute m_Base.VB_VarHelpID = -1
         InitializeComponent
     End Sub
     
-    Private Property Get IApplication_Resources() As ObservableDictionary
+    Private Property Get IApplication_Resources() As ResourceDictionary
         Set IApplication_Resources = Resources
     End Property
     

@@ -170,3 +170,7 @@ Public Function ArrayWrapper(Optional ByRef SourceArray) As ArrayWrapper
     Set ArrayWrapper = modConstructors.ArrayWrapper(SourceArray)
 End Function
 
+Public Sub ClearCustomConstructor()
+    Set modConstructors.CustomConstructor = Nothing
+End Sub
+

@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-Private WithEvents m_Resources As ObservableDictionary
+Private WithEvents m_Resources As ResourceDictionary
 Attribute m_Resources.VB_VarHelpID = -1
 Private m_StartupURI As String
 Private m_Windows As cSortedDictionary
@@ -37,7 +37,7 @@ Public Property Let StartupURI(ByVal Value As String)
     m_StartupURI = Value
 End Property
 
-Public Property Get Resources() As ObservableDictionary
+Public Property Get Resources() As ResourceDictionary
     Set Resources = m_Resources
 End Property
 
@@ -59,7 +59,7 @@ End Sub
 
 Private Sub Class_Initialize()
     Set m_Windows = New_c.SortedDictionary(TextCompare)
-    Set m_Resources = New ObservableDictionary
+    Set m_Resources = New ResourceDictionary
 End Sub
 
 Friend Sub Initialize(Superclass As IApplication)
@@ -90,15 +90,12 @@ Private Function GetStartupObject() As Object
 End Function
 
 Public Function FindResource(ByVal Key As String)
-    If m_Resources.ContainsKey(Key) Then
-        API.CopyVariable m_Resources(Key), FindResource
-    Else
-        Err.Raise 1761
-    End If
+    If m_Resources.TryGetResource(Key, FindResource) Then Exit Function
+    Err.Raise 1761
 End Function
 
 Public Function TryFindResource(ByVal Key As String)
-    If m_Resources.ContainsKey(Key) Then API.CopyVariable m_Resources(Key), TryFindResource
+    m_Resources.TryGetResource Key, TryFindResource
 End Function
 
 Private Sub m_Resources_CollectionChanged(Sender As Object, e As CollectionChangedEventArgs)

@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-Private m_Resources As ObservableDictionary
+Private m_Resources As ResourceDictionary
 Private m_SuperclassPtr As Long
 Private m_AttachedProperties As ObservableDictionary
 
@@ -21,28 +21,26 @@ Public Property Get AttachedProperties() As ObservableDictionary
     Set AttachedProperties = m_AttachedProperties
 End Property
 
-Public Property Get Resources() As ObservableDictionary
+Public Property Get Resources() As ResourceDictionary
     Set Resources = m_Resources
 End Property
 
 'CSEH: ErrMsgBox
 Public Function FindResource(ByVal Key As String)
     Dim Parent As IUIElement
-    
-    If m_Resources.ContainsKey(Key) Then
-        API.CopyVariable m_Resources(Key), FindResource
-    Else
-        Set Parent = Superclass.Parent
-        
-        If Parent Is Nothing Then
-            If Application.Current Is Nothing Then
-                Err.Raise 1761
-            Else
-                API.CopyVariable Application.Current.Base.FindResource(Key), FindResource
-            End If
+
+    If m_Resources.TryGetResource(Key, FindResource) Then Exit Function
+
+    Set Parent = Superclass.Parent
+
+    If Parent Is Nothing Then
+        If Application.Current Is Nothing Then
+            Err.Raise 1761
         Else
-            API.CopyVariable Parent.Base.FindResource(Key), FindResource
+            API.CopyVariable Application.Current.Base.FindResource(Key), FindResource
         End If
+    Else
+        API.CopyVariable Parent.Base.FindResource(Key), FindResource
     End If
 End Function
 
@@ -58,7 +56,7 @@ Public Function TryFindResource(ByVal Key As String)
 End Function
 
 Private Sub Class_Initialize()
-    Set m_Resources = New ObservableDictionary
+    Set m_Resources = New ResourceDictionary
     Set m_AttachedProperties = New ObservableDictionary
 End Sub
 

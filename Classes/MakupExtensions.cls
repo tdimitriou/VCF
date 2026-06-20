@@ -80,6 +80,12 @@ Private Function CreateExtObject(ByVal Classname As String, _
             
             Set StaticExt = New StaticResourceExtension
             Set CreateExtObject = StaticExt.InitializeFromMarkup(Target, MarkupProperties)
+
+        Case "DynamicResource", "ThemeResource"
+            Dim DynExt As DynamicResourceExtension
+
+            Set DynExt = New DynamicResourceExtension
+            Set CreateExtObject = DynExt.InitializeFromMarkup(Target, MarkupProperties)
         
         Case Else:
         

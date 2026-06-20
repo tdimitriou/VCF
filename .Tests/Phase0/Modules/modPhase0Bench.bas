@@ -21,12 +21,16 @@ Public Sub RunAll()
     If Not Phase2Bench_StackPanelXaml() Then Failed = Failed + 1
     If Not Phase2Bench_StackPanelLayout() Then Failed = Failed + 1
     If Not Phase2Bench_GridRowDefinitionsXaml() Then Failed = Failed + 1
+    If Not Phase3Bench_MergedDictionaryLookup() Then Failed = Failed + 1
+    If Not Phase3Bench_ResourceSourceLoad() Then Failed = Failed + 1
+    If Not Phase3Bench_DynamicResourceExtension() Then Failed = Failed + 1
+    If Not Phase3Bench_StrictUnknownProperty() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (11 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (15 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
-        MsgBox Failed & " Phase 0/1/2 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
+        MsgBox Failed & " Phase 0/1/2/3 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
-        MsgBox "All Phase 0/1/2 tests passed.", vbInformation, "Phase0"
+        MsgBox "All Phase 0/1/2/3 tests passed.", vbInformation, "Phase0"
     End If
 End Sub
 
@@ -254,7 +258,7 @@ End Function
 
 Public Function Phase2Bench_StackPanelXaml() As Boolean
     Dim Reader As XAMLReader
-    Dim Root As StackPanel
+    Dim Root As Object
     Dim Xml As String
 
     On Error GoTo Fail
@@ -264,8 +268,9 @@ Public Function Phase2Bench_StackPanelXaml() As Boolean
     Set Root = Reader.Load(Xml)
 
     If Root Is Nothing Then Err.Raise vbObjectError, , "StackPanel XAML returned Nothing"
-    If Root.Width <> 240# Then Err.Raise vbObjectError, , "Expected Width=240, got " & Root.Width
-    If Root.Orientation <> OrientationVertical Then Err.Raise vbObjectError, , "Expected Vertical orientation"
+    If TypeName(Root) <> "StackPanel" Then Err.Raise vbObjectError, , "Expected StackPanel, got " & TypeName(Root)
+    If CDbl(Root.Width) <> 240# Then Err.Raise vbObjectError, , "Expected Width=240, got " & Root.Width
+    If CLng(Root.Orientation) <> OrientationVertical Then Err.Raise vbObjectError, , "Expected Vertical orientation"
 
     LogResult "P2-STACK", 0, "OK Width=" & Root.Width
     Debug.Print "PASS  P2-STACK StackPanel Width/Orientation XAML"
@@ -279,13 +284,13 @@ Fail:
 End Function
 
 Public Function Phase2Bench_StackPanelLayout() As Boolean
-    Dim Sp As StackPanel
+    Dim Sp As Object
     Dim P1 As Panel
     Dim P2 As Panel
 
     On Error GoTo Fail
 
-    Set Sp = New StackPanel
+    Set Sp = CreateObject("VCF.StackPanel")
     Sp.Orientation = OrientationVertical
     Sp.Widget.Move 0, 0, 200, 300
 
@@ -315,7 +320,7 @@ End Function
 
 Public Function Phase2Bench_GridRowDefinitionsXaml() As Boolean
     Dim Reader As XAMLReader
-    Dim Root As Grid
+    Dim Root As Object
     Dim Xml As String
 
     On Error GoTo Fail
@@ -325,9 +330,10 @@ Public Function Phase2Bench_GridRowDefinitionsXaml() As Boolean
     Set Root = Reader.Load(Xml)
 
     If Root Is Nothing Then Err.Raise vbObjectError, , "Grid XAML returned Nothing"
+    If TypeName(Root) <> "Grid" Then Err.Raise vbObjectError, , "Expected Grid, got " & TypeName(Root)
     If Root.RowDefinitions.Count <> 2 Then Err.Raise vbObjectError, , "Expected 2 row definitions"
     If Root.ColumnDefinitions.Count <> 2 Then Err.Raise vbObjectError, , "Expected 2 column definitions"
-    If Root.Width <> 300# Then Err.Raise vbObjectError, , "Expected Width=300"
+    If CDbl(Root.Width) <> 300# Then Err.Raise vbObjectError, , "Expected Width=300"
 
     LogResult "P2-GRID", 0, "OK rows=" & Root.RowDefinitions.Count
     Debug.Print "PASS  P2-GRID Grid RowDefinitions/ColumnDefinitions XAML"
@@ -338,6 +344,126 @@ Fail:
     LogResult "P2-GRID", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P2-GRID — " & Err.Description
     Phase2Bench_GridRowDefinitionsXaml = False
+End Function
+
+Public Function Phase3Bench_MergedDictionaryLookup() As Boolean
+    Dim Root As ResourceDictionary
+    Dim Child As ResourceDictionary
+    Dim Value As Variant
+
+    On Error GoTo Fail
+
+    Set Root = New ResourceDictionary
+    Set Child = New ResourceDictionary
+    Child.Add "TestKey", "hello"
+
+    Root.Merge Child
+
+    If Not Root.TryGetResource("TestKey", Value) Then
+        Err.Raise vbObjectError, , "Merged key not found"
+    End If
+    If Value <> "hello" Then
+        Err.Raise vbObjectError, , "Expected 'hello', got " & CStr(Value)
+    End If
+
+    LogResult "P3-MERGE", 0, "OK TryGetResource=hello"
+    Debug.Print "PASS  P3-MERGE Merged dictionary lookup"
+    Phase3Bench_MergedDictionaryLookup = True
+    Exit Function
+
+Fail:
+    LogResult "P3-MERGE", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P3-MERGE — " & Err.Description
+    Phase3Bench_MergedDictionaryLookup = False
+End Function
+
+Public Function Phase3Bench_ResourceSourceLoad() As Boolean
+    Dim Resolver As XamlResourceResolver
+    Dim Dict As ResourceDictionary
+    Dim Value As Variant
+
+    On Error GoTo Fail
+
+    Set Resolver = New XamlResourceResolver
+    Resolver.BasePath = App.Path & "\Resources"
+    Set Dict = Resolver.LoadFromSource("P3ChildDict.xml")
+
+    If Dict Is Nothing Then Err.Raise vbObjectError, , "LoadFromSource returned Nothing"
+    If Not Dict.TryGetResource("Greeting", Value) Then
+        Err.Raise vbObjectError, , "Greeting key not found in sourced dictionary"
+    End If
+    If Value <> "Phase3" Then
+        Err.Raise vbObjectError, , "Expected 'Phase3', got " & CStr(Value)
+    End If
+
+    LogResult "P3-SOURCE", 0, "OK Greeting=Phase3"
+    Debug.Print "PASS  P3-SOURCE ResourceDictionary Source load"
+    Phase3Bench_ResourceSourceLoad = True
+    Exit Function
+
+Fail:
+    LogResult "P3-SOURCE", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P3-SOURCE — " & Err.Description
+    Phase3Bench_ResourceSourceLoad = False
+End Function
+
+Public Function Phase3Bench_DynamicResourceExtension() As Boolean
+    Dim P As Panel
+    Dim El As IUIElement
+    Dim Value As Variant
+
+    On Error GoTo Fail
+
+    Set P = New Panel
+    Set El = P
+    El.Base.Resources.Add "BgColor", 12345
+
+    API.CopyVariable El.Base.TryFindResource("BgColor"), Value
+
+    If IsEmpty(Value) Then Err.Raise vbObjectError, , "TryFindResource returned Empty"
+    If CLng(Value) <> 12345 Then
+        Err.Raise vbObjectError, , "Expected 12345, got " & CStr(Value)
+    End If
+
+    LogResult "P3-DYNAMIC", 0, "OK BgColor=12345"
+    Debug.Print "PASS  P3-DYNAMIC element TryFindResource (DynamicResource lookup path)"
+    Phase3Bench_DynamicResourceExtension = True
+    Exit Function
+
+Fail:
+    LogResult "P3-DYNAMIC", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P3-DYNAMIC — " & Err.Description
+    Phase3Bench_DynamicResourceExtension = False
+End Function
+
+Public Function Phase3Bench_StrictUnknownProperty() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As Object
+    Dim SavedStrict As Boolean
+
+    On Error GoTo Fail
+
+    SavedStrict = VCF.StrictXamlLoad
+    VCF.StrictXamlLoad = True
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load("<Panel NotARealProperty=""1""/>")
+
+    VCF.StrictXamlLoad = SavedStrict
+    Err.Raise vbObjectError, , "Expected XamlLoadException for unknown property"
+    Exit Function
+
+Fail:
+    VCF.StrictXamlLoad = SavedStrict
+    If Err.Source = "VCF.XamlLoadException" Then
+        LogResult "P3-STRICT-PROP", 0, "OK raised XamlLoadException"
+        Debug.Print "PASS  P3-STRICT Unknown property raises"
+        Phase3Bench_StrictUnknownProperty = True
+    Else
+        LogResult "P3-STRICT-PROP", 0, "FAIL: " & Err.Number & " " & Err.Description
+        Debug.Print "FAIL  P3-STRICT — " & Err.Description
+        Phase3Bench_StrictUnknownProperty = False
+    End If
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

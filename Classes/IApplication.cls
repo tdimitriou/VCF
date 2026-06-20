@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-Public Property Get Resources() As ObservableDictionary: End Property
+Public Property Get Resources() As ResourceDictionary: End Property
 Public Property Get Base() As VCF.Application: End Property
 Public Property Get StartupURI() As String: End Property
 Public Property Let StartupURI(ByVal Value As String): End Property

@@ -38,7 +38,7 @@ Private Sub IApplication_InitializeComponent()
     '
 End Sub
 
-Private Property Get IApplication_Resources() As VCF.ObservableDictionary
+Private Property Get IApplication_Resources() As VCF.ResourceDictionary
     Set IApplication_Resources = Base.Resources
 End Property
 

@@ -45,6 +45,10 @@ Public Function Load(XML As String) As Object
     End If
 End Function
 
+Public Function LoadElement(ByVal Node As cElement) As Object
+    Set LoadElement = NewObject(Node)
+End Function
+
 Public Sub LoadSuperclassData(Superclass As Object, XML As String)
     Dim IsValidSuperclass As Boolean
     Dim Attr As cAttribute
@@ -149,39 +153,95 @@ End Sub
 
 Private Sub LoadResources(ByVal Object As IApplication, Node As cElement)
     If Not Node.HasChildElements Then Exit Sub
-    
+
     Dim Child As cElement
-            
+    Dim Target As ResourceDictionary
+
+    Set Target = Object.Resources
+
     For Each Child In Node.ChildElements
         Select Case Child.BaseName
-        
+
+            Case "ResourceDictionary"
+                LoadResourceDictionary Target, Child
+
+            Case "ResourceDictionary.MergedDictionaries"
+                LoadMergedResourceDictionaries Target, Child
+
             Case "Style"
-            
                 Dim Reader As XAMLStyleReader
                 Set Reader = New XAMLStyleReader
-                Reader.LoadStyle Object.Resources, Child
-                
+                Reader.LoadStyle Target, Child
+
             Case Else
-            
-                Dim Key As String
-                Key = GetResourceKey(Child)
-                Dim Data As Variant
-                
-                If Len(Key) > 0 Then
-                    API.CopyVariable GetResource(Child), Data
-                    
-                    If IsEmpty(Data) Then GoTo SKIP_ITEM
-                    If IsNull(Data) Then GoTo SKIP_ITEM
-                    If IsNothing(Data) Then GoTo SKIP_ITEM
-                    
-                    Object.Resources.Add Key, Data
-                    
-SKIP_ITEM:
-                    '
-                End If
+                AddResourceEntry Target, Child
+
         End Select
     Next
+End Sub
 
+Private Sub LoadResourceDictionary(ByVal Target As ResourceDictionary, ByVal Node As cElement)
+    Dim Resolver As XamlResourceResolver
+    Dim Loaded As ResourceDictionary
+    Dim Source As String
+
+    On Error Resume Next
+    Source = Node.Attributes("Source").Text
+    On Error GoTo 0
+
+    If Len(Source) > 0 Then
+        Set Resolver = New XamlResourceResolver
+        Set Loaded = Resolver.LoadFromSource(Source)
+        If Not Loaded Is Nothing Then Target.Merge Loaded
+    End If
+
+    If Not Node.HasChildElements Then Exit Sub
+
+    Dim Child As cElement
+    For Each Child In Node.ChildElements
+        Select Case Child.BaseName
+            Case "ResourceDictionary.MergedDictionaries"
+                LoadMergedResourceDictionaries Target, Child
+            Case "Style"
+                Dim Reader As XAMLStyleReader
+                Set Reader = New XAMLStyleReader
+                Reader.LoadStyle Target, Child
+            Case "ResourceDictionary"
+                LoadResourceDictionary Target, Child
+            Case Else
+                AddResourceEntry Target, Child
+        End Select
+    Next
+End Sub
+
+Private Sub LoadMergedResourceDictionaries(ByVal Target As ResourceDictionary, ByVal Node As cElement)
+    Dim Child As cElement
+
+    If Not Node.HasChildElements Then Exit Sub
+
+    For Each Child In Node.ChildElements
+        If Child.BaseName = "ResourceDictionary" Then
+            LoadResourceDictionary Target, Child
+        End If
+    Next
+End Sub
+
+Private Sub AddResourceEntry(ByVal Target As ResourceDictionary, ByVal Node As cElement)
+    Dim Key As String
+    Dim Data As Variant
+
+    Key = GetResourceKey(Node)
+    If Len(Key) = 0 Then Exit Sub
+
+    API.CopyVariable GetResource(Node), Data
+
+    If IsEmpty(Data) Then Exit Sub
+    If IsNull(Data) Then Exit Sub
+    If IsObject(Data) Then
+        If Data Is Nothing Then Exit Sub
+    End If
+
+    Target.Add Key, Data
 End Sub
 
 Private Function GetResource(Node As cElement) As Variant
@@ -574,6 +634,7 @@ Private Sub SetProperty(ByVal Obj As Object, ByVal Name As String, ByVal Value A
     End If
     
     If Err.Number = 0 Then Exit Sub
+    
     Err.Clear
     
     ' Pass the final property value, (PropertyValue) directly to the inner object
@@ -592,7 +653,28 @@ Private Sub SetProperty(ByVal Obj As Object, ByVal Name As String, ByVal Value A
         If Err.Number = 0 Then Exit Sub
         Err.Clear
         SetProperty ObjWin.Base.Form.WidgetRoot, Name, Value, PropertyValue
-    Else
-        SetProperty Obj.Widget, Name, Value, PropertyValue
+
+        If Err.Number = 0 Then Exit Sub
+        Err.Clear
+    ElseIf TypeOf Obj Is IControl Then
+        If (Not modConstructors.StrictXamlLoad) Or IsStrictWidgetFallbackProperty(Name) Then
+            SetProperty Obj.Widget, Name, Value, PropertyValue
+
+            If Err.Number = 0 Then Exit Sub
+        End If
+        Err.Clear
+    End If
+
+    If modConstructors.StrictXamlLoad Then
+        If TypeOf Obj Is IDependencyObject Then
+            Dim DepObj As IDependencyObject
+            Dim DepProp As String
+            Set DepObj = Obj
+            DepProp = MapDesignPropertyAlias(DepObj, Name)
+            If Not DepObj.DependencyProperties.Exists(DepProp) Then
+                On Error GoTo 0
+                RaiseXamlLoad "Unknown property '" & Name & "' on " & TypeName(Obj) & ".", TypeName(Obj), Name, , , Err.Number
+            End If
+        End If
     End If
 End Sub

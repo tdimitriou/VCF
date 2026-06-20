@@ -248,6 +248,27 @@ Each **major** or **breaking minor** release MUST include:
 
 **Boilerplate reduction:** Generate ~200 lines of `Implements IDependencyObject_*` per control from registry metadata.
 
+### 8.1 OLE DLL compatibility mode (Demac.VCF.vbp)
+
+Use **Project Compatibility** during Phases 0–7 while the public typelib is still evolving.
+
+| VB6 setting | Typelib GUID | Class / member layout | Caller `.vbp` reference | Caller EXE after VCF rebuild |
+|-------------|--------------|------------------------|-------------------------|------------------------------|
+| **No Compatibility** | New each build | Unrelated | **Lost** — re-add reference in IDE every open | Must recompile |
+| **Project Compatibility** *(current)* | **Stable** | May add / change / remove | **Preserved** | **Must recompile** to use new API |
+| **Binary Compatibility** | Stable | **Frozen** — same dispids | Preserved | Old EXE may run without recompile |
+
+**Rewrite workflow (Project Compatibility):**
+
+1. Make `Demac.VCF.dll` → `regsvr32 bin\Demac.VCF.dll`
+2. Open caller (e.g. `.Tests/Phase0/Phase0.vbp`) — reference should still resolve
+3. **Make** the caller EXE (required after any VCF interface change)
+4. Run tests
+
+Do **not** switch to No Compatibility during development (reference churn). Do **not** use Binary Compatibility until the public `VCF.*` surface is frozen for a POS pin (post–Phase 7 or hotfix-only releases).
+
+**Typelib warnings** on compile are expected when adding coclasses (`StackPanel`, `Grid`, …) or new `Constructor` members — append new public members at the **end** of existing classes to avoid unnecessary dispatch churn. Warnings about **changed** existing members mean caller recompile is mandatory (same as any Project Compatibility rebuild).
+
 ---
 
 ## 9. Open questions (resolve at kickoff or defer with ticket)

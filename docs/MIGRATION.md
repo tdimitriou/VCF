@@ -9,10 +9,13 @@
 ## General upgrade process
 
 1. Read **[BREAKING_CHANGES.md](./BREAKING_CHANGES.md)** for your target version.
-2. Pin new DLL in app `.vbp` / references.
-3. Run **`.Tests/Phase0`** and app smoke tests.
-4. Apply XAML transforms (per phase below).
-5. Apply VB6 code transforms (per phase below).
+2. Build and register **`Demac.VCF.dll`** (`regsvr32 bin\Demac.VCF.dll`).
+3. **Recompile** the app EXE (required — VCF uses **Project Compatibility**; typelib GUID is stable but member layout changes until Binary Compatibility is enabled for production pins).
+4. Run **`.Tests/Phase0`** and app smoke tests.
+5. Apply XAML transforms (per phase below).
+6. Apply VB6 code transforms (per phase below).
+
+See [VCF_TEAM_HANDOFF_GUIDE.md §8.1](./VCF_TEAM_HANDOFF_GUIDE.md) for No / Project / Binary compatibility during the rewrite.
 
 ---
 

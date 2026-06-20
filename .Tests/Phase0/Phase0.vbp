@@ -1,6 +1,6 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\..\..\..\Windows\System32\stdole2.tlb#OLE Automation
-Reference=*\G{C79C91A4-10F5-4F71-A490-3B7915514344}#2.7#0#..\..\..\..\Frameworks\RC\v5\vbRichClient5.dll#vbRichClient5
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\..\..\..\..\..\Windows\SysWOW64\stdole2.tlb#OLE Automation
+Reference=*\G{C79C91A4-10F5-4F71-A490-3B7915514344}#2.7#0#..\..\..\..\..\..\Frameworks\RC\v5\vbRichClient5.dll#vbRichClient5
 Reference=*\G{74362769-B3CB-467E-988C-B7461D864D8D}#cd.0#0#..\..\bin\Demac.VCF.dll#
 Module=modApp; Modules\modApp.bas
 Module=modPhase0Bench; Modules\modPhase0Bench.bas
@@ -36,5 +36,3 @@ MaxNumberOfThreads=1
 
 [Rubberduck]
 ProjectId=phase0-wpf-alignment-p0
-
-
