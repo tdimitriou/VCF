@@ -78,6 +78,10 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
     
     Friend Sub OnDependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue)
         RaiseEvent DependencyPropertyChanged(Property, PreviousValue)
+
+        If Property.Name = "DataContext" Then
+            modBindingExpressions.OnDataContextChanged Me.Target
+        End If
     End Sub
     
     Friend Property Get RegisteredProperties() As cSortedDictionary

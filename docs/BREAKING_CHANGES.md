@@ -30,6 +30,25 @@
 
 ---
 
+## [2.5.0] — 2026-06-20 — Phase 4 (bindings — partial)
+
+### Added
+
+- **`BindingExpression`** — `Attach`, `Detach`, `UpdateTarget`; wraps legacy `Binding` graph (transitional).
+- **`modBindingExpressions`** — `OnDataContextChanged`, `RefreshTargetBindings`, `DetachTargetBindings`.
+- **DataContext rebind (B6)** — `DependencyProperties.OnDependencyPropertyChanged` calls binding refresh when `DataContext` changes.
+
+### Notes
+
+- Legacy **`Binding`** remains in use; **`BindingsManager`** unchanged this release.
+- **`BindingExpression`** entries stored in control **`Bindings`** list alongside legacy **`Binding`** objects.
+
+### Test
+
+- **P4-BIND**, **P4-DCTX**, **P4-DETACH** in `.Tests/Phase0` (target **18/18** with Phase 0–3).
+
+---
+
 ## [2.4.0] — 2026-06-20 — Phase 3 (resources)
 
 ### Breaking (when `StrictXamlLoad = True`)

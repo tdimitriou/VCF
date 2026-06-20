@@ -351,3 +351,37 @@ Private Function GetEffectiveMode() As VCF.BindingMode
     
     If GetEffectiveMode = BindingMode.Default Then GetEffectiveMode = Me.TargetProperty.Metadata.BindingMode
 End Function
+
+Friend Sub RefreshTarget()
+    IsTargetValueSet = False
+    SetTargetPropertyValue
+End Sub
+
+Friend Sub DetachBinding()
+    On Error Resume Next
+
+    Dim Obj As DependencyProperty
+    Dim TargetObj As IDependencyObject
+    Dim Bindings As List
+
+    Set Obj = API.ObjFromPtr(m_TargetPropertyPtr)
+    If Not Obj Is Nothing Then Obj.RemoveListener m_HashCode
+
+    Set Obj = API.ObjFromPtr(m_SrcDepObjPtr)
+    If Not Obj Is Nothing Then Obj.RemoveCallback m_HashCode
+
+    Set TargetPropertyChangedEvent = Nothing
+    Set SourcePropertyChangedEvent = Nothing
+    Set m_SourceProperty = Nothing
+
+    Set TargetObj = Me.Target
+    If Not TargetObj Is Nothing Then
+        Set Bindings = API.CObj(TargetObj).Bindings
+        If Not Bindings Is Nothing Then Bindings.Remove Me
+    End If
+
+    m_TargetPtr = 0
+    m_SourcePtr = 0
+    m_TargetPropertyPtr = 0
+    m_SrcDepObjPtr = 0
+End Sub

@@ -1,6 +1,6 @@
 # Demac.VCF — performance benchmarks (Phase 0 baseline)
 
-**Status:** Baselines recorded — **v2.4.0-wpf-alignment-p3** validated  
+**Status:** Phase 4 started — **v2.5.0-wpf-alignment-p4** (3 new tests; pending validation)  
 **Runner:** `.Tests/Phase0` (`modPhase0Bench`)  
 **Threshold policy:** Regressions > 10% vs previous tag require explanation in release notes.
 
@@ -10,12 +10,12 @@
 
 | Field | Value |
 |-------|-------|
-| DLL version | 2.4.0-wpf-alignment-p3 |
+| DLL version | 2.5.0-wpf-alignment-p4 (pending validation) |
 | OS | Windows 10/11 x64 (build 26200) |
 | vbRichClient5 | v5 (path in test `.vbp`) |
 | Process bitness | 32-bit (VB6) |
 | Recorded | 2026-06-20 |
-| Phase0/1/2/3 result | **15 passed, 0 failed** (validated) |
+| Phase0/1/2/3/4 result | **18 tests** (15 validated + 3 Phase 4 pending) |
 
 Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whether POS video secondary display is active (exclude from UI benchmarks).
 
@@ -40,6 +40,9 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P3-SOURCE | `Source=` file load | `Phase3Bench_ResourceSourceLoad` | **pass** | Greeting=Phase3 |
 | P3-DYNAMIC | Element TryFindResource path | `Phase3Bench_DynamicResourceExtension` | **pass** | BgColor=12345 |
 | P3-STRICT-PROP | Unknown property raises | `Phase3Bench_StrictUnknownProperty` | **pass** | must raise |
+| P4-BIND | OneWay binding + INPC | `Phase4Bench_BindingOneWay` | — | Title sync |
+| P4-DCTX | DataContext swap rebind | `Phase4Bench_DataContextRebind` | — | One→Two |
+| P4-DETACH | Detach stops updates | `Phase4Bench_BindingDetach` | — | frozen text |
 | B-RESZ | Window resize nested UniformGrid 50× | *Phase 1+* | — | deferred |
 | B-NAV | 50× view navigation binding leak | *Phase 4+* | — | deferred |
 

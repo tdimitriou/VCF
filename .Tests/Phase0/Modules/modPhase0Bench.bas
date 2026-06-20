@@ -25,12 +25,15 @@ Public Sub RunAll()
     If Not Phase3Bench_ResourceSourceLoad() Then Failed = Failed + 1
     If Not Phase3Bench_DynamicResourceExtension() Then Failed = Failed + 1
     If Not Phase3Bench_StrictUnknownProperty() Then Failed = Failed + 1
+    If Not Phase4Bench_BindingOneWay() Then Failed = Failed + 1
+    If Not Phase4Bench_DataContextRebind() Then Failed = Failed + 1
+    If Not Phase4Bench_BindingDetach() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (15 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (18 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
-        MsgBox Failed & " Phase 0/1/2/3 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
+        MsgBox Failed & " Phase 0/1/2/3/4 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
-        MsgBox "All Phase 0/1/2/3 tests passed.", vbInformation, "Phase0"
+        MsgBox "All Phase 0/1/2/3/4 tests passed.", vbInformation, "Phase0"
     End If
 End Sub
 
@@ -464,6 +467,103 @@ Fail:
         Debug.Print "FAIL  P3-STRICT — " & Err.Description
         Phase3Bench_StrictUnknownProperty = False
     End If
+End Function
+
+Public Function Phase4Bench_BindingOneWay() As Boolean
+    Dim Vm As Phase0ViewModel
+    Dim Tb As TextBlock
+    Dim Expr As BindingExpression
+
+    On Error GoTo Fail
+
+    Set Vm = New Phase0ViewModel
+    Vm.Title = "Hello"
+    Set Tb = New TextBlock
+    Set Expr = New BindingExpression
+    Expr.Attach Tb, "Text", Vm, "Title", OneWay
+
+    If Tb.Text <> "Hello" Then Err.Raise vbObjectError, , "Expected Hello, got " & Tb.Text
+
+    Vm.Title = "World"
+    If Tb.Text <> "World" Then Err.Raise vbObjectError, , "Expected World after INPC, got " & Tb.Text
+
+    LogResult "P4-BIND", 0, "OK OneWay Title binding"
+    Debug.Print "PASS  P4-BIND OneWay binding + INPC"
+    Phase4Bench_BindingOneWay = True
+    Exit Function
+
+Fail:
+    LogResult "P4-BIND", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4-BIND — " & Err.Description
+    Phase4Bench_BindingOneWay = False
+End Function
+
+Public Function Phase4Bench_DataContextRebind() As Boolean
+    Dim Vm1 As Phase0ViewModel
+    Dim Vm2 As Phase0ViewModel
+    Dim P As Panel
+    Dim Tb As TextBlock
+    Dim Expr As BindingExpression
+
+    On Error GoTo Fail
+
+    Set Vm1 = New Phase0ViewModel
+    Vm1.Title = "One"
+    Set Vm2 = New Phase0ViewModel
+    Vm2.Title = "Two"
+
+    Set P = New Panel
+    Set Tb = New TextBlock
+    P.Children.Add Tb
+
+    Set P.DataContext = Vm1
+    Set Expr = New BindingExpression
+    Expr.Attach Tb, "Text", Tb.DependencyProperties.GetProperty("DataContext"), "Title", OneWay
+
+    If Tb.Text <> "One" Then Err.Raise vbObjectError, , "Expected One, got " & Tb.Text
+
+    Set P.DataContext = Vm2
+    If Tb.Text <> "Two" Then Err.Raise vbObjectError, , "Expected Two after DataContext swap, got " & Tb.Text
+
+    LogResult "P4-DCTX", 0, "OK DataContext rebind"
+    Debug.Print "PASS  P4-DCTX DataContext rebind"
+    Phase4Bench_DataContextRebind = True
+    Exit Function
+
+Fail:
+    LogResult "P4-DCTX", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4-DCTX — " & Err.Description
+    Phase4Bench_DataContextRebind = False
+End Function
+
+Public Function Phase4Bench_BindingDetach() As Boolean
+    Dim Vm As Phase0ViewModel
+    Dim Tb As TextBlock
+    Dim Expr As BindingExpression
+
+    On Error GoTo Fail
+
+    Set Vm = New Phase0ViewModel
+    Vm.Title = "Before"
+    Set Tb = New TextBlock
+    Set Expr = New BindingExpression
+    Expr.Attach Tb, "Text", Vm, "Title", OneWay
+
+    If Tb.Text <> "Before" Then Err.Raise vbObjectError, , "Expected Before, got " & Tb.Text
+
+    Expr.Detach
+    Vm.Title = "After"
+    If Tb.Text <> "Before" Then Err.Raise vbObjectError, , "Expected text frozen at Before, got " & Tb.Text
+
+    LogResult "P4-DETACH", 0, "OK Detach stops updates"
+    Debug.Print "PASS  P4-DETACH Binding Detach"
+    Phase4Bench_BindingDetach = True
+    Exit Function
+
+Fail:
+    LogResult "P4-DETACH", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4-DETACH — " & Err.Description
+    Phase4Bench_BindingDetach = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String
