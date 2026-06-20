@@ -30,8 +30,9 @@ Public Sub RunAll()
     If Not Phase4Bench_BindingDetach() Then Failed = Failed + 1
     If Not Phase4bBench_BeginUpdateDefer() Then Failed = Failed + 1
     If Not Phase4bBench_Move() Then Failed = Failed + 1
+    If Not Phase4bBench_ItemsControl() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (20 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (21 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -653,6 +654,46 @@ Fail:
     LogResult "P4b-MOVE", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P4b-MOVE — " & Err.Description
     Phase4bBench_Move = False
+End Function
+
+Public Function Phase4bBench_ItemsControl() As Boolean
+    Dim IC As ItemsControl
+    Dim Coll As ObservableCollection
+    Dim Tmpl As DataTemplate
+    Dim Tb As TextBlock
+
+    On Error GoTo Fail
+
+    Set Coll = New ObservableCollection
+    Coll.Add "one"
+    Coll.Add "two"
+
+    Set Tmpl = New DataTemplate
+    Set Tb = New TextBlock
+    Tb.Text = "Item"
+    Tmpl.Children.Add Tb
+
+    Set IC = New ItemsControl
+    Set IC.ItemTemplate = Tmpl
+    Set IC.ItemsSource = Coll
+
+    If IC.ItemCount <> 2 Then Err.Raise vbObjectError, , "Expected ItemCount=2"
+    If IC.ItemsHost Is Nothing Then Err.Raise vbObjectError, , "ItemsHost is Nothing"
+    If IC.ItemsHost.Children.Count <> 2 Then Err.Raise vbObjectError, , "Expected 2 generated items"
+
+    Coll.Add "three"
+    If IC.ItemCount <> 3 Then Err.Raise vbObjectError, , "Expected ItemCount=3 after Add"
+    If IC.ItemsHost.Children.Count <> 3 Then Err.Raise vbObjectError, , "Expected 3 host children after Add"
+
+    LogResult "P4b-ICtrl", 0, "OK ItemsControl generates items"
+    Debug.Print "PASS  P4b-ICtrl ItemsControl ItemTemplate + ItemsSource"
+    Phase4bBench_ItemsControl = True
+    Exit Function
+
+Fail:
+    LogResult "P4b-ICtrl", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4b-ICtrl — " & Err.Description
+    Phase4bBench_ItemsControl = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

@@ -149,11 +149,12 @@ Public Function ReadElementVisibility(ByVal Child As Object) As Visibility
 End Function
 
 Public Function ReadElementMargin(ByVal Child As Object) As Thickness
-    Dim DefaultMargin As Thickness
-    Set ReadElementMargin = DefaultMargin
     On Error Resume Next
     If Child.DependencyProperties.Exists("Margin") Then
         Set ReadElementMargin = Child.DependencyProperties.GetValue("Margin")
+    End If
+    If ReadElementMargin Is Nothing Then
+        Set ReadElementMargin = modConstructors.NewThickness(0, 0, 0, 0)
     End If
 End Function
 
@@ -192,21 +193,36 @@ Public Sub ApplyChildWidgetVisibility(ByVal Child As Object, ByVal Value As Visi
     End If
 End Sub
 
+Public Function ControlWidgetKey(ByVal Child As Object) As String
+    ControlWidgetKey = "_" & ObjPtr(Child)
+End Function
+
 Public Sub AttachChildWidget( _
     ByVal Child As Object, _
     ByVal HostWidget As cWidgetBase, _
     ByVal ChildVis As Visibility)
 
+    Dim Key As String
+
     If Not TypeOf Child Is IControl Then Exit Sub
-    If HostWidget.Widgets.Exists(Child.Widget.Key) Then HostWidget.Widgets.Remove Child.Widget.Key
-    If Not HostWidget.Widgets.Exists(Child.Widget.Key) Then
-        HostWidget.Widgets.Add Child, "_" & ObjPtr(Child), , , , , IsWidgetVisible(ChildVis)
+    If Child.Widget Is Nothing Then Exit Sub
+    If HostWidget Is Nothing Then Exit Sub
+
+    Key = ControlWidgetKey(Child)
+    If HostWidget.Widgets.Exists(Key) Then HostWidget.Widgets.Remove Key
+    If Not HostWidget.Widgets.Exists(Key) Then
+        HostWidget.Widgets.Add Child, Key, , , , , IsWidgetVisible(ChildVis)
     End If
 End Sub
 
 Public Sub DetachCollapsedChild(ByVal Child As Object, ByVal HostWidget As cWidgetBase)
+    Dim Key As String
+
     If Not TypeOf Child Is IControl Then Exit Sub
-    If HostWidget.Widgets.Exists(Child.Widget.Key) Then HostWidget.Widgets.Remove Child.Widget.Key
+    If HostWidget Is Nothing Then Exit Sub
+
+    Key = ControlWidgetKey(Child)
+    If HostWidget.Widgets.Exists(Key) Then HostWidget.Widgets.Remove Key
 End Sub
 
 Public Sub ArrangeStackPanelChildren( _

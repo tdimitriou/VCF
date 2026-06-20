@@ -109,6 +109,10 @@ Private Sub RegisterFrameworkElementType()
     RegisterType "ContentControl", "FrameworkElement", _
         Array("Content", vbObject, vbNullString, vbNullString, False, True, False, OneWay)
 
+    RegisterType "ItemsControl", "FrameworkElement", _
+        Array("ItemsSource", vbObject, vbNullString, vbNullString, False, True, False, OneWay), _
+        Array("ItemTemplate", vbObject, "DataTemplate", vbNullString, False, True, False, OneWay)
+
     RegisterType "Border", "FrameworkElement", _
         Array("Child", vbObject, vbNullString, vbNullString, False, True, False, OneWay)
     RegisterType "UserControl", "FrameworkElement"

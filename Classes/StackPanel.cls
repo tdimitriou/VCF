@@ -320,37 +320,33 @@ End Property
 
 '#Region UIElementCollection Events
     Private Sub m_Children_CollectionChanged(Sender As Object, e As CollectionChangedEventArgs)
-        On Error GoTo Catch
-            
         Dim Child As Object
-        
-Try:
-        
+
         If Not e.OldItems Is Nothing Then
             For Each Child In e.OldItems
-                If TypeOf Child Is IControl Then If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove Child.Widget.Key
+                If TypeOf Child Is IControl Then
+                    If W.Widgets.Exists(modLayoutEngine.ControlWidgetKey(Child)) Then
+                        W.Widgets.Remove modLayoutEngine.ControlWidgetKey(Child)
+                    End If
+                End If
             Next
         End If
-                
+
         If Not e.NewItems Is Nothing Then
             For Each Child In e.NewItems
                 MoveChild Child
             Next
         End If
-        
+
         If Not W.LockRefresh Then W.Refresh
-        
-        Exit Sub
-        
-Catch:
-        '
 End Sub
 '#End Region
 
 '#Region Private Methods
-    Private Sub MoveChild(Child As Object)
-        ArrangePanel
-    End Sub
+Private Sub MoveChild(Child As Object)
+    If W.LockRefresh Then Exit Sub
+    ArrangePanel
+End Sub
 
     Private Sub ArrangePanel()
         ArrangeStackPanelChildren m_Children, W, m_Orientation

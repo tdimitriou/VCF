@@ -706,38 +706,7 @@ Private ItemTemplates                           As List
     End Function
     
     Private Function CreateDataTemplate(Item) As DataTemplate
-        Dim ActiveTemplate As DataTemplate
-
-        Dim Key
-        Key = "DataTemplate_" & Typename(Item)
-
-        Dim ResourceTemplate
-        API.CopyVariable m_BaseUIElement.TryFindResource(Key), ResourceTemplate
-
-        If Not IsEmpty(ResourceTemplate) Then Set ActiveTemplate = ResourceTemplate
-
-        If ActiveTemplate Is Nothing Then Set ActiveTemplate = m_ItemTemplate
-
-        If ActiveTemplate Is Nothing Then Exit Function
-
-        ' CloneActiveTemplate
-        Dim NewTemplate As DataTemplate
-        Set NewTemplate = New DataTemplate
-
-        Dim Child As IVisualChild
-        Dim Obj As ICloneable
-        Dim Element As IUIElement
-
-        For Each Obj In ActiveTemplate.Children
-            Set Obj = Obj.Clone
-            Set Child = Obj
-            Set Element = Obj
-
-            If IsObject(Item) Then Set Element.DataContext = Item
-            NewTemplate.Children.Add Obj
-        Next
-
-        Set CreateDataTemplate = NewTemplate
+        Set CreateDataTemplate = modItemTemplateEngine.CloneDataTemplateForItem(m_ItemTemplate, Item, m_BaseUIElement)
     End Function
     
 '#End Region

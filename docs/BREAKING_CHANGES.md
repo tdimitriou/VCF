@@ -30,6 +30,26 @@
 
 ---
 
+## [2.7.0] — 2026-06-20 — Phase 4c (ItemsControl — validated)
+
+Tag: **`v2.7.0-wpf-alignment-p4c`** · Phase0 **21/21** pass.
+
+### Added
+
+- **`ItemsControl`** — WPF-aligned items presenter: **`ItemsSource`**, **`ItemTemplate`**, default vertical **`StackPanel`** items host; incremental **`CollectionChanged`** updates.
+- **`modItemTemplateEngine`** — shared item template cloning (**`CloneItemVisualForItem`** for **`ItemsControl`**, **`CloneDataTemplateForItem`** for **`ListView`**).
+- **`UIElementCollection.Insert`** — insert child at index (items host updates).
+
+### Bug fixes
+
+- **B4 (partial, ItemsControl):** non-**`ObservableCollection`** **`ItemsSource`** raises **`Err`** with clear message (ListView unchanged this release).
+
+### Test
+
+- **P4b-ICtrl** in `.Tests/Phase0` (suite → **21** tests).
+
+---
+
 ## [2.6.0] — 2026-06-20 — Phase 4b (collections — validated)
 
 Tag: **`v2.6.0-wpf-alignment-p4b`** · Phase0 **20/20** pass.

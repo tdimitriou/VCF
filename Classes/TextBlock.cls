@@ -268,9 +268,8 @@ End Function
         m_Top = 0 'Top
         m_Width = Width
         m_Height = Height
-                
-        If Parent.Widgets.Exists(Widget.Key) Then Parent.Widgets.Remove Widget.Key
-        Parent.Widgets.Add Me, "_" & ObjPtr(Me), , , , , W.Visible
+        
+        If W Is Nothing Then Exit Sub
         W.Move Left, Top, Width, Height
     End Sub
 
@@ -282,8 +281,7 @@ End Function
         If Value Is Nothing Then Exit Property
         
         DependencyPropertiesStatic.InheritPropertyValues Me
-        
-        Parent.Widget.Refresh
+        If Not Parent.Widget Is Nothing Then Parent.Widget.Refresh
     End Property
         
     Public Property Get Parent() As IControl
@@ -580,6 +578,7 @@ Public Function Clone() As TextBlock
     Dim DstBinding As Binding
     
     For Each SrcBinding In m_Bindings
+        If SrcBinding.TargetProperty Is Nothing Then GoTo NextBinding
         Set DstBinding = New Binding
         
         DstBinding.Initialize SrcBinding.Source, _
@@ -594,9 +593,10 @@ Public Function Clone() As TextBlock
                 Set DstBinding.SrcDepObj = Clone.DependencyProperties.GetProperty(SrcBinding.SrcDepObj.Name)
         
         Clone.Bindings.Add DstBinding
+NextBinding:
     Next
     
-    Clone.Move CSng(m_Left), CSng(m_Top), CSng(m_Width), CSng(m_Height)
+    If Not W Is Nothing Then W.Move 0, 0, CSng(m_Width), CSng(m_Height)
 End Function
 
 Private Sub W_HitTest(ByVal x As Single, ByVal y As Single, HitResultHit As Boolean)

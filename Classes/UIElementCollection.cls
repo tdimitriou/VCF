@@ -30,6 +30,10 @@ Public Sub Add(Value As Object)
     m_List.Add Value
 End Sub
 
+Public Sub Insert(ByVal Index As Long, Value As Object)
+    m_List.Insert Index, Value
+End Sub
+
 Public Sub AddRange(List)
     m_List.AddRange List
 End Sub
@@ -48,6 +52,27 @@ End Sub
 
 Public Sub Clear()
     m_List.Clear
+End Sub
+
+Friend Sub AddSilent(Value As Object)
+    Dim UIElement As IUIElement
+
+    If m_ParentPtr <> 0 Then
+        Set UIElement = Value
+        Set UIElement.Parent = Parent
+    End If
+    m_List.AddSilent Value
+End Sub
+
+Friend Sub ClearSilent()
+    Dim UIElement As IUIElement
+    Dim i As Long
+
+    For i = 0 To m_List.Count - 1
+        Set UIElement = m_List(i)
+        Set UIElement.Parent = Nothing
+    Next i
+    m_List.ClearSilent
 End Sub
 
 Public Function Contains(Value As Object) As Boolean
@@ -79,6 +104,7 @@ Public Property Set Item(ByVal Index As Long, Value As Object)
 End Property
 
 Public Property Get Parent() As Object
+    If m_ParentPtr = 0 Then Exit Property
     Set Parent = API.ObjFromPtr(m_ParentPtr)
 End Property
 '#End Region
@@ -102,35 +128,50 @@ Private Sub m_List_CollectionChanged(Sender As Object, e As CollectionChangedEve
     
     Select Case e.Action
         Case CollectionChangedActionAdd
-            For Each UIElement In e.NewItems
-                Set UIElement.Parent = Parent
-            Next
+            If m_ParentPtr <> 0 Then
+                If Not e.NewItems Is Nothing Then
+                    For Each UIElement In e.NewItems
+                        Set UIElement.Parent = Parent
+                    Next
+                End If
+            End If
         Case CollectionChangedActionRemove
-            For Each UIElement In e.OldItems
-                Set UIElement.Parent = Nothing
-            Next
+            If Not e.OldItems Is Nothing Then
+                For Each UIElement In e.OldItems
+                    Set UIElement.Parent = Nothing
+                Next
+            End If
         Case CollectionChangedActionReplace
-            For Each UIElement In e.OldItems
-                Set UIElement.Parent = Nothing
-            Next
+            If Not e.OldItems Is Nothing Then
+                For Each UIElement In e.OldItems
+                    Set UIElement.Parent = Nothing
+                Next
+            End If
             
-            For Each UIElement In e.NewItems
-                Set UIElement.Parent = Parent
-            Next
+            If m_ParentPtr <> 0 Then
+                If Not e.NewItems Is Nothing Then
+                    For Each UIElement In e.NewItems
+                        Set UIElement.Parent = Parent
+                    Next
+                End If
+            End If
         Case CollectionChangedActionMove
             '
         Case CollectionChangedActionReset
-            For Each UIElement In e.OldItems
-                Set UIElement.Parent = Nothing
-            Next
+            If Not e.OldItems Is Nothing Then
+                For Each UIElement In e.OldItems
+                    Set UIElement.Parent = Nothing
+                Next
+            End If
     End Select
             
     RaiseEvent CollectionChanged(Me, e)
     
-    Dim ParentWin As Window
-    Set ParentWin = GetParentWindow(Parent)
-    
-    If Not ParentWin Is Nothing Then ParentWin.OnChildElementsChanged Parent, e
+    If m_ParentPtr <> 0 Then
+        Dim ParentWin As Window
+        Set ParentWin = GetParentWindow(Parent)
+        If Not ParentWin Is Nothing Then ParentWin.OnChildElementsChanged Parent, e
+    End If
     
 End Sub
 '#End Region

@@ -324,6 +324,14 @@ Public Sub Clear()
     Call OnCollectionChanged(CollectionChangedActionReset, Nothing, -1, OldList, 0)
 End Sub
 
+Friend Sub AddSilent(Value)
+    m_List.Add Value
+End Sub
+
+Friend Sub ClearSilent()
+    Set m_List = New_c.ArrayList(vbVariant)
+End Sub
+
 Public Function CollectionChangedEvent() As CollectionChangedEvent
     Set CollectionChangedEvent = m_CollectionChangedEvent
 End Function
