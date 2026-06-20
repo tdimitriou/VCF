@@ -474,7 +474,10 @@ Private ItemTemplates                           As List
                     Index = Index + 1
                 Next
             Case CollectionChangedAction.CollectionChangedActionMove
-                '
+                Dim MovedTemplate As Variant
+                MovedTemplate = ItemTemplates(e.OldStartingIndex)
+                ItemTemplates.RemoveAt e.OldStartingIndex
+                ItemTemplates.Insert e.NewStartingIndex, MovedTemplate
             Case CollectionChangedAction.CollectionChangedActionRemove
                 ItemTemplates.RemoveRange e.OldStartingIndex, e.OldItems.Count
             Case CollectionChangedAction.CollectionChangedActionReplace

@@ -135,6 +135,26 @@ Public Sub Clear()
     Set m_List = New_c.ArrayList(vbVariant)
 End Sub
 
+Friend Sub ClearInPlace()
+    Do While m_List.Count > 0
+        m_List.Remove m_List.Count - 1
+    Loop
+End Sub
+
+Friend Sub SetSingleItem(ByVal Value As Variant)
+    ClearInPlace
+    
+    If IsObject(Value) Then
+        If Value Is Nothing Then
+            m_List.Add Empty
+        Else
+            m_List.Add Value
+        End If
+    Else
+        m_List.Add Value
+    End If
+End Sub
+
 Public Function Contains(Value) As Boolean
     Contains = Exists(Value)
 End Function

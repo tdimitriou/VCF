@@ -346,6 +346,7 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-06-19 | Initial complete handoff package — 8 documents, full class/property inventory |
 | 2026-06-20 | Phase 0 complete — tag v2.0.0-wpf-alignment-p0; baselines recorded; kickoff agenda added |
 | 2026-06-20 | Phase 4 validated — tag v2.5.0-wpf-alignment-p4; Phase0 18/18 (P4-BIND, P4-DCTX, P4-DETACH) |
+| 2026-06-20 | Phase 4b validated — tag v2.6.0-wpf-alignment-p4b; Phase0 20/20; B-COLL 3 ms |
 
 ---
 

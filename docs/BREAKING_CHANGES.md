@@ -30,6 +30,32 @@
 
 ---
 
+## [2.6.0] — 2026-06-20 — Phase 4b (collections — validated)
+
+Tag: **`v2.6.0-wpf-alignment-p4b`** · Phase0 **20/20** pass.
+
+### Added
+
+- **`ObservableCollection.BeginUpdate` / `EndUpdate`** — batch mutations; coalesce to a single **`Reset`** notification on `EndUpdate`.
+- **`ObservableCollection.Move(OldIndex, NewIndex)`** — raises **`CollectionChangedActionMove`**.
+- **`ObservableCollection.IsUpdating`** — read-only batch depth indicator.
+- **`modCollectionNotifications`** — reusable single-item **`List`** scratch buffers for Add/Remove/Replace/Move (avoids `New List` per single-item change).
+
+### Bug fixes
+
+- **B2 (partial):** **`ListView`** now handles **`CollectionChangedActionMove`** (item template reorder).
+
+### Notes
+
+- Multi-item **`AddRange`** / **`Clear`** still allocate **`List`** payloads where required; single-item paths use scratch buffers.
+- **`ObservableDictionary`** unchanged this release (same notification pattern as before).
+
+### Test
+
+- **P4b-DEFER**, **P4b-MOVE** in `.Tests/Phase0` (with Phase 0–4 suite → **20** tests).
+
+---
+
 ## [2.5.0] — 2026-06-20 — Phase 4 (bindings — validated)
 
 Tag: **`v2.5.0-wpf-alignment-p4`** · Phase0 **18/18** pass.

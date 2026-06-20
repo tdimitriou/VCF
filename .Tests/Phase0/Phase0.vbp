@@ -5,6 +5,7 @@ Reference=*\G{74362769-B3CB-467E-988C-B7461D864D8D}#cd.0#0#..\..\bin\Demac.VCF.d
 Module=modApp; Modules\modApp.bas
 Module=modPhase0Bench; Modules\modPhase0Bench.bas
 Class=Phase0ViewModel; Classes\Phase0ViewModel.cls
+Class=Phase0CollectionSink; Classes\Phase0CollectionSink.cls
 Startup="Sub Main"
 HelpFile=""
 ExeName32="Phase0.exe"

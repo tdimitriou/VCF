@@ -23,6 +23,9 @@ Private m_Ptr               As Long
 
 Private m_CollectionChangedEvent As CollectionChangedEvent
 
+Private m_UpdateDepth       As Long
+Private m_DeferredNotify    As Boolean
+
 '#Region Class Events
 Private Sub Class_Initialize()
     Set m_List = New_c.ArrayList(vbVariant)
@@ -38,10 +41,71 @@ End Sub
 '#End Region
 
 '#Region Public Methods
+Public Sub BeginUpdate()
+    m_UpdateDepth = m_UpdateDepth + 1
+End Sub
+
+Public Sub EndUpdate()
+    If m_UpdateDepth = 0 Then
+        Err.Raise 5, TypeName(Me), "EndUpdate without matching BeginUpdate"
+        Exit Sub
+    End If
+    
+    m_UpdateDepth = m_UpdateDepth - 1
+    
+    If m_UpdateDepth = 0 And m_DeferredNotify Then
+        m_DeferredNotify = False
+        Call OnCollectionChanged(CollectionChangedActionReset, Nothing, -1, Nothing, 0)
+    End If
+End Sub
+
+Public Property Get IsUpdating() As Boolean
+    IsUpdating = (m_UpdateDepth > 0)
+End Property
+
+Public Sub Move(ByVal OldIndex As Long, ByVal NewIndex As Long)
+    Dim Value As Variant
+    
+    If OldIndex < 0 Or OldIndex > m_List.Count - 1 Then
+        Err.Raise 9
+        Exit Sub
+    End If
+    
+    If NewIndex < 0 Or NewIndex > m_List.Count - 1 Then
+        Err.Raise 9
+        Exit Sub
+    End If
+    
+    If OldIndex = NewIndex Then Exit Sub
+    
+    Call API.CopyVariable(m_List(OldIndex), Value)
+    
+    Call m_List.Remove(OldIndex)
+    m_List.Add Value, NewIndex
+    
+    If m_UpdateDepth > 0 Then
+        m_DeferredNotify = True
+        Exit Sub
+    End If
+    
+    Dim NewItems As List
+    Dim OldItems As List
+    Set NewItems = ScratchNewForItem(Value)
+    Set OldItems = ScratchOldForItem(Value)
+    Call OnCollectionChanged(CollectionChangedActionMove, NewItems, NewIndex, OldItems, OldIndex)
+End Sub
+
 Public Sub Add(Value)
     m_List.Add Value
     
-    Call OnCollectionChanged(CollectionChangedActionAdd, NewList(Value), m_List.Count - 1, Nothing, -1)
+    If m_UpdateDepth > 0 Then
+        m_DeferredNotify = True
+        Exit Sub
+    End If
+    
+    Dim NewItems As List
+    Set NewItems = ScratchNewForItem(Value)
+    Call OnCollectionChanged(CollectionChangedActionAdd, NewItems, m_List.Count - 1, Nothing, -1)
 End Sub
 
 Public Sub AddRange(List)
@@ -71,9 +135,12 @@ Public Sub AddRange(List)
         Next
     
     End If
-    
+        
 
-'================================================
+    If m_UpdateDepth > 0 Then
+        m_DeferredNotify = True
+        Exit Sub
+    End If
     
     Dim NewItems As VCF.List
     
@@ -113,7 +180,14 @@ Public Sub Insert(Index, Value)
     
     m_List.Add Value, Index
     
-    Call OnCollectionChanged(CollectionChangedActionAdd, NewList(Value), Index, Nothing, -1)
+    If m_UpdateDepth > 0 Then
+        m_DeferredNotify = True
+        Exit Sub
+    End If
+    
+    Dim NewItems As List
+    Set NewItems = ScratchNewForItem(Value)
+    Call OnCollectionChanged(CollectionChangedActionAdd, NewItems, Index, Nothing, -1)
 End Sub
 
 Public Sub InsertRange(ByVal Index As Long, List As Object)
@@ -144,6 +218,11 @@ Public Sub InsertRange(ByVal Index As Long, List As Object)
         NewItems.AddRange List
     End If
     
+    If m_UpdateDepth > 0 Then
+        m_DeferredNotify = True
+        Exit Sub
+    End If
+    
     Call OnCollectionChanged(CollectionChangedActionAdd, NewItems, Index, Nothing, -1)
 End Sub
 
@@ -154,7 +233,14 @@ Public Sub Remove(Value)
     
     Call m_List.Remove(Index)
     
-    Call OnCollectionChanged(CollectionChangedActionRemove, Nothing, -1, NewList(Value), Index)
+    If m_UpdateDepth > 0 Then
+        m_DeferredNotify = True
+        Exit Sub
+    End If
+    
+    Dim OldItems As List
+    Set OldItems = ScratchOldForItem(Value)
+    Call OnCollectionChanged(CollectionChangedActionRemove, Nothing, -1, OldItems, Index)
 End Sub
 
 Public Sub RemoveRange(ByVal Index As Long, ByVal Count As Long)
@@ -183,6 +269,11 @@ Public Sub RemoveRange(ByVal Index As Long, ByVal Count As Long)
     
     m_List.RemoveElements Index, Count
 
+    If m_UpdateDepth > 0 Then
+        m_DeferredNotify = True
+        Exit Sub
+    End If
+
     Call OnCollectionChanged(CollectionChangedActionRemove, Nothing, -1, OldList, Index)
 End Sub
 
@@ -203,7 +294,14 @@ Public Sub RemoveAt(ByVal Index As Long)
     
     Call m_List.Remove(Index)
     
-    Call OnCollectionChanged(CollectionChangedActionRemove, Nothing, -1, NewList(OldValue), Index)
+    If m_UpdateDepth > 0 Then
+        m_DeferredNotify = True
+        Exit Sub
+    End If
+    
+    Dim OldItems As List
+    Set OldItems = ScratchOldForItem(OldValue)
+    Call OnCollectionChanged(CollectionChangedActionRemove, Nothing, -1, OldItems, Index)
 End Sub
 
 Public Sub Clear()
@@ -217,6 +315,11 @@ Public Sub Clear()
     Next
     
     Set m_List = New_c.ArrayList(vbVariant)
+    
+    If m_UpdateDepth > 0 Then
+        m_DeferredNotify = True
+        Exit Sub
+    End If
     
     Call OnCollectionChanged(CollectionChangedActionReset, Nothing, -1, OldList, 0)
 End Sub
@@ -288,12 +391,21 @@ Attribute Item.VB_UserMemId = 0
                 
         If Object.Equals(m_List(Index), Value) Then Exit Property
         
-        Dim OldItems As List
-        Set OldItems = NewList(m_List(Index))
+        Dim OldValue As Variant
+        Call API.CopyVariable(m_List(Index), OldValue)
         
         m_List(Index) = Value
         
-        Call OnCollectionChanged(CollectionChangedActionReplace, NewList(Value), Index, OldItems, Index)
+        If m_UpdateDepth > 0 Then
+            m_DeferredNotify = True
+            Exit Property
+        End If
+        
+        Dim NewItems As List
+        Dim OldItems As List
+        Set NewItems = ScratchNewForItem(Value)
+        Set OldItems = ScratchOldForItem(OldValue)
+        Call OnCollectionChanged(CollectionChangedActionReplace, NewItems, Index, OldItems, Index)
     End Property
     
     Public Property Set Item(ByVal Index As Long, Value As Variant)
@@ -306,12 +418,21 @@ Attribute Item.VB_UserMemId = 0
                 
         If Object.Equals(m_List(Index), Value) Then Exit Property
         
-        Dim OldItems As List
-        Set OldItems = NewList(m_List(Index))
+        Dim OldValue As Variant
+        Call API.CopyVariable(m_List(Index), OldValue)
         
         Set m_List(Index) = Value
         
-        Call OnCollectionChanged(CollectionChangedActionReplace, NewList(Value), Index, OldItems, Index)
+        If m_UpdateDepth > 0 Then
+            m_DeferredNotify = True
+            Exit Property
+        End If
+        
+        Dim NewItems As List
+        Dim OldItems As List
+        Set NewItems = ScratchNewForItem(Value)
+        Set OldItems = ScratchOldForItem(OldValue)
+        Call OnCollectionChanged(CollectionChangedActionReplace, NewItems, Index, OldItems, Index)
     End Property
     '#End Region
     
@@ -351,6 +472,8 @@ Attribute Item.VB_UserMemId = 0
         Dim e As CollectionChangedEventArgs
         Dim DefaultView As ListCollectionView
         
+        modCollectionNotifications.NotifyEnter
+        
         Set e = NewCollectionChangedEventArgs(Action, NewItems, NewStartingIndex, OldItems, OldStartingIndex)
         
         ' Notify the DefaultView (if any)
@@ -360,6 +483,8 @@ Attribute Item.VB_UserMemId = 0
         RaiseEvent CollectionChanged(Me, e)
     
         m_CollectionChangedEvent.OnCollectionChanged e
+        
+        modCollectionNotifications.NotifyLeave
     End Sub
 '#End Region
 

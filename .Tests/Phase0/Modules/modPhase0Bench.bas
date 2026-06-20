@@ -28,8 +28,10 @@ Public Sub RunAll()
     If Not Phase4Bench_BindingOneWay() Then Failed = Failed + 1
     If Not Phase4Bench_DataContextRebind() Then Failed = Failed + 1
     If Not Phase4Bench_BindingDetach() Then Failed = Failed + 1
+    If Not Phase4bBench_BeginUpdateDefer() Then Failed = Failed + 1
+    If Not Phase4bBench_Move() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (18 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (20 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -581,6 +583,76 @@ Fail:
     LogResult "P4-DETACH", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P4-DETACH — " & Err.Description
     Phase4Bench_BindingDetach = False
+End Function
+
+Public Function Phase4bBench_BeginUpdateDefer() As Boolean
+    Dim Coll As ObservableCollection
+    Dim Sink As Phase0CollectionSink
+    Dim i As Long
+
+    On Error GoTo Fail
+
+    Set Coll = New ObservableCollection
+    Set Sink = New Phase0CollectionSink
+    Sink.Attach Coll
+
+    Coll.BeginUpdate
+    For i = 1 To 100
+        Coll.Add "item" & i
+    Next
+    Coll.EndUpdate
+
+    If Coll.Count <> 100 Then Err.Raise vbObjectError, , "Expected 100 items after batch"
+    If Sink.NotifyCount <> 1 Then Err.Raise vbObjectError, , "Expected 1 notification, got " & Sink.NotifyCount
+    If Sink.LastAction <> CollectionChangedActionReset Then Err.Raise vbObjectError, , "Expected Reset notification"
+
+    Sink.Detach
+    LogResult "P4b-DEFER", 0, "OK BeginUpdate coalesced 100 adds"
+    Debug.Print "PASS  P4b-DEFER BeginUpdate defers notifications"
+    Phase4bBench_BeginUpdateDefer = True
+    Exit Function
+
+Fail:
+    On Error Resume Next
+    If Not Sink Is Nothing Then Sink.Detach
+    LogResult "P4b-DEFER", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4b-DEFER — " & Err.Description
+    Phase4bBench_BeginUpdateDefer = False
+End Function
+
+Public Function Phase4bBench_Move() As Boolean
+    Dim Coll As ObservableCollection
+    Dim Sink As Phase0CollectionSink
+
+    On Error GoTo Fail
+
+    Set Coll = New ObservableCollection
+    Coll.Add "a"
+    Coll.Add "b"
+    Coll.Add "c"
+
+    Set Sink = New Phase0CollectionSink
+    Sink.Attach Coll
+
+    Coll.Move 0, 2
+
+    If Coll(0) <> "b" Then Err.Raise vbObjectError, , "Index 0 expected b"
+    If Coll(1) <> "c" Then Err.Raise vbObjectError, , "Index 1 expected c"
+    If Coll(2) <> "a" Then Err.Raise vbObjectError, , "Index 2 expected a"
+    If Sink.LastAction <> CollectionChangedActionMove Then Err.Raise vbObjectError, , "Expected Move notification"
+
+    Sink.Detach
+    LogResult "P4b-MOVE", 0, "OK Move(0,2)"
+    Debug.Print "PASS  P4b-MOVE ObservableCollection Move"
+    Phase4bBench_Move = True
+    Exit Function
+
+Fail:
+    On Error Resume Next
+    If Not Sink Is Nothing Then Sink.Detach
+    LogResult "P4b-MOVE", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4b-MOVE — " & Err.Description
+    Phase4bBench_Move = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

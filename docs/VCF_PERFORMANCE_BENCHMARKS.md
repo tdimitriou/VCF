@@ -1,6 +1,6 @@
 # Demac.VCF — performance benchmarks (Phase 0 baseline)
 
-**Status:** Phase 4 validated — **v2.5.0-wpf-alignment-p4** (18/18 tests)  
+**Status:** Phase 4b validated — **v2.6.0-wpf-alignment-p4b** (20/20 tests)  
 **Runner:** `.Tests/Phase0` (`modPhase0Bench`)  
 **Threshold policy:** Regressions > 10% vs previous tag require explanation in release notes.
 
@@ -10,12 +10,12 @@
 
 | Field | Value |
 |-------|-------|
-| DLL version | 2.5.0-wpf-alignment-p4 |
+| DLL version | 2.6.0-wpf-alignment-p4b |
 | OS | Windows 10/11 x64 (build 26200) |
 | vbRichClient5 | v5 (path in test `.vbp`) |
 | Process bitness | 32-bit (VB6) |
 | Recorded | 2026-06-20 |
-| Phase0/1/2/3/4 result | **18/18 pass** |
+| Phase0/1/2/3/4 result | **20/20 pass** |
 
 Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whether POS video secondary display is active (exclude from UI benchmarks).
 
@@ -26,7 +26,7 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | ID | Scenario | Method | Baseline (ms) | Threshold |
 |----|----------|--------|---------------|-----------|
 | B-GOLD | Golden XAML load (minimal tree) | `Phase0Bench_GoldenXamlLoad` | **22** | ≤ 24 (10% margin) |
-| B-COLL | 1000× `ObservableCollection.Add` | `Phase0Bench_CollectionAdd1000` | **21** | ≤ 23 (10% margin) |
+| B-COLL | 1000× `ObservableCollection.Add` | `Phase0Bench_CollectionAdd1000` | **3** | ≤ 23 (10% margin) |
 | B-LCV | Two simultaneous `ListCollectionView` init | `Phase0Bench_DualListCollectionView` | **pass** | must not raise |
 | B-STRICT-MALFORM | Malformed XAML raises `XamlLoadException` | `Phase0Bench_StrictMalformedXaml` | **pass** | must raise |
 | B-STRICT-UNKNOWN | Unknown type raises `XamlLoadException` | `Phase0Bench_StrictUnknownType` | **pass** | must raise |
@@ -43,6 +43,8 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P4-BIND | OneWay binding + INPC | `Phase4Bench_BindingOneWay` | **pass** | Title sync |
 | P4-DCTX | DataContext swap rebind | `Phase4Bench_DataContextRebind` | **pass** | One→Two |
 | P4-DETACH | Detach stops updates | `Phase4Bench_BindingDetach` | **pass** | Text stays Before |
+| P4b-DEFER | BeginUpdate coalesces 100 adds | `Phase4bBench_BeginUpdateDefer` | **pass** | 1 Reset notify |
+| P4b-MOVE | Move(0,2) reorder | `Phase4bBench_Move` | **pass** | b,c,a |
 | B-RESZ | Window resize nested UniformGrid 50× | *Phase 1+* | — | deferred |
 | B-NAV | 50× view navigation binding leak | *Phase 4+* | — | deferred |
 
@@ -63,7 +65,7 @@ Normal POS process **< 100 MB** without secondary customer-display video. Framew
 | Metric | Issue | Target |
 |--------|-------|--------|
 | DP registration | Per-instance Register × N | Shared registry (~10–25 MB savings est.) |
-| Collection Add | `New List` per notification | Single-item args |
+| Collection Add | `New List` per notification | Single-item scratch buffers + batch Reset |
 | Binding graph | 3× WithEvents per binding | BindingExpression + Detach |
 | Layout resize | Design* cascade | Measure/Arrange |
 
@@ -79,4 +81,5 @@ Normal POS process **< 100 MB** without secondary customer-display video. Framew
 | 2026-06-20 | **v2.4.0 Phase 3 validated:** 15/15 pass; B-GOLD 22 ms, B-COLL 21 ms; P3-MERGE, P3-SOURCE, P3-DYNAMIC, P3-STRICT-PROP pass |
 | 2026-06-20 | **v2.4.0 Phase 3:** P3-MERGE, P3-SOURCE, P3-DYNAMIC, P3-STRICT-PROP added (15 total tests) |
 | 2026-06-20 | **v2.3.0 Phase 2 validated:** 11/11 pass; B-GOLD 19 ms, B-COLL 16 ms; P2-STACK, P2-STACK-LAY, P2-GRID pass |
+| 2026-06-20 | **v2.6.0 Phase 4b validated:** 20/20 pass; B-COLL **3 ms** (scratch buffers); P4b-DEFER, P4b-MOVE pass |
 | 2026-06-20 | **v2.5.0 Phase 4 validated:** 18/18 pass; P4-BIND, P4-DCTX, P4-DETACH pass; binding detach no longer hangs on target read |
