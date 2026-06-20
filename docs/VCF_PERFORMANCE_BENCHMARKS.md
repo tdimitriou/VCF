@@ -10,12 +10,12 @@
 
 | Field | Value |
 |-------|-------|
-| DLL version | 2.1.0-wpf-alignment-p1 (validated build) |
+| DLL version | 2.2.0-wpf-alignment-p1b |
 | OS | Windows 10/11 x64 (build 26200) |
 | vbRichClient5 | v5 (path in test `.vbp`) |
 | Process bitness | 32-bit (VB6) |
 | Recorded | 2026-06-20 |
-| Phase0/1 result | **7 passed, 0 failed** |
+| Phase0/1 result | **8 passed, 0 failed** (target after rebuild) |
 
 Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whether POS video secondary display is active (exclude from UI benchmarks).
 
