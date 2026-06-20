@@ -37,8 +37,11 @@ Private m_SrcDepObjPtr                          As Long
 Private WithEvents m_SourceProperty             As NestedProperty
 Attribute m_SourceProperty.VB_VarHelpID = -1
 
-Private m_SourceHandler                         As BindingSourceChangedHandler
-Private m_TargetHandler                         As BindingTargetChangedHandler
+Private WithEvents SourcePropertyChangedEvent   As PropertyChangedEvent
+Attribute SourcePropertyChangedEvent.VB_VarHelpID = -1
+Private WithEvents TargetPropertyChangedEvent   As PropertyChangedEvent
+Attribute TargetPropertyChangedEvent.VB_VarHelpID = -1
+
 Private m_SourceInpcConnected                   As Boolean
 
 ' Use this to control the target update if Mode = OneTime (2)
@@ -121,7 +124,7 @@ Public Property Get Source() As Object
 End Property
 
 Public Property Set Source(ByVal Value As Object)
-    m_SourceHandler.Disconnect
+    Set SourcePropertyChangedEvent = Nothing
     m_SourceInpcConnected = False
     
     If Not Value Is Nothing Then
@@ -146,7 +149,7 @@ Public Property Set Source(ByVal Value As Object)
     If Not TypeOf Value Is INotifyPropertyChanged Then Exit Property
     
     Set Obj = Value
-    m_SourceHandler.Connect Me, Obj.PropertyChangedEvent
+    Set SourcePropertyChangedEvent = Obj.PropertyChangedEvent
     m_SourceInpcConnected = True
     
     SetSourceProperty
@@ -174,13 +177,13 @@ Public Property Set TargetProperty(ByVal Value As DependencyProperty)
     Set OldTargetProp = Me.TargetProperty
     If Not OldTargetProp Is Nothing Then OldTargetProp.RemoveListener Me
 
-    m_TargetHandler.Disconnect
+    Set TargetPropertyChangedEvent = Nothing
     
     m_TargetPropertyPtr = ObjPtr(Value)
     
     If Value Is Nothing Then Exit Property
     
-    m_TargetHandler.Connect Me, Value.PropertyChangedEvent
+    Set TargetPropertyChangedEvent = Value.PropertyChangedEvent
     
     Value.AddListener Me
 End Property
@@ -226,8 +229,6 @@ End Property
 Private Sub Class_Initialize()
     m_Mode = VCF.BindingMode.Default
     m_ConverterParameter = vbEmpty
-    Set m_SourceHandler = New BindingSourceChangedHandler
-    Set m_TargetHandler = New BindingTargetChangedHandler
 End Sub
 
 Private Sub Class_Terminate()
@@ -316,14 +317,6 @@ Private Sub SourcePropertyChangedEvent_PropertyChanged(ByVal Sender As Object, e
     m_SourceProperty.OnPropertyChanged e
 End Sub
 
-Friend Sub NotifySourcePropertyChanged(ByVal PropertyName As Variant)
-    SourcePropertyChangedEvent_PropertyChanged Nothing, PropertyName
-End Sub
-
-Friend Sub NotifyTargetPropertyChanged(ByVal PropertyName As Variant)
-    TargetPropertyChangedEvent_PropertyChanged Nothing, PropertyName
-End Sub
-
 Private Sub m_SourceProperty_ValueChanged(ByVal Sender As Object, e As Variant)
     If m_Detached Then Exit Sub
     SetTargetPropertyValue
@@ -380,9 +373,10 @@ Friend Sub DetachBinding()
         If Not SrcDp Is Nothing Then SrcDp.RemoveCallback Me
     End If
 
-    m_SourceHandler.Disconnect
-    m_TargetHandler.Disconnect
     m_SourceInpcConnected = False
+
+    Set SourcePropertyChangedEvent = Nothing
+    Set TargetPropertyChangedEvent = Nothing
 
     Set Me.TargetProperty = Nothing
     If Not m_SourceProperty Is Nothing Then m_SourceProperty.Detach

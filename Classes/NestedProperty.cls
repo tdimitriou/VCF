@@ -13,7 +13,8 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-Private m_ChildHandler              As NestedPropertyChildChangedHandler
+Private WithEvents ChildNotifier    As PropertyChangedEvent
+Attribute ChildNotifier.VB_VarHelpID = -1
 
 Private m_ParentPtr                 As Long
 Private m_SourcePtr                 As Long
@@ -98,12 +99,12 @@ Public Sub OnPropertyChanged(ByVal PropertyName As String)
     End If
 End Sub
 
-Friend Sub HandleChildPropertyChanged(ByVal PropertyName As Variant)
+Private Sub ChildNotifier_PropertyChanged(ByVal Sender As Object, e As Variant)
     If m_SourcePtr = 0 Then Exit Sub
     If Child Is Nothing Then Exit Sub
-    If PropertyName <> Child.Name Then Exit Sub
+    If e <> Child.Name Then Exit Sub
 
-    Child.OnPropertyChanged PropertyName
+    Child.OnPropertyChanged e
 End Sub
 
 'CSEH: ErrMsgBox
@@ -311,14 +312,10 @@ Private Function GetNestedObject(ByVal PropertyName As String) As Object
 End Function
 
 Friend Sub Detach()
-    m_ChildHandler.Disconnect
+    Set ChildNotifier = Nothing
     Set m_Child = Nothing
     m_SourcePtr = 0
     m_ParentPtr = 0
-End Sub
-
-Private Sub Class_Initialize()
-    Set m_ChildHandler = New NestedPropertyChildChangedHandler
 End Sub
 
 Private Sub Class_Terminate()
@@ -331,7 +328,7 @@ Private Sub SetupChildSource()
     
     Dim Obj As INotifyPropertyChanged
     
-    m_ChildHandler.Disconnect
+    Set ChildNotifier = Nothing
     
     If Child Is Nothing Then Exit Sub
     
@@ -348,6 +345,6 @@ Private Sub SetupChildSource()
     
     If TypeOf Child.Source Is INotifyPropertyChanged Then
         Set Obj = Child.Source
-        m_ChildHandler.Connect Me, Obj.PropertyChangedEvent
+        Set ChildNotifier = Obj.PropertyChangedEvent
     End If
 End Sub

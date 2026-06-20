@@ -13,9 +13,8 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Implements IPropertyChangedHandler
-
-Private m_Notifier As VCF.PropertyChangedEvent
+Private WithEvents m_Notifier As VCF.PropertyChangedEvent
+Attribute m_Notifier.VB_VarHelpID = -1
 Private m_ListViewPtr As Long
 
 Private Property Get ListView() As ListView
@@ -23,26 +22,23 @@ Private Property Get ListView() As ListView
 End Property
 
 Friend Sub Init(Notifier As VCF.PropertyChangedEvent, LV As VCF.ListView)
-    Disconnect
+    Set m_Notifier = Nothing
     If Notifier Is Nothing Then Exit Sub
 
     m_ListViewPtr = ObjPtr(LV)
     Set m_Notifier = Notifier
-    m_Notifier.AddHandler Me
 End Sub
 
 Friend Sub Disconnect()
-    On Error Resume Next
-    If Not m_Notifier Is Nothing Then m_Notifier.RemoveHandler Me
     Set m_Notifier = Nothing
     m_ListViewPtr = 0
 End Sub
 
-Private Sub IPropertyChangedHandler_OnPropertyChanged(ByVal Sender As Object, ByVal PropertyName As Variant)
+Private Sub m_Notifier_PropertyChanged(ByVal Sender As Object, e As Variant)
     On Error Resume Next
     If m_ListViewPtr = 0 Then Exit Sub
 
-    ListView.PropertyChangedCallback Sender, PropertyName
+    ListView.PropertyChangedCallback Sender, e
 End Sub
 
 Private Sub Class_Terminate()

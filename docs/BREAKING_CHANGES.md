@@ -37,10 +37,8 @@ Tag: **`v2.5.0-wpf-alignment-p4`** · Phase0 **18/18** pass.
 ### Added
 
 - **`BindingExpression`** — `Attach`, `Detach`, `UpdateTarget`; wraps legacy `Binding` graph (transitional).
-- **`IPropertyChangedHandler`** + **`PropertyChangedEvent.AddHandler` / `RemoveHandler`** — explicit INPC subscriptions (replaces `RaiseEvent` for binding paths).
-- **`BindingSourceChangedHandler`**, **`BindingTargetChangedHandler`**, **`NestedPropertyChildChangedHandler`** — small handler objects for binding/nested-path notifications.
 - **`modBindingExpressions`** — `RefreshTargetBindings`, `DetachTargetBindings`; `OnDataContextChanged` hook on `DataContext` DP change.
-- **`Binding.IsListenerActive`**, **`Binding.DetachBinding`** — deterministic teardown of listeners, callbacks, and INPC handlers.
+- **`Binding.IsListenerActive`**, **`Binding.DetachBinding`** — deterministic teardown of listeners, callbacks, and INPC `WithEvents` subscriptions.
 
 ### Bug fixes
 
