@@ -394,6 +394,10 @@ Private Sub AddPropertyList(ByVal Property As Object, ByVal Elements As cElement
         
         If TypeOf Property Is ObservableDictionary Then
             AddDictionaryItem Property, NewObj
+        ElseIf TypeOf Property Is ObservableCollection Then
+            Property.Add NewObj
+        ElseIf TypeOf Property Is List Then
+            Property.Add NewObj
         End If
     Next
     

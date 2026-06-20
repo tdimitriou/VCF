@@ -56,6 +56,20 @@ Public Name As String
     Public Property Get CornerRadius() As VCF.CornerRadius
         Call API.CopyVariable(m_DependencyProperties.GetValue("CornerRadius"), CornerRadius)
     End Property
+
+    Public Property Get Child() As Object
+        If m_Children.Count > 0 Then Set Child = m_Children(0)
+    End Property
+
+    Public Property Set Child(ByVal Value As Object)
+        Dim i As Long
+        For i = m_Children.Count - 1 To 0 Step -1
+            m_Children.RemoveAt i
+        Next
+        If Not Value Is Nothing Then
+            If TypeOf Value Is IUIElement Then m_Children.Add Value
+        End If
+    End Property
 '#End Region
 
 '#Region IDependencyObject Inheritance
@@ -176,6 +190,7 @@ Public Name As String
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
             Call .Register("ShowGridLines", vbBoolean)
             Call .Register("CornerRadius", vbUserDefinedType, "CornerRadius")
+            Call .Register("Child", vbObject)
             
             Dim Radius As VCF.CornerRadius
             With Radius
@@ -200,6 +215,7 @@ Public Name As String
         Set m_Layout = New FrameworkElement
         m_Layout.Initialize Me, Me, W
         m_Layout.RegisterLayoutProperties "Border"
+        m_Layout.LegacyScaleLayout = False
         
         DesignLeft = 0
         DesignTop = 0
@@ -335,7 +351,15 @@ Catch:
 
 '#Region Private Methods
     Private Sub MoveChild(Child As Object)
-        m_Layout.ArrangeChildren m_Children, W
+        ArrangeBorderChild
+    End Sub
+
+    Private Sub ArrangeBorderChild()
+        If m_Children.Count = 1 Then
+            ArrangeDecoratorChild m_Children(0), W
+        Else
+            m_Layout.ArrangeChildren m_Children, W
+        End If
     End Sub
 '#End Region
 
@@ -346,7 +370,7 @@ Catch:
             Case Else
                 If Not m_Children Is Nothing Then
                     If m_Layout.HandlesLayoutProperty(Property.Name) Then
-                        m_Layout.OnLayoutPropertyChanged Property.Name, m_Children, W
+                        ArrangeBorderChild
                     End If
                 End If
         End Select
@@ -403,8 +427,7 @@ Catch:
     End Sub
     
     Private Sub W_Resize()
-        W.Widgets.RemoveAll
-        m_Layout.ArrangeChildren m_Children, W
+        ArrangeBorderChild
     End Sub
 '#End Region
 

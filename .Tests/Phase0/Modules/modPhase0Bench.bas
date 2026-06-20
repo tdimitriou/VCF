@@ -18,12 +18,15 @@ Public Sub RunAll()
     If Not Phase1Bench_LayoutWidthXaml() Then Failed = Failed + 1
     If Not Phase1Bench_PanelVisibilityCollapsed() Then Failed = Failed + 1
     If Not Phase1Bench_BorderWidthXaml() Then Failed = Failed + 1
+    If Not Phase2Bench_StackPanelXaml() Then Failed = Failed + 1
+    If Not Phase2Bench_StackPanelLayout() Then Failed = Failed + 1
+    If Not Phase2Bench_GridRowDefinitionsXaml() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (8 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (11 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
-        MsgBox Failed & " Phase 0/1 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
+        MsgBox Failed & " Phase 0/1/2 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
-        MsgBox "All Phase 0/1 tests passed.", vbInformation, "Phase0"
+        MsgBox "All Phase 0/1/2 tests passed.", vbInformation, "Phase0"
     End If
 End Sub
 
@@ -247,6 +250,94 @@ Fail:
     LogResult "P1-BORDER", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P1-BORDER — " & Err.Description
     Phase1Bench_BorderWidthXaml = False
+End Function
+
+Public Function Phase2Bench_StackPanelXaml() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As StackPanel
+    Dim Xml As String
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Xml = LoadTextFile(App.Path & "\Resources\LayoutStackPanel.xml")
+    Set Root = Reader.Load(Xml)
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "StackPanel XAML returned Nothing"
+    If Root.Width <> 240# Then Err.Raise vbObjectError, , "Expected Width=240, got " & Root.Width
+    If Root.Orientation <> OrientationVertical Then Err.Raise vbObjectError, , "Expected Vertical orientation"
+
+    LogResult "P2-STACK", 0, "OK Width=" & Root.Width
+    Debug.Print "PASS  P2-STACK StackPanel Width/Orientation XAML"
+    Phase2Bench_StackPanelXaml = True
+    Exit Function
+
+Fail:
+    LogResult "P2-STACK", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-STACK — " & Err.Description
+    Phase2Bench_StackPanelXaml = False
+End Function
+
+Public Function Phase2Bench_StackPanelLayout() As Boolean
+    Dim Sp As StackPanel
+    Dim P1 As Panel
+    Dim P2 As Panel
+
+    On Error GoTo Fail
+
+    Set Sp = New StackPanel
+    Sp.Orientation = OrientationVertical
+    Sp.Widget.Move 0, 0, 200, 300
+
+    Set P1 = New Panel
+    P1.Width = 180
+    P1.Height = 50
+    Set P2 = New Panel
+    P2.Width = 180
+    P2.Height = 80
+
+    Sp.Children.Add P1
+    Sp.Children.Add P2
+
+    If Abs(P1.Widget.Top - 0!) > 1! Then Err.Raise vbObjectError, , "P1.Top expected 0, got " & P1.Widget.Top
+    If Abs(P2.Widget.Top - 50!) > 1! Then Err.Raise vbObjectError, , "P2.Top expected 50, got " & P2.Widget.Top
+
+    LogResult "P2-STACK-LAY", 0, "OK P2.Top=" & P2.Widget.Top
+    Debug.Print "PASS  P2-STACK-LAY vertical stack positions"
+    Phase2Bench_StackPanelLayout = True
+    Exit Function
+
+Fail:
+    LogResult "P2-STACK-LAY", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-STACK-LAY — " & Err.Description
+    Phase2Bench_StackPanelLayout = False
+End Function
+
+Public Function Phase2Bench_GridRowDefinitionsXaml() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As Grid
+    Dim Xml As String
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Xml = LoadTextFile(App.Path & "\Resources\LayoutGridRows.xml")
+    Set Root = Reader.Load(Xml)
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "Grid XAML returned Nothing"
+    If Root.RowDefinitions.Count <> 2 Then Err.Raise vbObjectError, , "Expected 2 row definitions"
+    If Root.ColumnDefinitions.Count <> 2 Then Err.Raise vbObjectError, , "Expected 2 column definitions"
+    If Root.Width <> 300# Then Err.Raise vbObjectError, , "Expected Width=300"
+
+    LogResult "P2-GRID", 0, "OK rows=" & Root.RowDefinitions.Count
+    Debug.Print "PASS  P2-GRID Grid RowDefinitions/ColumnDefinitions XAML"
+    Phase2Bench_GridRowDefinitionsXaml = True
+    Exit Function
+
+Fail:
+    LogResult "P2-GRID", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-GRID — " & Err.Description
+    Phase2Bench_GridRowDefinitionsXaml = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

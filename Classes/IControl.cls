@@ -32,6 +32,11 @@ Public Enum Visibility
     VisibilityCollapsed = 2
 End Enum
 
+Public Enum Orientation
+    OrientationVertical = 0
+    OrientationHorizontal = 1
+End Enum
+
 Public Property Get Widget() As cWidgetBase: End Property
 Public Property Get Widgets() As cWidgets: End Property
 Public Property Get Children() As UIElementCollection: End Property

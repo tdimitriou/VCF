@@ -16,6 +16,28 @@
 
 ---
 
+## Upgrading to 2.3.0 (Phase 2 — Grid, StackPanel, ContentControl)
+
+### DLL pin
+
+Update reference to **`v2.3.0-wpf-alignment-p2`**.
+
+### New XAML (preferred for new screens)
+
+| Pattern | Example |
+|---------|---------|
+| Vertical stack | `<StackPanel Orientation="Vertical"><Button Height="40"/></StackPanel>` |
+| Grid rows/cols | `<Grid><Grid.RowDefinitions><RowDefinition Height="*"/></Grid.RowDefinitions></Grid>` |
+| Single swap region | `<ContentControl><UserControl/></ContentControl>` |
+| Border decorator | `<Border><Panel/></Border>` or `Child` DP in code |
+
+### Verification
+
+- [ ] `.Tests/Phase0` — **11/11** pass (includes P2-STACK, P2-STACK-LAY, P2-GRID)
+- [ ] POS screens using **UniformGrid** unchanged; Collapsed children no longer consume cells
+
+---
+
 ## Upgrading to 2.2.0 (Phase 1b — Border, UserControl, Window, Button)
 
 ### DLL pin

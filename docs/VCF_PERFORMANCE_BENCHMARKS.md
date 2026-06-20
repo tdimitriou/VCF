@@ -1,6 +1,6 @@
 # Demac.VCF — performance benchmarks (Phase 0 baseline)
 
-**Status:** Baselines recorded — **v2.1.0-wpf-alignment-p1** validated  
+**Status:** Baselines recorded — **v2.3.0-wpf-alignment-p2** target  
 **Runner:** `.Tests/Phase0` (`modPhase0Bench`)  
 **Threshold policy:** Regressions > 10% vs previous tag require explanation in release notes.
 
@@ -10,12 +10,12 @@
 
 | Field | Value |
 |-------|-------|
-| DLL version | 2.2.0-wpf-alignment-p1b |
+| DLL version | 2.3.0-wpf-alignment-p2 |
 | OS | Windows 10/11 x64 (build 26200) |
 | vbRichClient5 | v5 (path in test `.vbp`) |
 | Process bitness | 32-bit (VB6) |
 | Recorded | 2026-06-20 |
-| Phase0/1 result | **8 passed, 0 failed** (target after rebuild) |
+| Phase0/1/2 result | **11 passed, 0 failed** (target after rebuild) |
 
 Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whether POS video secondary display is active (exclude from UI benchmarks).
 
@@ -32,7 +32,10 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | B-STRICT-UNKNOWN | Unknown type raises `XamlLoadException` | `Phase0Bench_StrictUnknownType` | **pass** | must raise |
 | P1-WIDTH | Panel `Width`/`Height` from XAML | `Phase1Bench_LayoutWidthXaml` | **pass** | — |
 | P1-VIS | Panel `Visibility=Collapsed` DP | `Phase1Bench_PanelVisibilityCollapsed` | **pass** | must store Collapsed |
-| P1-BORDER | Border `Width` from XAML | `Phase1Bench_BorderWidthXaml` | *TBD* | — |
+| P1-BORDER | Border `Width` from XAML | `Phase1Bench_BorderWidthXaml` | **pass** | — |
+| P2-STACK | StackPanel Width/Orientation XAML | `Phase2Bench_StackPanelXaml` | *TBD* | — |
+| P2-STACK-LAY | Vertical stack child positions | `Phase2Bench_StackPanelLayout` | *TBD* | P2.Top ≈ 50 |
+| P2-GRID | Grid RowDefinitions XAML | `Phase2Bench_GridRowDefinitionsXaml` | *TBD* | 2 rows, 2 cols |
 | B-RESZ | Window resize nested UniformGrid 50× | *Phase 1+* | — | deferred |
 | B-NAV | 50× view navigation binding leak | *Phase 4+* | — | deferred |
 

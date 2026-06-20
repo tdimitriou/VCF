@@ -103,7 +103,14 @@ Private Sub RegisterFrameworkElementType()
     RegisterType "Panel", "FrameworkElement", _
         Array("ShowGridLines", vbBoolean, vbNullString, vbNullString, False, True, False, OneWay)
 
-    RegisterType "Border", "FrameworkElement"
+    RegisterType "StackPanel", "FrameworkElement", _
+        Array("Orientation", vbString, vbNullString, vbNullString, False, True, False, OneWay)
+    RegisterType "Grid", "FrameworkElement"
+    RegisterType "ContentControl", "FrameworkElement", _
+        Array("Content", vbObject, vbNullString, vbNullString, False, True, False, OneWay)
+
+    RegisterType "Border", "FrameworkElement", _
+        Array("Child", vbObject, vbNullString, vbNullString, False, True, False, OneWay)
     RegisterType "UserControl", "FrameworkElement"
     RegisterType "Button", "FrameworkElement"
     RegisterType "Window", "FrameworkElement"

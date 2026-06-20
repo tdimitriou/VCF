@@ -30,6 +30,30 @@
 
 ---
 
+## [2.3.0] — 2026-06-20 — Phase 2 (panels)
+
+### Added
+
+- **`StackPanel`** — vertical/horizontal stack layout (`Orientation`); `LegacyScaleLayout` off by default.
+- **`Grid`** — `RowDefinitions` / `ColumnDefinitions`, `Grid.Row` / `Grid.Column` / span attached props, `*` / `Auto` / pixel tracks.
+- **`ContentControl`** — single-content host with decorator arrange.
+- **`RowDefinition`**, **`ColumnDefinition`** — grid track specs for XAML.
+- **`Border.Child`** DP — decorator semantics; single child fills client (multi-child legacy arrange retained).
+- **`UniformGrid`** — **Collapsed** children skipped in cell assignment (B9 partial).
+
+### XAML
+
+- `<StackPanel Orientation="Vertical|Horizontal" Width Height>`
+- `<Grid>` with `<Grid.RowDefinitions>` / `<Grid.ColumnDefinitions>`
+- `<ContentControl>` with one visual child
+- `Grid.Row`, `Grid.Column` attached properties on **Grid** children
+
+### Test
+
+- **P2-STACK**, **P2-STACK-LAY**, **P2-GRID** in `.Tests/Phase0` (target **11/11** with Phase 0/1).
+
+---
+
 ## [2.2.0] — 2026-06-20 — Phase 1b (layout core — shell controls)
 
 ### Added
