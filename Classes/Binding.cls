@@ -32,19 +32,18 @@ Private m_TargetPropertyPtr                     As Long             'Holds the p
 Private m_Converter                             As IValueConverter  'Holds the value of the Converter (IValueConverter)
 Private m_ConverterParameter                    As Variant          'Holds the value of the ConverterParameter
 Private m_StringFormat                          As String           'Holds the value of the StringFormat (String)
-Private m_HashCode                              As Long
 Private m_SrcDepObjPtr                          As Long
 
 Private WithEvents m_SourceProperty             As NestedProperty
 Attribute m_SourceProperty.VB_VarHelpID = -1
 
-Private WithEvents SourcePropertyChangedEvent   As PropertyChangedEvent
-Attribute SourcePropertyChangedEvent.VB_VarHelpID = -1
-Private WithEvents TargetPropertyChangedEvent   As PropertyChangedEvent
-Attribute TargetPropertyChangedEvent.VB_VarHelpID = -1
+Private m_SourceHandler                         As BindingSourceChangedHandler
+Private m_TargetHandler                         As BindingTargetChangedHandler
+Private m_SourceInpcConnected                   As Boolean
 
 ' Use this to control the target update if Mode = OneTime (2)
 Private IsTargetValueSet As Boolean
+Private m_Detached As Boolean
 
 Friend Sub Initialize(ByVal Source As Object, _
                         ByVal Path As String, _
@@ -93,7 +92,7 @@ End Property
 
 Friend Property Set SrcDepObj(ByVal Value As DependencyProperty)
     ' Remove the Callback of the previous Source DependencyProperty if it has been set before
-    If Not SrcDepObj Is Nothing Then SrcDepObj.RemoveCallback m_HashCode
+    If Not SrcDepObj Is Nothing Then SrcDepObj.RemoveCallback Me
     
     m_SrcDepObjPtr = ObjPtr(Value)
     
@@ -122,9 +121,8 @@ Public Property Get Source() As Object
 End Property
 
 Public Property Set Source(ByVal Value As Object)
-    Dim OldSource As Object
-    
-    Set SourcePropertyChangedEvent = Nothing
+    m_SourceHandler.Disconnect
+    m_SourceInpcConnected = False
     
     If Not Value Is Nothing Then
         If TypeOf Value Is DependencyProperty Then
@@ -134,13 +132,11 @@ Public Property Set Source(ByVal Value As Object)
     Else
         Set SrcDepObj = Value
     End If
-        
-    Set OldSource = Me.Source
     
     m_SourcePtr = ObjPtr(Value)
     
     If Value Is Nothing Then
-        'If Not OldSource Is Nothing Then If Not TargetProperty Is Nothing Then TargetProperty.ClearValue
+        Set m_SourceProperty = Nothing
         Exit Property
     End If
     
@@ -150,7 +146,8 @@ Public Property Set Source(ByVal Value As Object)
     If Not TypeOf Value Is INotifyPropertyChanged Then Exit Property
     
     Set Obj = Value
-    Set SourcePropertyChangedEvent = Obj.PropertyChangedEvent
+    m_SourceHandler.Connect Me, Obj.PropertyChangedEvent
+    m_SourceInpcConnected = True
     
     SetSourceProperty
     
@@ -172,16 +169,18 @@ Public Property Get TargetProperty() As DependencyProperty
 End Property
 
 Public Property Set TargetProperty(ByVal Value As DependencyProperty)
-    ' Remove the Listener of the previous Target Property if it has been set before
-    If Not TargetProperty Is Nothing Then TargetProperty.RemoveListener m_HashCode
-    
-    Set TargetPropertyChangedEvent = Nothing
+    Dim OldTargetProp As DependencyProperty
+
+    Set OldTargetProp = Me.TargetProperty
+    If Not OldTargetProp Is Nothing Then OldTargetProp.RemoveListener Me
+
+    m_TargetHandler.Disconnect
     
     m_TargetPropertyPtr = ObjPtr(Value)
     
     If Value Is Nothing Then Exit Property
     
-    Set TargetPropertyChangedEvent = Value.PropertyChangedEvent
+    m_TargetHandler.Connect Me, Value.PropertyChangedEvent
     
     Value.AddListener Me
 End Property
@@ -225,27 +224,19 @@ Public Property Let StringFormat(ByVal Value As String)
 End Property
 
 Private Sub Class_Initialize()
-    m_HashCode = ObjPtr(Me)
     m_Mode = VCF.BindingMode.Default
     m_ConverterParameter = vbEmpty
+    Set m_SourceHandler = New BindingSourceChangedHandler
+    Set m_TargetHandler = New BindingTargetChangedHandler
 End Sub
 
 Private Sub Class_Terminate()
     On Error Resume Next
-    
-    Dim Obj As DependencyProperty
-    
-    ' Remove Listener from TargetProperty
-    Set Obj = API.ObjFromPtr(m_TargetPropertyPtr)
-    If Not Obj Is Nothing Then Obj.RemoveListener m_HashCode
-    
-    ' Remove Callback from SrcDepObj
-    Set Obj = API.ObjFromPtr(m_SrcDepObjPtr)
-    If Not Obj Is Nothing Then Obj.RemoveCallback m_HashCode
-    
+    If Not m_Detached Then DetachBinding
 End Sub
 
 Private Sub IDependencyPropertyCallbackListener_OnValueChanged(ByVal Sender As DependencyProperty, ByVal NewValue As Variant)
+    If m_Detached Then Exit Sub
     ' This will ocuur when the data context will change
     
     If Not Sender Is SrcDepObj Then Exit Sub
@@ -262,10 +253,11 @@ Private Sub IDependencyPropertyCallbackListener_OnValueChanged(ByVal Sender As D
 End Sub
 
 Private Function IDependencyPropertyCallbackListener_OnValueRequested(ProvidedValue As Variant) As Boolean
+    If Not IsListenerActive Then Exit Function
     On Error Resume Next
         
     ' No need to do something because the PropertyChangedEvent will take care
-    If Not SourcePropertyChangedEvent Is Nothing Then Exit Function
+    If m_SourceInpcConnected Then Exit Function
     
     IDependencyPropertyCallbackListener_OnValueRequested = True
         
@@ -283,6 +275,7 @@ Public Function ProvideValue() As Variant
 Try:
     On Error GoTo Catch
     
+    If m_Detached Then Exit Function
     If m_SourceProperty Is Nothing Then Exit Function
     
     Call API.CopyVariable(m_SourceProperty.GetValue, ProvideValue)
@@ -300,6 +293,7 @@ Catch:
 End Function
 
 Private Sub SetTargetPropertyValue()
+    If m_Detached Then Exit Sub
     Dim myMode As BindingMode
     
     If TargetProperty Is Nothing Then Exit Sub
@@ -317,11 +311,21 @@ Private Sub SetTargetPropertyValue()
 End Sub
 
 Private Sub SourcePropertyChangedEvent_PropertyChanged(ByVal Sender As Object, e As Variant)
+    If m_Detached Then Exit Sub
     If m_SourceProperty Is Nothing Then Exit Sub
     m_SourceProperty.OnPropertyChanged e
 End Sub
 
+Friend Sub NotifySourcePropertyChanged(ByVal PropertyName As Variant)
+    SourcePropertyChangedEvent_PropertyChanged Nothing, PropertyName
+End Sub
+
+Friend Sub NotifyTargetPropertyChanged(ByVal PropertyName As Variant)
+    TargetPropertyChangedEvent_PropertyChanged Nothing, PropertyName
+End Sub
+
 Private Sub m_SourceProperty_ValueChanged(ByVal Sender As Object, e As Variant)
+    If m_Detached Then Exit Sub
     SetTargetPropertyValue
 End Sub
 
@@ -335,6 +339,7 @@ Private Sub SetSourceProperty()
 End Sub
 
 Private Sub TargetPropertyChangedEvent_PropertyChanged(ByVal Sender As Object, e As Variant)
+    If m_Detached Then Exit Sub
     Dim myMode As BindingMode
     
     myMode = GetEffectiveMode
@@ -353,35 +358,45 @@ Private Function GetEffectiveMode() As VCF.BindingMode
 End Function
 
 Friend Sub RefreshTarget()
+    If m_Detached Then Exit Sub
     IsTargetValueSet = False
     SetTargetPropertyValue
 End Sub
 
 Friend Sub DetachBinding()
-    On Error Resume Next
+    If m_Detached Then Exit Sub
+    m_Detached = True
 
-    Dim Obj As DependencyProperty
-    Dim TargetObj As IDependencyObject
-    Dim Bindings As List
+    Dim TargetProp As DependencyProperty
+    Dim SrcDp As DependencyProperty
 
-    Set Obj = API.ObjFromPtr(m_TargetPropertyPtr)
-    If Not Obj Is Nothing Then Obj.RemoveListener m_HashCode
-
-    Set Obj = API.ObjFromPtr(m_SrcDepObjPtr)
-    If Not Obj Is Nothing Then Obj.RemoveCallback m_HashCode
-
-    Set TargetPropertyChangedEvent = Nothing
-    Set SourcePropertyChangedEvent = Nothing
-    Set m_SourceProperty = Nothing
-
-    Set TargetObj = Me.Target
-    If Not TargetObj Is Nothing Then
-        Set Bindings = API.CObj(TargetObj).Bindings
-        If Not Bindings Is Nothing Then Bindings.Remove Me
+    If m_TargetPropertyPtr <> 0 Then
+        Set TargetProp = API.ObjFromPtr(m_TargetPropertyPtr)
+        If Not TargetProp Is Nothing Then TargetProp.RemoveListener Me
     End If
+
+    If m_SrcDepObjPtr <> 0 Then
+        Set SrcDp = API.ObjFromPtr(m_SrcDepObjPtr)
+        If Not SrcDp Is Nothing Then SrcDp.RemoveCallback Me
+    End If
+
+    m_SourceHandler.Disconnect
+    m_TargetHandler.Disconnect
+    m_SourceInpcConnected = False
+
+    Set Me.TargetProperty = Nothing
+    If Not m_SourceProperty Is Nothing Then m_SourceProperty.Detach
+    Set Me.Source = Nothing
+    Set Me.Target = Nothing
 
     m_TargetPtr = 0
     m_SourcePtr = 0
     m_TargetPropertyPtr = 0
     m_SrcDepObjPtr = 0
+    m_Path = vbNullString
+    IsTargetValueSet = False
 End Sub
+
+Friend Property Get IsListenerActive() As Boolean
+    IsListenerActive = (Not m_Detached) And (m_TargetPropertyPtr <> 0)
+End Property

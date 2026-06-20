@@ -1,8 +1,12 @@
 Attribute VB_Name = "modBindingExpressions"
 Option Explicit
 
+Private m_RefreshBindings As Boolean
+
 Public Sub OnDataContextChanged(ByVal Target As IDependencyObject)
-    RefreshTargetBindings Target
+    ' Binding SrcDepObj callbacks already push target updates when DataContext
+    ' (DependencyProperty) changes. Avoid RefreshTargetBindings here — re-entrant
+    ' SetValue during DataContext change can recurse through layout/render paths.
 End Sub
 
 Public Sub RefreshTargetBindings(ByVal Target As IDependencyObject)
@@ -11,8 +15,11 @@ Public Sub RefreshTargetBindings(ByVal Target As IDependencyObject)
     Dim Expr As BindingExpression
     Dim B As Binding
 
+    If m_RefreshBindings Then Exit Sub
+    m_RefreshBindings = True
+
     Set Bindings = GetTargetBindings(Target)
-    If Bindings Is Nothing Then Exit Sub
+    If Bindings Is Nothing Then GoTo Finally
 
     For Each Item In Bindings
         If TypeOf Item Is BindingExpression Then
@@ -23,6 +30,9 @@ Public Sub RefreshTargetBindings(ByVal Target As IDependencyObject)
             B.RefreshTarget
         End If
     Next
+
+Finally:
+    m_RefreshBindings = False
 End Sub
 
 Public Sub DetachTargetBindings(ByVal Target As IDependencyObject)

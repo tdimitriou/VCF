@@ -16,6 +16,7 @@ Option Explicit
 Private m_Binding As Binding
 Private m_TargetPtr As Long
 Private m_IsAttached As Boolean
+Private m_IsDetaching As Boolean
 
 Public Property Get Binding() As Binding
     Set Binding = m_Binding
@@ -53,18 +54,27 @@ Public Function Attach( _
 End Function
 
 Public Sub Detach()
+    Dim TargetObj As Object
+
     If m_Binding Is Nothing Then Exit Sub
+    If m_IsDetaching Then Exit Sub
+    If Not m_IsAttached Then Exit Sub
+
+    m_IsDetaching = True
+
     m_Binding.DetachBinding
 
-    If Not Target Is Nothing Then
+    If m_TargetPtr <> 0 Then
         On Error Resume Next
-        API.CObj(Target).Bindings.Remove Me
+        Set TargetObj = API.ObjFromPtr(m_TargetPtr)
+        If Not TargetObj Is Nothing Then TargetObj.Bindings.Remove Me
         On Error GoTo 0
     End If
 
     m_IsAttached = False
-    Set m_Binding = Nothing
     m_TargetPtr = 0
+    Set m_Binding = Nothing
+    m_IsDetaching = False
 End Sub
 
 Public Sub UpdateTarget()
@@ -78,5 +88,6 @@ Public Sub UpdateSource()
 End Sub
 
 Private Sub Class_Terminate()
-    If m_IsAttached Then Detach
+    On Error Resume Next
+    If m_IsAttached And Not m_IsDetaching Then Detach
 End Sub

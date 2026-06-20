@@ -489,10 +489,16 @@ Public Function Phase4Bench_BindingOneWay() As Boolean
 
     LogResult "P4-BIND", 0, "OK OneWay Title binding"
     Debug.Print "PASS  P4-BIND OneWay binding + INPC"
+    Expr.Detach
+    Set Expr = Nothing
+    Set Tb = Nothing
+    Set Vm = Nothing
     Phase4Bench_BindingOneWay = True
     Exit Function
 
 Fail:
+    On Error Resume Next
+    If Not Expr Is Nothing Then Expr.Detach
     LogResult "P4-BIND", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P4-BIND — " & Err.Description
     Phase4Bench_BindingOneWay = False
@@ -501,9 +507,9 @@ End Function
 Public Function Phase4Bench_DataContextRebind() As Boolean
     Dim Vm1 As Phase0ViewModel
     Dim Vm2 As Phase0ViewModel
-    Dim P As Panel
     Dim Tb As TextBlock
     Dim Expr As BindingExpression
+    Dim DataContextProp As DependencyProperty
 
     On Error GoTo Fail
 
@@ -512,25 +518,31 @@ Public Function Phase4Bench_DataContextRebind() As Boolean
     Set Vm2 = New Phase0ViewModel
     Vm2.Title = "Two"
 
-    Set P = New Panel
     Set Tb = New TextBlock
-    P.Children.Add Tb
+    Set DataContextProp = Tb.DependencyProperties.GetProperty("DataContext")
 
-    Set P.DataContext = Vm1
+    Set Tb.DataContext = Vm1
     Set Expr = New BindingExpression
-    Expr.Attach Tb, "Text", Tb.DependencyProperties.GetProperty("DataContext"), "Title", OneWay
+    Expr.Attach Tb, "Text", DataContextProp, "Title", OneWay
 
     If Tb.Text <> "One" Then Err.Raise vbObjectError, , "Expected One, got " & Tb.Text
 
-    Set P.DataContext = Vm2
+    Set Tb.DataContext = Vm2
     If Tb.Text <> "Two" Then Err.Raise vbObjectError, , "Expected Two after DataContext swap, got " & Tb.Text
 
     LogResult "P4-DCTX", 0, "OK DataContext rebind"
     Debug.Print "PASS  P4-DCTX DataContext rebind"
+    Expr.Detach
+    Set Expr = Nothing
+    Set Tb = Nothing
+    Set Vm1 = Nothing
+    Set Vm2 = Nothing
     Phase4Bench_DataContextRebind = True
     Exit Function
 
 Fail:
+    On Error Resume Next
+    If Not Expr Is Nothing Then Expr.Detach
     LogResult "P4-DCTX", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P4-DCTX — " & Err.Description
     Phase4Bench_DataContextRebind = False
@@ -557,10 +569,15 @@ Public Function Phase4Bench_BindingDetach() As Boolean
 
     LogResult "P4-DETACH", 0, "OK Detach stops updates"
     Debug.Print "PASS  P4-DETACH Binding Detach"
+    Set Expr = Nothing
+    Set Tb = Nothing
+    Set Vm = Nothing
     Phase4Bench_BindingDetach = True
     Exit Function
 
 Fail:
+    On Error Resume Next
+    If Not Expr Is Nothing Then Expr.Detach
     LogResult "P4-DETACH", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P4-DETACH — " & Err.Description
     Phase4Bench_BindingDetach = False

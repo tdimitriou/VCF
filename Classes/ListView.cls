@@ -647,7 +647,13 @@ Private ItemTemplates                           As List
     End Sub
     
     Private Sub RemoveHandler(ByVal Value As VCF.INotifyPropertyChanged)
-        If m_Handlers.Exists(ObjPtr(Value)) Then m_Handlers.Remove ObjPtr(Value)
+        Dim H As VCF.ListViewPropertyChangedHandler
+
+        If Not m_Handlers.Exists(ObjPtr(Value)) Then Exit Sub
+
+        Set H = m_Handlers(ObjPtr(Value))
+        If Not H Is Nothing Then H.Disconnect
+        m_Handlers.Remove ObjPtr(Value)
     End Sub
     
     Friend Sub PropertyChangedCallback(Sender As Object, Optional e As Variant)

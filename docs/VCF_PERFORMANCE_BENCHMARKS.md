@@ -1,6 +1,6 @@
 # Demac.VCF — performance benchmarks (Phase 0 baseline)
 
-**Status:** Phase 4 started — **v2.5.0-wpf-alignment-p4** (3 new tests; pending validation)  
+**Status:** Phase 4 validated — **v2.5.0-wpf-alignment-p4** (18/18 tests)  
 **Runner:** `.Tests/Phase0` (`modPhase0Bench`)  
 **Threshold policy:** Regressions > 10% vs previous tag require explanation in release notes.
 
@@ -10,12 +10,12 @@
 
 | Field | Value |
 |-------|-------|
-| DLL version | 2.5.0-wpf-alignment-p4 (pending validation) |
+| DLL version | 2.5.0-wpf-alignment-p4 |
 | OS | Windows 10/11 x64 (build 26200) |
 | vbRichClient5 | v5 (path in test `.vbp`) |
 | Process bitness | 32-bit (VB6) |
 | Recorded | 2026-06-20 |
-| Phase0/1/2/3/4 result | **18 tests** (15 validated + 3 Phase 4 pending) |
+| Phase0/1/2/3/4 result | **18/18 pass** |
 
 Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whether POS video secondary display is active (exclude from UI benchmarks).
 
@@ -40,9 +40,9 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P3-SOURCE | `Source=` file load | `Phase3Bench_ResourceSourceLoad` | **pass** | Greeting=Phase3 |
 | P3-DYNAMIC | Element TryFindResource path | `Phase3Bench_DynamicResourceExtension` | **pass** | BgColor=12345 |
 | P3-STRICT-PROP | Unknown property raises | `Phase3Bench_StrictUnknownProperty` | **pass** | must raise |
-| P4-BIND | OneWay binding + INPC | `Phase4Bench_BindingOneWay` | — | Title sync |
-| P4-DCTX | DataContext swap rebind | `Phase4Bench_DataContextRebind` | — | One→Two |
-| P4-DETACH | Detach stops updates | `Phase4Bench_BindingDetach` | — | frozen text |
+| P4-BIND | OneWay binding + INPC | `Phase4Bench_BindingOneWay` | **pass** | Title sync |
+| P4-DCTX | DataContext swap rebind | `Phase4Bench_DataContextRebind` | **pass** | One→Two |
+| P4-DETACH | Detach stops updates | `Phase4Bench_BindingDetach` | **pass** | Text stays Before |
 | B-RESZ | Window resize nested UniformGrid 50× | *Phase 1+* | — | deferred |
 | B-NAV | 50× view navigation binding leak | *Phase 4+* | — | deferred |
 
@@ -79,3 +79,4 @@ Normal POS process **< 100 MB** without secondary customer-display video. Framew
 | 2026-06-20 | **v2.4.0 Phase 3 validated:** 15/15 pass; B-GOLD 22 ms, B-COLL 21 ms; P3-MERGE, P3-SOURCE, P3-DYNAMIC, P3-STRICT-PROP pass |
 | 2026-06-20 | **v2.4.0 Phase 3:** P3-MERGE, P3-SOURCE, P3-DYNAMIC, P3-STRICT-PROP added (15 total tests) |
 | 2026-06-20 | **v2.3.0 Phase 2 validated:** 11/11 pass; B-GOLD 19 ms, B-COLL 16 ms; P2-STACK, P2-STACK-LAY, P2-GRID pass |
+| 2026-06-20 | **v2.5.0 Phase 4 validated:** 18/18 pass; P4-BIND, P4-DCTX, P4-DETACH pass; binding detach no longer hangs on target read |

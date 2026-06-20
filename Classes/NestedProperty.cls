@@ -13,8 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-Private WithEvents ChildNotifier    As PropertyChangedEvent
-Attribute ChildNotifier.VB_VarHelpID = -1
+Private m_ChildHandler              As NestedPropertyChildChangedHandler
 
 Private m_ParentPtr                 As Long
 Private m_SourcePtr                 As Long
@@ -84,6 +83,8 @@ End Property
 
 'CSEH: ErrMsgBox
 Public Sub OnPropertyChanged(ByVal PropertyName As String)
+    If m_SourcePtr = 0 Then Exit Sub
+    
     ' The Parent (either the Binding Object itself or the Parent
     ' NestedProperty) of the current object has notified that the
     ' PropertyChangedEvent has been fired.
@@ -97,18 +98,12 @@ Public Sub OnPropertyChanged(ByVal PropertyName As String)
     End If
 End Sub
 
-Private Sub ChildNotifier_PropertyChanged(ByVal Sender As Object, e As Variant)
-    ' The object holds the PropertyChangedEvent for its Child Object.
-    ' It must notify the Child if the event has been fired for it (the child).
-    
-    ' The Child Null Check is not necessary because the 'ChildNotifier' is set
-    ' only when the child is set and the Type of the Property is INotifyPropertyChanged
-    
-    'Debug.Print "Child Is Nothing: " & (Child Is Nothing) & ", PropertyName = " & e
+Friend Sub HandleChildPropertyChanged(ByVal PropertyName As Variant)
+    If m_SourcePtr = 0 Then Exit Sub
     If Child Is Nothing Then Exit Sub
-    If e <> Child.Name Then Exit Sub
+    If PropertyName <> Child.Name Then Exit Sub
 
-    Child.OnPropertyChanged e
+    Child.OnPropertyChanged PropertyName
 End Sub
 
 'CSEH: ErrMsgBox
@@ -315,12 +310,28 @@ Private Function GetNestedObject(ByVal PropertyName As String) As Object
     If Err.Number <> 0 Then Err.Clear
 End Function
 
+Friend Sub Detach()
+    m_ChildHandler.Disconnect
+    Set m_Child = Nothing
+    m_SourcePtr = 0
+    m_ParentPtr = 0
+End Sub
+
+Private Sub Class_Initialize()
+    Set m_ChildHandler = New NestedPropertyChildChangedHandler
+End Sub
+
+Private Sub Class_Terminate()
+    On Error Resume Next
+    Detach
+End Sub
+
 Private Sub SetupChildSource()
     On Error Resume Next
     
     Dim Obj As INotifyPropertyChanged
     
-    Set ChildNotifier = Nothing
+    m_ChildHandler.Disconnect
     
     If Child Is Nothing Then Exit Sub
     
@@ -337,6 +348,6 @@ Private Sub SetupChildSource()
     
     If TypeOf Child.Source Is INotifyPropertyChanged Then
         Set Obj = Child.Source
-        Set ChildNotifier = Obj.PropertyChangedEvent
+        m_ChildHandler.Connect Me, Obj.PropertyChangedEvent
     End If
 End Sub

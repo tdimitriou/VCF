@@ -30,13 +30,22 @@
 
 ---
 
-## [2.5.0] — 2026-06-20 — Phase 4 (bindings — partial)
+## [2.5.0] — 2026-06-20 — Phase 4 (bindings — validated)
+
+Tag: **`v2.5.0-wpf-alignment-p4`** · Phase0 **18/18** pass.
 
 ### Added
 
 - **`BindingExpression`** — `Attach`, `Detach`, `UpdateTarget`; wraps legacy `Binding` graph (transitional).
-- **`modBindingExpressions`** — `OnDataContextChanged`, `RefreshTargetBindings`, `DetachTargetBindings`.
-- **DataContext rebind (B6)** — `DependencyProperties.OnDependencyPropertyChanged` calls binding refresh when `DataContext` changes.
+- **`IPropertyChangedHandler`** + **`PropertyChangedEvent.AddHandler` / `RemoveHandler`** — explicit INPC subscriptions (replaces `RaiseEvent` for binding paths).
+- **`BindingSourceChangedHandler`**, **`BindingTargetChangedHandler`**, **`NestedPropertyChildChangedHandler`** — small handler objects for binding/nested-path notifications.
+- **`modBindingExpressions`** — `RefreshTargetBindings`, `DetachTargetBindings`; `OnDataContextChanged` hook on `DataContext` DP change.
+- **`Binding.IsListenerActive`**, **`Binding.DetachBinding`** — deterministic teardown of listeners, callbacks, and INPC handlers.
+
+### Bug fixes
+
+- **Binding detach hang:** `DependencyProperty` listeners/callbacks now stored as **object references** (not `ObjPtr`); `GetValue` no longer revives stale pointers after `Detach`. Fixes IDE freeze in **P4-DETACH** when reading a bound target property after source INPC.
+- **`GetValue` re-entrancy guard** — prevents recursive listener fan-out during effective-value resolution.
 
 ### Notes
 
@@ -45,7 +54,7 @@
 
 ### Test
 
-- **P4-BIND**, **P4-DCTX**, **P4-DETACH** in `.Tests/Phase0` (target **18/18** with Phase 0–3).
+- **P4-BIND**, **P4-DCTX**, **P4-DETACH** in `.Tests/Phase0` (**18/18** with Phase 0–3).
 
 ---
 

@@ -27,6 +27,7 @@ Private m_Metadata                  As DependencyPropertyMetadata
 Private m_Listeners                 As List
 Private m_Callbacks                 As List
 Private m_PropertyChangedEvent      As PropertyChangedEvent
+Private m_InGetValue                  As Long
 
 '#Region Public Properties
     Public Property Get Name() As String
@@ -56,35 +57,27 @@ Private m_PropertyChangedEvent      As PropertyChangedEvent
 
 '#Region Friend Members
     Friend Sub AddListener(ByVal Value As IDependencyPropertyCallbackListener)
-        Dim ValuePtr As Long
-        
-        ValuePtr = ObjPtr(Value)
-        
-        If m_Listeners.Contains(ValuePtr) Then Exit Sub
-        
-        m_Listeners.Add ValuePtr
+        If Value Is Nothing Then Exit Sub
+        If m_Listeners.Contains(Value) Then Exit Sub
+        m_Listeners.Add Value
     End Sub
     
-    Friend Sub RemoveListener(ByVal ValuePtr As Long)
-        If Not m_Listeners.Contains(ValuePtr) Then Exit Sub
-        
-        m_Listeners.Remove ValuePtr
+    Friend Sub RemoveListener(ByVal Value As IDependencyPropertyCallbackListener)
+        On Error Resume Next
+        If Value Is Nothing Then Exit Sub
+        m_Listeners.Remove Value
     End Sub
     
     Friend Sub AddCallback(ByVal Value As IDependencyPropertyCallbackListener)
-        Dim ValuePtr As Long
-        
-        ValuePtr = ObjPtr(Value)
-        
-        If m_Callbacks.Contains(ValuePtr) Then Exit Sub
-        
-        m_Callbacks.Add ValuePtr
+        If Value Is Nothing Then Exit Sub
+        If m_Callbacks.Contains(Value) Then Exit Sub
+        m_Callbacks.Add Value
     End Sub
     
-    Friend Sub RemoveCallback(ByVal ValuePtr As Long)
-        If Not m_Callbacks.Contains(ValuePtr) Then Exit Sub
-        
-        m_Callbacks.Remove ValuePtr
+    Friend Sub RemoveCallback(ByVal Value As IDependencyPropertyCallbackListener)
+        On Error Resume Next
+        If Value Is Nothing Then Exit Sub
+        m_Callbacks.Remove Value
     End Sub
     
     Friend Property Get Parent() As DependencyProperties
@@ -95,20 +88,43 @@ Private m_PropertyChangedEvent      As PropertyChangedEvent
     Friend Function GetValue() As Variant
         On Error Resume Next
         
-        Dim Listener As IDependencyPropertyCallbackListener
-        Dim ListenerPtr
-        Dim ProvidedValue
+        If m_InGetValue > 0 Then
+            GoTo ReturnStored
+        End If
         
-        For Each ListenerPtr In m_Listeners
-            Set Listener = API.ObjFromPtr(ListenerPtr)
-            ProvidedValue = Empty
-            If Not Listener Is Nothing Then
-                If Listener.OnValueRequested(ProvidedValue) = True Then
-                    API.CopyVariable ProvidedValue, m_Value
+        m_InGetValue = m_InGetValue + 1
+        
+        Dim Snapshot As List
+        Dim Listener As IDependencyPropertyCallbackListener
+        Dim Item As Variant
+        Dim ProvidedValue
+        Dim BindingListener As Binding
+        
+        Set Snapshot = New List
+        Snapshot.AddRange m_Listeners
+        
+        For Each Item In Snapshot
+            Set Listener = Item
+            If Listener Is Nothing Then GoTo NextListener
+            
+            If TypeOf Listener Is Binding Then
+                Set BindingListener = Listener
+                If Not BindingListener.IsListenerActive Then
+                    m_Listeners.Remove Item
+                    GoTo NextListener
                 End If
             End If
+            
+            ProvidedValue = Empty
+            If Listener.OnValueRequested(ProvidedValue) = True Then
+                API.CopyVariable ProvidedValue, m_Value
+            End If
+NextListener:
         Next
         
+        m_InGetValue = m_InGetValue - 1
+        
+ReturnStored:
         If Object.Equals(m_Value, m_UnsetValue) Then
             Call API.CopyVariable(m_CurrentValue, GetValue)
         Else
@@ -200,35 +216,47 @@ Private m_PropertyChangedEvent      As PropertyChangedEvent
         m_PropertyChangedEvent.OnPropertyChanged m_Name
         
         Dim Callback As IDependencyPropertyCallbackListener
-        Dim CallbackPtr
+        Dim CallbackItem As Variant
+        Dim BindingCallback As Binding
         
-        For Each CallbackPtr In m_Callbacks
-            Set Callback = API.ObjFromPtr(CallbackPtr)
+        For Each CallbackItem In m_Callbacks
+            Set Callback = CallbackItem
+            If Callback Is Nothing Then GoTo NextCallback
             
-            If Not Callback Is Nothing Then
-                Callback.OnValueChanged Me, GetValue
+            If TypeOf Callback Is Binding Then
+                Set BindingCallback = Callback
+                If Not BindingCallback.IsListenerActive Then
+                    m_Callbacks.Remove CallbackItem
+                    GoTo NextCallback
+                End If
             End If
+            
+            Callback.OnValueChanged Me, GetValue
+NextCallback:
         Next
         
     End Sub
+'#End Region
+
+'#Region Class Events
+    Private Sub Class_Initialize()
+        Set m_PropertyChangedEvent = New PropertyChangedEvent
+        m_PropertyChangedEvent.Register Me
+        
+        Set m_Listeners = New List
+        Set m_Callbacks = New List
+    End Sub
     
-Private Sub Class_Initialize()
-    Set m_PropertyChangedEvent = New PropertyChangedEvent
-    m_PropertyChangedEvent.Register Me
+    Private Sub Class_Terminate()
+        m_PropertyChangedEvent.Unregister
+    End Sub
+'#End Region
+
+    Private Function INotifyPropertyChanged_PropertyChangedEvent() As PropertyChangedEvent
+        Set INotifyPropertyChanged_PropertyChangedEvent = PropertyChangedEvent
+    End Function
     
-    Set m_Listeners = New List
-    Set m_Callbacks = New List
-End Sub
-
-Private Sub Class_Terminate()
-    m_PropertyChangedEvent.Unregister
-End Sub
-
-Private Function INotifyPropertyChanged_PropertyChangedEvent() As PropertyChangedEvent
-    Set INotifyPropertyChanged_PropertyChangedEvent = PropertyChangedEvent
-End Function
-
-Public Function PropertyChangedEvent() As PropertyChangedEvent
-    Set PropertyChangedEvent = m_PropertyChangedEvent
-End Function
+    Public Function PropertyChangedEvent() As PropertyChangedEvent
+        Set PropertyChangedEvent = m_PropertyChangedEvent
+    End Function
 
