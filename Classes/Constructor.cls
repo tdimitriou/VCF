@@ -174,3 +174,35 @@ Public Sub ClearCustomConstructor()
     Set modConstructors.CustomConstructor = Nothing
 End Sub
 
+Public Sub BeginRenderUpdate()
+    modRenderCoalescer.BeginRenderUpdate
+End Sub
+
+Public Sub EndRenderUpdate()
+    modRenderCoalescer.EndRenderUpdate
+End Sub
+
+Public Sub SafeEndRenderUpdate()
+    modRenderCoalescer.SafeEndRenderUpdate
+End Sub
+
+Public Function RenderUpdateDepth() As Long
+    RenderUpdateDepth = modRenderCoalescer.RenderUpdateDepth
+End Function
+
+Public Sub ResetRenderCoalescer()
+    modRenderCoalescer.ResetRenderCoalescer
+End Sub
+
+Public Sub RequestWidgetRefresh(ByVal W As cWidgetBase)
+    modRenderCoalescer.RequestWidgetRefresh W
+End Sub
+
+Public Function RenderCoalescerPendingCount() As Long
+    RenderCoalescerPendingCount = modRenderCoalescer.PendingRefreshCount
+End Function
+
+Public Function RenderCoalescerLastFlushCount() As Long
+    RenderCoalescerLastFlushCount = modRenderCoalescer.LastFlushRefreshCount
+End Function
+

@@ -18,15 +18,19 @@ Public Sub ApplyStyle(ByVal Style As Style, ByVal Target As Object)
         Err.Raise vbObjectError, TypeName(Me), "Target Type mismatch"
         Exit Sub
     End If
-        
+
+    On Error GoTo ApplyStyleFail
+
     SetObjectProperties Target, Style
     modStyleTriggerEngine.ApplyActiveTriggers Style, Target
     modControlTemplateEngine.ApplyControlTemplate Style, Target
-    
-    On Error Resume Next
-    Target.Widget.Refresh
-    If Err Then Err.Clear
-    
+
+    modRenderCoalescer.RequestWidgetRefresh Target.Widget
+
+    Exit Sub
+
+ApplyStyleFail:
+    Err.Raise Err.Number, Err.Source, Err.Description
 End Sub
 
 'CSEH: ErrMsgBox

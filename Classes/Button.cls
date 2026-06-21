@@ -517,12 +517,12 @@ Catch:
         ' property (if any) to use in the drawing routines
         Select Case Property.Name
             Case "Visible":         W.Visible = Property.GetValue
-            Case "Selected":        W.Refresh
+            Case "Selected":        modRenderCoalescer.RequestWidgetRefresh W
             Case "BackColor":       W.BackColor = Property.GetValue
             Case "BorderColor":     W.BorderColor = Property.GetValue
             Case "ToolTip":         W.ToolTip = Property.GetValue
             Case "Style":           ApplyStyle
-            Case "Content":         W.Refresh
+            Case "Content":         modRenderCoalescer.RequestWidgetRefresh W
         End Select
         
         ' Pass the new property value to the contained widgets

@@ -38,6 +38,27 @@
 
 ---
 
+## [2.15.0] — 2026-06-21 — Phase 6d (Render coalescing — validated)
+
+Tag: **`v2.15.0-wpf-alignment-p6d`** · Phase0 **29/29** pass.
+
+### Added
+
+- **`RenderCoalescer`** class — host-facing batch refresh API (`BeginRenderUpdate`, `EndRenderUpdate`, `RequestWidgetRefresh`, `PendingCount`, `LastFlushCount`). Prefer **`New RenderCoalescer`** from external projects; do not call coalescer methods on **`Constructor`** instances (GlobalNameSpace methods live on **`VCF.*`** only).
+- **`modRenderCoalescer`** — internal batch widget refresh engine; **`RequestWidgetRefresh`** dedupes by widget pointer.
+- **`Constructor.BeginRenderUpdate`**, **`EndRenderUpdate`**, **`RequestWidgetRefresh`**, **`RenderCoalescerPendingCount`**, **`RenderCoalescerLastFlushCount`** — also forwarded on **`VCF.*`** when the compatible typelib is refreshed.
+
+### Changed
+
+- **`StyleManager.ApplyStyle`** — defers widget refresh via **`RequestWidgetRefresh`** (respects any outer **`BeginRenderUpdate`** batch); no separate inner batch wrapper.
+- **`Button`** — **`Selected`** / **`Content`** DP changes use **`RequestWidgetRefresh`** instead of immediate **`W.Refresh`**.
+
+### Test
+
+- **P6d-COAL** in `.Tests/Phase0` (suite → **29** tests).
+
+---
+
 ## [2.14.0] — 2026-06-21 — Phase 6c (ControlTemplate — validated)
 
 Tag: **`v2.14.0-wpf-alignment-p6c`** · Phase0 **28/28** pass.

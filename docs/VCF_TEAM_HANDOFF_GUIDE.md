@@ -167,7 +167,7 @@ Phase 5 — ListView
   ~~Merge ListView/UnboundListView~~ (5a) · ~~MeasureRow variable height~~ (5b) · ~~hierarchy indent~~ (5c)
 
 Phase 6 — Templates & polish
-  ~~Button Content DP~~ (6a) · ~~Style.Triggers PropertyTrigger~~ (6b) · ~~ControlTemplate~~ (6c) · render coalescing
+  ~~Button Content DP~~ (6a) · ~~Style.Triggers PropertyTrigger~~ (6b) · ~~ControlTemplate~~ (6c) · ~~render coalescing~~ (6d)
 
 Phase 7 — POS migration support (denovo)
   AI migration scripts · pin DLL · integration smoke
@@ -346,6 +346,8 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-06-19 | Initial complete handoff package — 8 documents, full class/property inventory |
 | 2026-06-20 | Phase 0 complete — tag v2.0.0-wpf-alignment-p0; baselines recorded; kickoff agenda added |
 | 2026-06-20 | Phase 4 validated — tag v2.5.0-wpf-alignment-p4; Phase0 18/18 (P4-BIND, P4-DCTX, P4-DETACH) |
+| 2026-06-21 | Phase 6d validated — tag v2.15.0-wpf-alignment-p6d; Phase0 29/29 (P6d-COAL); B-GOLD 21 ms, B-COLL 7 ms; **Phase 6 complete** |
+| 2026-06-21 | Phase 6d started — v2.15.0; render coalescing, P6d-COAL (29 tests) |
 | 2026-06-21 | Phase 6c validated — tag v2.14.0-wpf-alignment-p6c; Phase0 28/28 (P6c-TMPL); B-GOLD 17 ms, B-COLL 3 ms |
 | 2026-06-21 | Phase 6c started — v2.14.0; ControlTemplate + Style.Template, P6c-TMPL (28 tests) |
 | 2026-06-21 | Phase 6b validated — tag v2.13.0-wpf-alignment-p6b; Phase0 27/27 (P6b-TRIG); B-GOLD 63 ms, B-COLL 4 ms |

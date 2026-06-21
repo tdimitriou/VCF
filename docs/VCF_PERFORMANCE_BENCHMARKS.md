@@ -1,6 +1,6 @@
 # Demac.VCF — performance benchmarks (Phase 0 baseline)
 
-**Status:** Phase 6c — **v2.14.0-wpf-alignment-p6c** (28 tests, validated)  
+**Status:** Phase 6d — **v2.15.0-wpf-alignment-p6d** (29 tests, validated)  
 **Runner:** `.Tests/Phase0` (`modPhase0Bench`)  
 **Threshold policy:** Regressions > 10% vs previous tag require explanation in release notes.
 
@@ -10,12 +10,12 @@
 
 | Field | Value |
 |-------|-------|
-| DLL version | 2.14.0-wpf-alignment-p6c |
+| DLL version | 2.15.0-wpf-alignment-p6d |
 | OS | Windows 10/11 x64 (build 26200) |
 | vbRichClient5 | v5 (path in test `.vbp`) |
 | Process bitness | 32-bit (VB6) |
 | Recorded | 2026-06-21 |
-| Phase0/1/2/3/4/5/6 result | **28/28 pass** |
+| Phase0/1/2/3/4/5/6 result | **29/29 pass** |
 
 Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whether POS video secondary display is active (exclude from UI benchmarks).
 
@@ -25,7 +25,7 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 
 | ID | Scenario | Method | Baseline (ms) | Threshold |
 |----|----------|--------|---------------|-----------|
-| B-GOLD | Golden XAML load (minimal tree) | `Phase0Bench_GoldenXamlLoad` | **19** | ≤ 24 (10% margin) |
+| B-GOLD | Golden XAML load (minimal tree) | `Phase0Bench_GoldenXamlLoad` | **21** | ≤ 24 (10% margin) |
 | B-COLL | 1000× `ObservableCollection.Add` | `Phase0Bench_CollectionAdd1000` | **7** | ≤ 23 (10% margin) |
 | B-LCV | Two simultaneous `ListCollectionView` init | `Phase0Bench_DualListCollectionView` | **pass** | must not raise |
 | B-STRICT-MALFORM | Malformed XAML raises `XamlLoadException` | `Phase0Bench_StrictMalformedXaml` | **pass** | must raise |
@@ -53,6 +53,7 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P6a-CONTENT | Button Content DP + Text alias + bind | `Phase6aBench_ButtonContent` | **pass** | WPF caption |
 | P6b-TRIG | Style PropertyTrigger IsMouseOver | `Phase6bBench_PropertyTrigger` | **pass** | hover BackColor |
 | P6c-TMPL | ControlTemplate Border chrome | `Phase6cBench_ControlTemplate` | **pass** | Button CornerRadius |
+| P6d-COAL | Render refresh coalescing | `Phase6dBench_RenderCoalesce` | **pass** | dedupe + Style batch |
 | B-RESZ | Window resize nested UniformGrid 50× | *Phase 1+* | — | deferred |
 | B-NAV | 50× view navigation binding leak | *Phase 4+* | — | deferred |
 
@@ -89,6 +90,8 @@ Normal POS process **< 100 MB** without secondary customer-display video. Framew
 | 2026-06-20 | **v2.4.0 Phase 3 validated:** 15/15 pass; B-GOLD 22 ms, B-COLL 21 ms; P3-MERGE, P3-SOURCE, P3-DYNAMIC, P3-STRICT-PROP pass |
 | 2026-06-20 | **v2.4.0 Phase 3:** P3-MERGE, P3-SOURCE, P3-DYNAMIC, P3-STRICT-PROP added (15 total tests) |
 | 2026-06-20 | **v2.3.0 Phase 2 validated:** 11/11 pass; B-GOLD 19 ms, B-COLL 16 ms; P2-STACK, P2-STACK-LAY, P2-GRID pass |
+| 2026-06-21 | **v2.15.0 Phase 6d validated:** 29/29 pass; B-GOLD **21 ms**, B-COLL **7 ms**; P6d-COAL pass |
+| 2026-06-21 | **v2.15.0 Phase 6d started:** P6d-COAL added (29 tests); render refresh coalescing |
 | 2026-06-21 | **v2.14.0 Phase 6c validated:** 28/28 pass; B-GOLD **17 ms**, B-COLL **3 ms**; P6c-TMPL pass |
 | 2026-06-21 | **v2.14.0 Phase 6c started:** P6c-TMPL added (28 tests); ControlTemplate + Style.Template |
 | 2026-06-21 | **v2.13.0 Phase 6b validated:** 27/27 pass; B-GOLD **63 ms**, B-COLL **4 ms**; P6b-TRIG pass |
