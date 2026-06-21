@@ -20,6 +20,7 @@ Public Sub ApplyStyle(ByVal Style As Style, ByVal Target As Object)
     End If
         
     SetObjectProperties Target, Style
+    modStyleTriggerEngine.ApplyActiveTriggers Style, Target
     
     On Error Resume Next
     Target.Widget.Refresh

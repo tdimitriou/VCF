@@ -38,6 +38,28 @@
 
 ---
 
+## [2.13.0] — 2026-06-21 — Phase 6b (Style.Triggers — validated)
+
+Tag: **`v2.13.0-wpf-alignment-p6b`** · Phase0 **27/27** pass.
+
+### Added
+
+- **`PropertyTrigger`** — WPF-like **`Trigger Property="..." Value="..."`** with child setters.
+- **`Style.Triggers`** collection — **`AddTrigger`**, **`TriggerCount`**, **`TriggerAt`**, **`ClearTriggers`**.
+- **`modStyleTriggerEngine`** — evaluates triggers after base style setters; **`BasedOn`** chain triggers first.
+- **`Button.IsMouseOver`** — readable/writable state property for trigger evaluation (mouse handlers update it).
+- **XAML** — **`Style.Triggers` / `Trigger`** parsing in **`XAMLStyleReader`**; **`Setter Name=`** alias fixed alongside **`Property=`**.
+
+### Changed
+
+- **`StyleManager.ApplyStyle`** — applies active trigger setters after style setters.
+
+### Test
+
+- **P6b-TRIG** in `.Tests/Phase0` (suite → **27** tests).
+
+---
+
 ## [2.12.0] — 2026-06-21 — Phase 6a (Button Content — validated)
 
 Tag: **`v2.12.0-wpf-alignment-p6a`** · Phase0 **26/26** pass.

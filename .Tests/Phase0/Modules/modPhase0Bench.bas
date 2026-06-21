@@ -36,8 +36,9 @@ Public Sub RunAll()
     If Not Phase5bBench_MeasureRow() Then Failed = Failed + 1
     If Not Phase5cBench_RowLevel() Then Failed = Failed + 1
     If Not Phase6aBench_ButtonContent() Then Failed = Failed + 1
+    If Not Phase6bBench_PropertyTrigger() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (26 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (27 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -948,6 +949,44 @@ Fail:
     LogResult "P6a-CONTENT", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P6a-CONTENT — " & Err.Description
     Phase6aBench_ButtonContent = False
+End Function
+
+Public Function Phase6bBench_PropertyTrigger() As Boolean
+    Dim St As Style
+    Dim Btn As Button
+    Dim Trig As PropertyTrigger
+
+    On Error GoTo Fail
+
+    Set St = NewStyle("Button")
+    St.SetSetter "BackColor", CLng(16777215)
+    St.SetSetter "HoverColor", CLng(-1)
+
+    Set Trig = New PropertyTrigger
+    Trig.Initialize "IsMouseOver", "True"
+    Trig.SetSetter "BackColor", CLng(255)
+    St.AddTrigger Trig
+
+    Set Btn = New Button
+    Set Btn.Style = St
+
+    If Btn.Widget.BackColor <> 16777215 Then Err.Raise vbObjectError, , "Expected base BackColor 16777215, got " & Btn.Widget.BackColor
+
+    Btn.IsMouseOver = True
+    If Btn.Widget.BackColor <> 255 Then Err.Raise vbObjectError, , "Expected hover BackColor 255, got " & Btn.Widget.BackColor
+
+    Btn.IsMouseOver = False
+    If Btn.Widget.BackColor <> 16777215 Then Err.Raise vbObjectError, , "Expected restored BackColor 16777215, got " & Btn.Widget.BackColor
+
+    LogResult "P6b-TRIG", 0, "OK IsMouseOver PropertyTrigger BackColor"
+    Debug.Print "PASS  P6b-TRIG Style PropertyTrigger IsMouseOver"
+    Phase6bBench_PropertyTrigger = True
+    Exit Function
+
+Fail:
+    LogResult "P6b-TRIG", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6b-TRIG — " & Err.Description
+    Phase6bBench_PropertyTrigger = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

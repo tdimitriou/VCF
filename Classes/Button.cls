@@ -28,7 +28,7 @@ Private m_DesignLeft                            As Single
 Private m_DesignTop                             As Single
 Private m_ParentPtr                             As Long
 
-Private IsMouseOver                             As Boolean
+Private m_IsMouseOver                           As Boolean
 Private IsMouseDown                             As Boolean
 
 Private m_CornerRadius                          As Double
@@ -117,6 +117,16 @@ Attribute TmrRelease.VB_VarHelpID = -1
     
     Public Property Let ClickMode(ByVal Value As ClickMode)
         m_ClickMode = Value
+    End Property
+
+    Public Property Get IsMouseOver() As Boolean
+        IsMouseOver = m_IsMouseOver
+    End Property
+
+    Public Property Let IsMouseOver(ByVal Value As Boolean)
+        If m_IsMouseOver = Value Then Exit Property
+        m_IsMouseOver = Value
+        ApplyStyle
     End Property
 
     Public Property Get BorderWidth() As Double
@@ -578,7 +588,6 @@ End Sub
         If Not W.Enabled Then Exit Sub
         
         IsMouseOver = True
-        W.Refresh
         
         If m_ClickMode = ClickModeHover Then If Not IsMouseDown Then OnClick
     End Sub

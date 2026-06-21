@@ -241,6 +241,13 @@ Public Function NewStyle(ByVal TargetType As String, Optional ByVal Key As Strin
     Set NewStyle = Obj
 End Function
 
+Public Function NewPropertyTrigger(ByVal PropertyName As String, ByVal TriggerValue As String) As PropertyTrigger
+    Dim Obj As PropertyTrigger
+    Set Obj = New PropertyTrigger
+    Obj.Initialize PropertyName, TriggerValue
+    Set NewPropertyTrigger = Obj
+End Function
+
 Public Function Variable(Optional Value) As Variable
     Set Variable = New Variable
     If Not IsMissing(Value) Then Variable.Value = Value

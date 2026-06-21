@@ -23,6 +23,7 @@ Private m_Key As String
 Private m_TargetType As String
 
 Private m_Setters As cCollection
+Private m_Triggers As cCollection
 Private IsInitialized As Boolean
 
 Private m_BasedOn As VCF.Style
@@ -184,7 +185,31 @@ Attribute GetSetter.VB_UserMemId = 0
     Public Sub RemoveSetter(ByVal Property As String)
         VerifyInitialization
         m_Setters.Remove Property
+        OnStyleChanged
     End Sub
+
+    Public Sub AddTrigger(ByVal Trig As PropertyTrigger)
+        VerifyInitialization
+        If Trig Is Nothing Then Exit Sub
+        m_Triggers.Add Trig
+        OnStyleChanged
+    End Sub
+
+    Public Sub ClearTriggers()
+        VerifyInitialization
+        m_Triggers.RemoveAll
+        OnStyleChanged
+    End Sub
+
+    Public Property Get TriggerCount() As Long
+        VerifyInitialization
+        TriggerCount = m_Triggers.Count
+    End Property
+
+    Public Property Get TriggerAt(ByVal Index As Long) As PropertyTrigger
+        VerifyInitialization
+        Set TriggerAt = m_Triggers.ItemByIndex(Index)
+    End Property
     
     Public Sub Clear()
         VerifyInitialization
@@ -217,8 +242,11 @@ Attribute GetEnumerator.VB_UserMemId = -4
     Private Sub Class_Initialize()
         Set m_ChildStyles = New_c.SortedDictionary
         Set m_Setters = New_c.Collection(False)
+        Set m_Triggers = New_c.Collection(False)
         
-        Set ThemesManager = Application.Current.Base.ThemesManager
+        If Not Application.Current Is Nothing Then
+            Set ThemesManager = Application.Current.Base.ThemesManager
+        End If
     End Sub
 '#End Region
 
@@ -228,6 +256,9 @@ End Sub
 
 Private Function GetBaseStyle(ByVal TargetType As String) As Style
     Dim Style
+
+    If Application.Current Is Nothing Then Exit Function
+
     API.CopyVariable Application.Current.TryFindResource(TargetType & ".BaseStyle"), Style
     
     If Not IsObject(Style) Then Exit Function

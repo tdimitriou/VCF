@@ -27,12 +27,16 @@ Public Sub LoadStyle(ByVal Resources As ResourceDictionary, Node As cElement)
         
         Dim e
         Dim Setter As KeyValuePair
+        Dim i As Long
         
-        ' Overwrite the old style's setters
         Style.Clear
+        Style.ClearTriggers
         For Each e In NewStyle
             Setter = e
             Style.SetSetter Setter.Key, Setter.Value
+        Next
+        For i = 0 To NewStyle.TriggerCount - 1
+            Style.AddTrigger NewStyle.TriggerAt(i).Clone
         Next
     Else
         Resources.Add NewStyle.Key, NewStyle
@@ -48,7 +52,6 @@ Private Function CreateStyle(Node As cElement) As VCF.Style
     TargetType = Node.Attributes("TargetType").Text
     
     If Err Then
-        'No TargetType defined -> Abort
         Err.Clear
         Exit Function
     End If
@@ -78,10 +81,55 @@ Private Function CreateStyle(Node As cElement) As VCF.Style
     
     If Not Node.HasChildElements Then Exit Function
     
-    Dim Setter As cElement
-    For Each Setter In Node.ChildElements
-        If Setter.BaseName = "Setter" Then CreateStyle.SetSetter Setter.Attributes("Property").Text, Setter.Attributes("Value").Text
+    Dim Child As cElement
+    For Each Child In Node.ChildElements
+        Select Case Child.BaseName
+            Case "Setter"
+                CreateStyle.SetSetter GetSetterPropertyName(Child), GetAttributeText(Child, "Value")
+            Case "Style.Triggers"
+                LoadTriggers CreateStyle, Child
+            Case "Trigger"
+                CreateStyle.AddTrigger CreatePropertyTrigger(Child)
+        End Select
     Next
     If Err Then Err.Clear
 End Function
 
+Private Sub LoadTriggers(ByVal Style As Style, Node As cElement)
+    Dim Child As cElement
+
+    For Each Child In Node.ChildElements
+        If Child.BaseName = "Trigger" Then Style.AddTrigger CreatePropertyTrigger(Child)
+    Next
+End Sub
+
+Private Function CreatePropertyTrigger(Node As cElement) As PropertyTrigger
+    Dim Trig As PropertyTrigger
+    Dim Setter As cElement
+
+    Set Trig = modConstructors.NewPropertyTrigger(GetTriggerPropertyName(Node), GetAttributeText(Node, "Value"))
+
+    For Each Setter In Node.ChildElements
+        If Setter.BaseName = "Setter" Then
+            Trig.SetSetter GetSetterPropertyName(Setter), GetAttributeText(Setter, "Value")
+        End If
+    Next
+
+    Set CreatePropertyTrigger = Trig
+End Function
+
+Private Function GetSetterPropertyName(ByVal Node As cElement) As String
+    GetSetterPropertyName = GetAttributeText(Node, "Property")
+    If Len(GetSetterPropertyName) = 0 Then GetSetterPropertyName = GetAttributeText(Node, "Name")
+End Function
+
+Private Function GetTriggerPropertyName(ByVal Node As cElement) As String
+    GetTriggerPropertyName = GetAttributeText(Node, "Property")
+    If Len(GetTriggerPropertyName) = 0 Then GetTriggerPropertyName = GetAttributeText(Node, "Name")
+End Function
+
+Private Function GetAttributeText(ByVal Node As cElement, ByVal Name As String) As String
+    On Error Resume Next
+    GetAttributeText = Node.Attributes(Name).Text
+    If Err Then Err.Clear
+End Function
