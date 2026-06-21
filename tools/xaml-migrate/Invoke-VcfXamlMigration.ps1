@@ -185,6 +185,27 @@ function Convert-ThemeResourceMarkup {
     return $result
 }
 
+function Add-ReviewNotes {
+    param(
+        [System.Collections.Generic.List[string]]$Target,
+        [AllowNull()]
+        [System.Collections.IEnumerable]$Items
+    )
+
+    if ($null -eq $Items) { return }
+
+    foreach ($item in $Items) {
+        if ($null -ne $item) {
+            [void]$Target.Add([string]$item)
+        }
+    }
+}
+
+function Get-XamlLines {
+    param([string]$Content)
+    return @(($Content -split "`r?`n", -1))
+}
+
 function Get-ManualReviewNotes {
     param(
         [string[]]$Lines,
@@ -192,11 +213,12 @@ function Get-ManualReviewNotes {
     )
 
     $notes = [System.Collections.Generic.List[string]]::new()
+    $allLines = @($Lines)
     $inButton = $false
     $buttonLine = 0
 
-    for ($i = 0; $i -lt $Lines.Count; $i++) {
-        $line = $Lines[$i]
+    for ($i = 0; $i -lt $allLines.Length; $i++) {
+        $line = $allLines[$i]
         $lineNo = $i + 1
 
         if ($line -match '<Scene\b[^>]*\bBackColor=') {
@@ -235,7 +257,8 @@ function Convert-XamlFileContent {
     )
 
     $manual = [System.Collections.Generic.List[string]]::new()
-    $manual.AddRange([string[]](Get-ManualReviewNotes -Lines ($Content -split "`r?`n") -FilePath $FilePath))
+    $xamlLines = Get-XamlLines -Content $Content
+    Add-ReviewNotes -Target $manual -Items (Get-ManualReviewNotes -Lines $xamlLines -FilePath $FilePath)
 
     if ($ReportOnlyMode) {
         return [pscustomobject]@{
@@ -246,10 +269,9 @@ function Convert-XamlFileContent {
     }
 
     $changeCount = 0
-    $lines = $Content -split "`r?`n", -1
     $out = New-Object System.Collections.Generic.List[string]
 
-    foreach ($line in $lines) {
+    foreach ($line in $xamlLines) {
         $script:ThemeResourceHits = 0
         $newLine = Convert-XamlOpeningTag -Line $line -ChangeCount ([ref]$changeCount) -ManualReview $manual
         $newLine = Convert-ThemeResourceMarkup -Text $newLine -ChangeCount ([ref]$changeCount)
@@ -329,7 +351,7 @@ function Invoke-MigrationRun {
     foreach ($file in $files) {
         $original = [IO.File]::ReadAllText($file)
         $result = Convert-XamlFileContent -Content $original -FilePath $file -ReportOnlyMode:$ReportOnly
-        $allReview.AddRange($result.ManualReview)
+        Add-ReviewNotes -Target $allReview -Items $result.ManualReview
 
         if ($ReportOnly) {
             Write-Host "Report: $file ($($result.ManualReview.Count) note(s))"
