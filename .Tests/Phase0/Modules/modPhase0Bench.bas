@@ -39,12 +39,13 @@ Public Sub RunAll()
     If Not Phase6bBench_PropertyTrigger() Then Failed = Failed + 1
     If Not Phase6cBench_ControlTemplate() Then Failed = Failed + 1
     If Not Phase6dBench_RenderCoalesce() Then Failed = Failed + 1
+    If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (29 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (30 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
-        MsgBox Failed & " Phase 0/1/2/3/4/5/6 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
+        MsgBox Failed & " Phase 0/1/2/3/4/5/6/7 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
-        MsgBox "All Phase 0/1/2/3/4/5/6 tests passed.", vbInformation, "Phase0"
+        MsgBox "All Phase 0/1/2/3/4/5/6/7 tests passed.", vbInformation, "Phase0"
     End If
 End Sub
 
@@ -1099,6 +1100,34 @@ Fail:
     LogResult "P6d-COAL", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P6d-COAL — " & Err.Description
     Phase6dBench_RenderCoalesce = False
+End Function
+
+Public Function Phase7aBench_PosSalesOrderShell() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As Scene
+    Dim Grid As Object
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load(LoadTextFile(App.Path & "\Resources\PosSalesOrderShell.xml"))
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "POS SalesOrder shell returned Nothing"
+    If Root.Name <> "SalesOrder" Then Err.Raise vbObjectError, , "Expected Name=SalesOrder, got " & Root.Name
+    If Root.Children.Count <> 1 Then Err.Raise vbObjectError, , "Expected 1 child, got " & Root.Children.Count
+
+    Set Grid = Root.Children(0)
+    If TypeName(Grid) <> "UniformGrid" Then Err.Raise vbObjectError, , "Expected UniformGrid, got " & TypeName(Grid)
+
+    LogResult "P7a-SMOKE", 0, "OK POS SalesOrder shell Scene+UniformGrid"
+    Debug.Print "PASS  P7a-SMOKE POS SalesOrder shell XAML"
+    Phase7aBench_PosSalesOrderShell = True
+    Exit Function
+
+Fail:
+    LogResult "P7a-SMOKE", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P7a-SMOKE — " & Err.Description
+    Phase7aBench_PosSalesOrderShell = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

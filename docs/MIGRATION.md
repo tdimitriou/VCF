@@ -17,6 +17,56 @@
 
 See [VCF_TEAM_HANDOFF_GUIDE.md §8.1](./VCF_TEAM_HANDOFF_GUIDE.md) for No / Project / Binary compatibility during the rewrite.
 
+**POS smoke checklist:** [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md)
+
+---
+
+## Upgrading to 2.15.0 (Phases 0–6 complete — recommended POS pin)
+
+### DLL pin
+
+**Tag:** **`v2.15.0-wpf-alignment-p6d`** (framework) · **`v2.16.0-wpf-alignment-p7a`** adds migration docs + POS shell smoke test (same DLL as 2.15.0).
+
+### Summary of changes since 2.0.0
+
+| Phase | Tag (approx) | Required POS change | Optional / incremental |
+|-------|--------------|---------------------|----------------------|
+| 0 | 2.0.0 | None | `StrictXamlLoad`, TypeRegistry |
+| 1 | 2.1–2.2 | None | `Width`/`Height` instead of `Design*` |
+| 2 | 2.3 | None | StackPanel, Grid for new screens |
+| 3 | 2.4 | None | ResourceDictionary, `{DynamicResource}` |
+| 4 | 2.5–2.8 | None | Binding rebind automatic; ItemsControl/Selector |
+| 5 | 2.9–2.11 | **`UnboundListView` → `ListView`** | MeasureRow, QueryRowLevel for hierarchy |
+| 6 | 2.12–2.15 | **`Button.Text` → `Content`** (shim remains) | PropertyTrigger, ControlTemplate, RenderCoalescer batch |
+
+Details per release: [BREAKING_CHANGES.md](./BREAKING_CHANGES.md).
+
+### XAML transforms (apply over time)
+
+| Before | After |
+|--------|-------|
+| `DesignWidth` / `DesignHeight` | `Width` / `Height` (shim accepts both) |
+| `<UnboundListView …/>` | `<ListView …/>` without `ItemsSource` |
+| `{ThemeResource Key=…}` | `{DynamicResource …}` |
+| `<res:Path\Fragment/>` | Merged `ResourceDictionary` + `{StaticResource …}` |
+| `Button` caption via `Text` | `Content` (layout engine aliases `Text` → `Content`) |
+| `Scene BackColor="…"` | Style or widget API (not a Scene DP today; strict XAML rejects it) |
+| Dialog `@` fragment templates | `DataTemplate` + `{Binding …}` (Phase 7 migration) |
+
+### VB6 code
+
+| Before | After |
+|--------|-------|
+| `ListView` owner-draw only via `UnboundListView` | `ListView` (same API surface) |
+| Manual binding recreate on DataContext | Automatic rebind (Phase 4) |
+| Batch layout refresh storms | Optional `New RenderCoalescer` + `BeginRenderUpdate` / `EndRenderUpdate` |
+
+### Verification
+
+- [ ] `.Tests/Phase0` — **30/30** pass (includes **P7a-SMOKE** POS SalesOrder shell)
+- [ ] [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) §3 manual flows
+- [ ] DeNovo EXE recompiled against pinned DLL
+
 ---
 
 ## Upgrading to 2.3.0 (Phase 2 — Grid, StackPanel, ContentControl)
@@ -128,45 +178,13 @@ Registered names are resolved in `CreateInstance` before `CreateObject` and befo
 
 ---
 
-## Future phases (preview)
+## Phase 7 — POS migration (in progress)
 
-| Phase | Topic | Doc section |
-|------:|-------|-------------|
-| 1 | `Design*` → layout DPs | See template below |
-| 3 | `res:` → ResourceDictionary | See template below |
-| 4 | Binding rebind on DataContext | Remove manual TODO comments |
-| 5 | `UnboundListView` → `ListView` | See template below |
-
-<details>
-<summary>Phase 1 — Layout (`Design*` → DPs)</summary>
-
-| Before | After |
-|--------|-------|
-| `DesignWidth="200"` | `Width="200"` |
-| `DesignHeight="40"` | `Height="40"` |
-| `DesignLeft="10" DesignTop="20"` | `Margin="10,20,0,0"` |
-
-</details>
-
-<details>
-<summary>Phase 3 — Resources</summary>
-
-| Before | After |
-|--------|-------|
-| `<res:Screens\Sales\Menu.xml/>` | Merged ResourceDictionary; `{StaticResource MenuTemplate}` |
-| `{ThemeResource Key=PrimaryBrush}` | `{DynamicResource PrimaryBrush}` |
-
-</details>
-
-<details>
-<summary>Phase 5 — ListView</summary>
-
-| Before | After |
-|--------|-------|
-| `UnboundListView` | `ListView` (no ItemsSource) |
-| Dialog `@Selected` hacks | `{Binding SelectedItem, Mode=TwoWay}` |
-
-</details>
+| Slice | Tag | Deliverable |
+|-------|-----|-------------|
+| **7a** | `v2.16.0-wpf-alignment-p7a` | [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md), 2.15 pin guide above, **P7a-SMOKE** |
+| 7b | TBD | XAML transform scripts / Cursor migration prompts |
+| 7c | TBD | DeNovo `@` template → DataTemplate migration |
 
 ---
 

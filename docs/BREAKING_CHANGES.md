@@ -38,6 +38,24 @@
 
 ---
 
+---
+
+## [2.16.0] — 2026-06-21 — Phase 7a (POS migration package — validated)
+
+Tag: **`v2.16.0-wpf-alignment-p7a`** · Phase0 **30/30** pass. **No DLL API changes** — same `Demac.VCF.dll` as 2.15.0.
+
+### Added
+
+- **[POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md)** — DeNovo manual smoke checklist (login → sales → grid → dialog).
+- **[MIGRATION.md](./MIGRATION.md)** — **Upgrading to 2.15.0** master section (Phases 0–6 pin guide).
+- **P7a-SMOKE** — loads POS-shaped `PosSalesOrderShell.xml` (Scene + UniformGrid + legacy `Design*`). Real POS `SalesOrder.xml` still uses `Scene BackColor=` (legacy widget setter); omitted here because strict Phase0 rejects unknown Scene DPs.
+
+### Test
+
+- Suite → **30** tests.
+
+---
+
 ## [2.15.0] — 2026-06-21 — Phase 6d (Render coalescing — validated)
 
 Tag: **`v2.15.0-wpf-alignment-p6d`** · Phase0 **29/29** pass.
