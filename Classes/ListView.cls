@@ -19,6 +19,21 @@ Implements IUIElement
 Implements IItemsControl
 Implements ISelector
 
+Event OwnerDrawRowSelector(CC As cCairoContext, ByVal dx As Single, ByVal dy As Single, ByVal Alpha As Single)
+Event OwnerDrawHeader(CC As cCairoContext, ByVal dx As Single, ByVal dy As Single, ByVal Alpha As Single)
+Event OwnerDrawItem(ByVal Index As Long, CC As cCairoContext, ByVal dx As Single, ByVal dy As Single, ByVal Alpha As Single)
+Event Click()
+Event HeaderClick(ByVal ColIdx As Long, State As ColumnSortState)
+Event DblClick()
+Event DeleteKeyPressed()
+Event ScrollIndexChange()
+Event HScrollChange()
+Event MouseUpClick()
+Event MouseMoveOnListItem(ByVal HoverIndex As Long, ByVal RelX As Single, ByVal RelY As Single)
+Event SelectedAll()
+Event DimensionsAdjusted()
+Event ListIndexChanged()
+
 Private WithEvents W                            As cWidgetBase
 Attribute W.VB_VarHelpID = -1
 Private WithEvents ActiveStyle As Style
@@ -168,6 +183,12 @@ Private m_Ready                                   As Boolean
     Public Property Let Name(ByVal Value As String)
         m_Name = Value
     End Property
+'#End Region
+
+'#Region Public Methods
+    Public Sub Refresh()
+        m_Base.Widget.Refresh
+    End Sub
 '#End Region
 
 
@@ -467,26 +488,79 @@ Private m_Ready                                   As Boolean
 '#End Region
 
 '#Region ListViewBase Events
-    Private Sub m_Base_DimensionsAdjusted()
-            Dim Child As Object
-                    
-            If m_ItemTemplate Is Nothing Then Exit Sub
-                    
-            For Each Child In m_ItemTemplate.Children
-                Call MoveChild(Child)
-            Next
+    Private Sub m_Base_Click()
+        RaiseEvent Click
     End Sub
-    
+
+    Private Sub m_Base_DblClick()
+        RaiseEvent DblClick
+    End Sub
+
+    Private Sub m_Base_DeleteKeyPressed()
+        RaiseEvent DeleteKeyPressed
+    End Sub
+
+    Private Sub m_Base_DimensionsAdjusted()
+        If IsOwnerDrawMode() Then
+            RaiseEvent DimensionsAdjusted
+            Exit Sub
+        End If
+
+        Dim Child As Object
+
+        If m_ItemTemplate Is Nothing Then Exit Sub
+
+        For Each Child In m_ItemTemplate.Children
+            Call MoveChild(Child)
+        Next
+
+        RaiseEvent DimensionsAdjusted
+    End Sub
+
+    Private Sub m_Base_HeaderClick(ByVal ColIdx As Long, State As ColumnSortState)
+        RaiseEvent HeaderClick(ColIdx, State)
+    End Sub
+
+    Private Sub m_Base_HScrollChange()
+        RaiseEvent HScrollChange
+    End Sub
+
     Private Sub m_Base_ListIndexChanged()
-        If m_ListCollectionView Is Nothing Then Exit Sub
         If m_SyncingSelection Then Exit Sub
+
+        If m_ListCollectionView Is Nothing Then
+            m_SyncingSelection = True
+            m_DependencyProperties.SetCurrentValue "SelectedIndex", m_Base.ListIndex
+            m_SyncingSelection = False
+            RaiseEvent ListIndexChanged
+            Exit Sub
+        End If
+
         m_SyncingSelection = True
         m_ListCollectionView.MoveCurrentToPosition m_Base.ListIndex
         m_SyncingSelection = False
         modSelectorEngine.PublishSelectorState m_DependencyProperties, m_ListCollectionView, m_SelectedValuePath, m_SyncingSelection
+        RaiseEvent ListIndexChanged
     End Sub
-    
+
+    Private Sub m_Base_MouseMoveOnListItem(ByVal HoverIndex As Long, ByVal RelX As Single, ByVal RelY As Single)
+        RaiseEvent MouseMoveOnListItem(HoverIndex, RelX, RelY)
+    End Sub
+
+    Private Sub m_Base_MouseUpClick()
+        RaiseEvent MouseUpClick
+    End Sub
+
+    Private Sub m_Base_OwnerDrawHeader(CC As vbRichClient5.cCairoContext, ByVal dx As Single, ByVal dy As Single, ByVal Alpha As Single)
+        RaiseEvent OwnerDrawHeader(CC, dx, dy, Alpha)
+    End Sub
+
     Private Sub m_Base_OwnerDrawItem(ByVal Index As Long, CC As vbRichClient5.cCairoContext, ByVal dx As Single, ByVal dy As Single, ByVal Alpha As Single)
+        If IsOwnerDrawMode() Then
+            RaiseEvent OwnerDrawItem(Index, CC, dx, dy, Alpha)
+            Exit Sub
+        End If
+
         On Error Resume Next
 
         Dim ActiveTemplate As DataTemplate
@@ -518,7 +592,15 @@ Private m_Ready                                   As Boolean
     End Sub
 
     Private Sub m_Base_OwnerDrawRowSelector(CC As vbRichClient5.cCairoContext, ByVal dx As Single, ByVal dy As Single, ByVal Alpha As Single)
-        '
+        RaiseEvent OwnerDrawRowSelector(CC, dx, dy, Alpha)
+    End Sub
+
+    Private Sub m_Base_ScrollIndexChange()
+        RaiseEvent ScrollIndexChange
+    End Sub
+
+    Private Sub m_Base_SelectedAll()
+        RaiseEvent SelectedAll
     End Sub
 '#End Region
 
@@ -714,6 +796,15 @@ Private m_Ready                                   As Boolean
     End Sub
     
     Private Sub ApplySelectedIndex(ByVal Index As Long)
+        If m_ListCollectionView Is Nothing Then
+            If m_SyncingSelection Then Exit Sub
+            m_SyncingSelection = True
+            m_Base.SetListIndexSilent Index
+            m_DependencyProperties.SetCurrentValue "SelectedIndex", Index
+            m_SyncingSelection = False
+            Exit Sub
+        End If
+
         modSelectorEngine.ApplySelectorIndex m_ListCollectionView, m_SyncingSelection, Index
         modSelectorEngine.PublishSelectorState m_DependencyProperties, m_ListCollectionView, m_SelectedValuePath, m_SyncingSelection
     End Sub
@@ -825,11 +916,19 @@ Private m_Ready                                   As Boolean
     Private Function CreateDataTemplate(Item) As DataTemplate
         Set CreateDataTemplate = modItemTemplateEngine.CloneDataTemplateForItem(m_ItemTemplate, Item, m_BaseUIElement)
     End Function
+
+    Private Function IsOwnerDrawMode() As Boolean
+        IsOwnerDrawMode = (m_ItemsSource Is Nothing)
+    End Function
     
 '#End Region
 Private Function GetBaseStyle() As Style
     Dim Style
     API.CopyVariable m_BaseUIElement.TryFindResource(Typename(Me) & ".BaseStyle"), Style
+    
+    If Not IsObject(Style) Then
+        API.CopyVariable m_BaseUIElement.TryFindResource("UnboundListView.BaseStyle"), Style
+    End If
     
     If Not IsObject(Style) Then Exit Function
     If TypeOf Style Is Style Then Set GetBaseStyle = Style

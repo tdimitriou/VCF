@@ -32,12 +32,13 @@ Public Sub RunAll()
     If Not Phase4bBench_Move() Then Failed = Failed + 1
     If Not Phase4bBench_ItemsControl() Then Failed = Failed + 1
     If Not Phase4dBench_Selector() Then Failed = Failed + 1
+    If Not Phase5aBench_OwnerDrawListView() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (22 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (23 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
-        MsgBox Failed & " Phase 0/1/2/3/4 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
+        MsgBox Failed & " Phase 0/1/2/3/4/5 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
-        MsgBox "All Phase 0/1/2/3/4 tests passed.", vbInformation, "Phase0"
+        MsgBox "All Phase 0/1/2/3/4/5 tests passed.", vbInformation, "Phase0"
     End If
 End Sub
 
@@ -798,6 +799,41 @@ Fail:
     LogResult "P4d-SEL", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P4d-SEL — " & Err.Description
     Phase4dBench_Selector = False
+End Function
+
+Public Function Phase5aBench_OwnerDrawListView() As Boolean
+    Dim LV As ListView
+    Dim Reader As XAMLReader
+    Dim Root As Object
+
+    On Error GoTo Fail
+
+    Set LV = New ListView
+    If Not LV.ItemsSource Is Nothing Then Err.Raise vbObjectError, , "Expected ItemsSource=Nothing for owner-draw"
+
+    LV.Base.ListCount = 5
+    If LV.Base.ListCount <> 5 Then Err.Raise vbObjectError, , "Expected ListCount=5"
+
+    LV.SelectedIndex = 2
+    If LV.SelectedIndex <> 2 Then Err.Raise vbObjectError, , "Expected SelectedIndex=2"
+    If LV.Base.ListIndex <> 2 Then Err.Raise vbObjectError, , "Expected ListIndex=2"
+
+    LV.Refresh
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load("<UnboundListView/>")
+    If Root Is Nothing Then Err.Raise vbObjectError, , "UnboundListView XAML alias failed"
+    If Not TypeOf Root Is ListView Then Err.Raise vbObjectError, , "UnboundListView XAML must create ListView"
+
+    LogResult "P5a-OWN", 0, "OK owner-draw ListView + XAML alias"
+    Debug.Print "PASS  P5a-OWN owner-draw ListView + UnboundListView XAML alias"
+    Phase5aBench_OwnerDrawListView = True
+    Exit Function
+
+Fail:
+    LogResult "P5a-OWN", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P5a-OWN — " & Err.Description
+    Phase5aBench_OwnerDrawListView = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

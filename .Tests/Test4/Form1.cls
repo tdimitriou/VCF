@@ -19,7 +19,7 @@ Public WithEvents Form As cWidgetForm
 Attribute Form.VB_VarHelpID = -1
 
 Private MemDb As cMemDB
-Private WithEvents LV As UnboundListView
+Private WithEvents LV As ListView
 Attribute LV.VB_VarHelpID = -1
 Private WithEvents Rs As cRecordset
 Attribute Rs.VB_VarHelpID = -1

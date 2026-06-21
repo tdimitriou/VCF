@@ -24,9 +24,29 @@
 ### Deprecated (remove in Phase 1+)
 
 - Public `DesignLeft/Top/Width/Height` → `Width`, `Height`, `Margin` DPs (Phase 1).
-- `UnboundListView` → merged `ListView` (Phase 5).
+- `UnboundListView` → merged `ListView` (Phase 5 — **removed in 2.9.0**).
 - `ThemeResource` markup → `{DynamicResource}` (Phase 3).
 - `CallByName` XAML property fallback → DP-only setters (Phase 3).
+
+---
+
+---
+
+## [2.9.0] — 2026-06-21 — Phase 5a (ListView merge — validated)
+
+Tag: **`v2.9.0-wpf-alignment-p5a`** · Phase0 **23/23** pass.
+
+### Breaking
+
+- **`UnboundListView` removed** — use **`ListView`** with no **`ItemsSource`** for owner-draw mode. XAML **`<UnboundListView/>`** still loads via alias (creates **`ListView`**).
+
+### Changed
+
+- **`ListView`** — forwards **`ListViewBase`** input/draw/scroll events; **`Refresh()`**; owner-draw when **`ItemsSource`** is **`Nothing`**; **`SelectedIndex`** syncs with **`ListIndex`** in owner-draw mode.
+
+### Test
+
+- **P5a-OWN** in `.Tests/Phase0` (suite → **23** tests).
 
 ---
 

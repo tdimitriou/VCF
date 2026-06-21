@@ -164,7 +164,7 @@ Phase 4 — Bindings & collections
   ObservableCollection lightweight args · ListCollectionView fixes · ItemsControl · Selector
 
 Phase 5 — ListView
-  Merge ListView/UnboundListView · ListViewBase rewrite · variable row height · hierarchy
+  ~~Merge ListView/UnboundListView~~ (5a) · ListViewBase rewrite · variable row height · hierarchy
 
 Phase 6 — Templates & polish
   ControlTemplate · Style.Triggers · Button Content DP · render coalescing
@@ -346,6 +346,8 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-06-19 | Initial complete handoff package — 8 documents, full class/property inventory |
 | 2026-06-20 | Phase 0 complete — tag v2.0.0-wpf-alignment-p0; baselines recorded; kickoff agenda added |
 | 2026-06-20 | Phase 4 validated — tag v2.5.0-wpf-alignment-p4; Phase0 18/18 (P4-BIND, P4-DCTX, P4-DETACH) |
+| 2026-06-21 | Phase 5a validated — tag v2.9.0-wpf-alignment-p5a; Phase0 23/23 (P5a-OWN); B-GOLD 19 ms, B-COLL 5 ms |
+| 2026-06-21 | Phase 5a started — v2.9.0; merge UnboundListView → ListView, P5a-OWN |
 | 2026-06-21 | Phase 4d validated — tag v2.8.0-wpf-alignment-p4d; Phase0 22/22 (P4d-SEL); B-GOLD 23 ms, B-COLL 9 ms |
 | 2026-06-20 | Phase 4d started — v2.8.0; Selector, ListView selection DPs, P4d-SEL |
 | 2026-06-20 | Phase 4c validated — tag v2.7.0-wpf-alignment-p4c; Phase0 21/21 (P4b-ICtrl); B-GOLD 20 ms, B-COLL 7 ms |

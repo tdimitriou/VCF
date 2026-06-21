@@ -165,6 +165,10 @@ Public Function CreateInstance(ByVal Namespace As String, ByVal Class As String)
     Dim ProgId As String
     Dim ElementName As String
 
+    If StrComp(Class, "UnboundListView", vbTextCompare) = 0 Then
+        Class = "ListView"
+    End If
+
     ElementName = Class
     If InStr(1, ElementName, ".") = 0 And Len(Namespace) > 0 Then
         ElementName = Namespace & "." & Class

@@ -19,7 +19,7 @@ Public WithEvents Form As cWidgetForm
 Attribute Form.VB_VarHelpID = -1
 
 Private MemDb As cMemDB
-Private WithEvents LV As UnboundListView
+Private WithEvents LV As ListView
 Attribute LV.VB_VarHelpID = -1
 Private WithEvents Rs As cRecordset
 Attribute Rs.VB_VarHelpID = -1
@@ -34,7 +34,7 @@ Private Sub IWindow_InitializeComponent()
     Set Form = Win.Form
 
 104     CreateDb
-106     Set LV = New UnboundListView
+106     Set LV = New ListView
     
 108     Form.WidgetRoot.Widgets.Add LV, "LV", 8, 8, 300, 300
 110     Set Rs = MemDb.GetTable("t1")
