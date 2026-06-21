@@ -1047,67 +1047,45 @@ Fail:
 End Function
 
 Public Function Phase6dBench_RenderCoalesce() As Boolean
-    Dim StepName As String
     Dim Btn As Button
     Dim St As Style
     Dim RC As RenderCoalescer
     Dim i As Long
-    Dim ErrNum As Long
-    Dim ErrDesc As String
 
     On Error GoTo Fail
 
-    StepName = "probe-VCF.ClearCustomConstructor"
-    VCF.ClearCustomConstructor
-
-    StepName = "New-RenderCoalescer"
     Set RC = New RenderCoalescer
-
-    StepName = "New-Button"
     Set Btn = New Button
 
-    StepName = "BeginRenderUpdate"
     RC.BeginRenderUpdate
-
-    StepName = "RequestWidgetRefresh x20"
     For i = 1 To 20
         RC.RequestWidgetRefresh Btn.Widget
     Next
 
-    StepName = "PendingCount=1"
     If RC.PendingCount <> 1 Then
         Err.Raise vbObjectError, , "Expected 1 pending refresh, got " & RC.PendingCount
     End If
 
-    StepName = "EndRenderUpdate"
     RC.EndRenderUpdate
 
-    StepName = "LastFlushCount=1"
     If RC.LastFlushCount <> 1 Then
         Err.Raise vbObjectError, , "Expected flush count 1, got " & RC.LastFlushCount
     End If
 
-    StepName = "NewStyle"
     Set St = NewStyle("Button")
     St.SetSetter "BackColor", CLng(16777215)
     St.SetSetter "BorderColor", CLng(255)
     St.SetSetter "ToolTip", "coalesce"
 
-    StepName = "BeginRenderUpdate-2"
     RC.BeginRenderUpdate
-
-    StepName = "Set Btn.Style"
     Set Btn.Style = St
 
-    StepName = "PendingCount=1-after-style"
     If RC.PendingCount <> 1 Then
         Err.Raise vbObjectError, , "Expected 1 pending refresh after nested style apply, got " & RC.PendingCount
     End If
 
-    StepName = "EndRenderUpdate-2"
     RC.EndRenderUpdate
 
-    StepName = "LastFlushCount=1-after-style"
     If RC.LastFlushCount <> 1 Then
         Err.Raise vbObjectError, , "Expected style batch flush count 1, got " & RC.LastFlushCount
     End If
@@ -1118,12 +1096,8 @@ Public Function Phase6dBench_RenderCoalesce() As Boolean
     Exit Function
 
 Fail:
-    ErrNum = Err.Number
-    ErrDesc = Err.Description
-    On Error Resume Next
-    If Not RC Is Nothing Then RC.SafeEndRenderUpdate
-    LogResult "P6d-COAL", 0, "FAIL at [" & StepName & "]: " & ErrDesc & " (#" & ErrNum & ")"
-    Debug.Print "FAIL  P6d-COAL at [" & StepName & "] — " & ErrDesc & " (#" & ErrNum & ")"
+    LogResult "P6d-COAL", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6d-COAL — " & Err.Description
     Phase6dBench_RenderCoalesce = False
 End Function
 

@@ -2,7 +2,6 @@ Attribute VB_Name = "modRenderCoalescer"
 Option Explicit
 
 Private m_UpdateDepth As Long
-Private m_FlushDepth As Long
 Private m_Pending As cSortedDictionary
 Private m_PendingReady As Boolean
 Private m_LastFlushCount As Long
@@ -20,27 +19,12 @@ Public Sub EndRenderUpdate()
     If m_UpdateDepth = 0 Then FlushPendingRefreshes
 End Sub
 
-Public Sub SafeEndRenderUpdate()
-    If m_UpdateDepth > 0 Then EndRenderUpdate
-End Sub
-
-Public Function RenderUpdateDepth() As Long
-    RenderUpdateDepth = m_UpdateDepth
-End Function
-
-Public Sub ResetRenderCoalescer()
-    m_UpdateDepth = 0
-    m_FlushDepth = 0
-    m_LastFlushCount = 0
-    If m_PendingReady Then m_Pending.RemoveAll
-End Sub
-
 Public Sub RequestWidgetRefresh(ByVal W As cWidgetBase)
     Dim Key As String
 
     If W Is Nothing Then Exit Sub
 
-    If m_UpdateDepth > 0 Or m_FlushDepth > 0 Then
+    If m_UpdateDepth > 0 Then
         EnsurePending
         Key = CStr(ObjPtr(W))
         If Not m_Pending.Exists(Key) Then m_Pending.Add Key, W
@@ -75,29 +59,25 @@ Private Sub FlushPendingRefreshes()
     Dim i As Long
     Dim W As cWidgetBase
 
-    If m_FlushDepth > 0 Then Exit Sub
-    m_FlushDepth = 1
+    If Not m_PendingReady Then Exit Sub
+    Count = m_Pending.Count
+    If Count = 0 Then Exit Sub
 
-    Do While m_PendingReady And m_Pending.Count > 0
-        Count = m_Pending.Count
-        m_LastFlushCount = Count
-        ReDim Pending(0 To Count - 1)
+    m_LastFlushCount = Count
+    ReDim Pending(0 To Count - 1)
 
-        For i = 0 To Count - 1
-            Set Pending(i) = m_Pending.ItemByIndex(i)
-        Next
+    For i = 0 To Count - 1
+        Set Pending(i) = m_Pending.ItemByIndex(i)
+    Next
 
-        m_Pending.RemoveAll
+    m_Pending.RemoveAll
 
-        For i = 0 To Count - 1
-            Set W = Pending(i)
-            If Not W Is Nothing Then
-                On Error Resume Next
-                If Not W.LockRefresh Then W.Refresh
-                Err.Clear
-            End If
-        Next
-    Loop
-
-    m_FlushDepth = 0
+    For i = 0 To Count - 1
+        Set W = Pending(i)
+        If Not W Is Nothing Then
+            On Error Resume Next
+            If Not W.LockRefresh Then W.Refresh
+            Err.Clear
+        End If
+    Next
 End Sub

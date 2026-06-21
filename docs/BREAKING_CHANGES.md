@@ -44,9 +44,8 @@ Tag: **`v2.15.0-wpf-alignment-p6d`** · Phase0 **29/29** pass.
 
 ### Added
 
-- **`RenderCoalescer`** class — host-facing batch refresh API (`BeginRenderUpdate`, `EndRenderUpdate`, `RequestWidgetRefresh`, `PendingCount`, `LastFlushCount`). Prefer **`New RenderCoalescer`** from external projects; do not call coalescer methods on **`Constructor`** instances (GlobalNameSpace methods live on **`VCF.*`** only).
+- **`RenderCoalescer`** class — host-facing batch refresh API (`BeginRenderUpdate`, `EndRenderUpdate`, `RequestWidgetRefresh`, `PendingCount`, `LastFlushCount`). Use **`New RenderCoalescer`** from external projects.
 - **`modRenderCoalescer`** — internal batch widget refresh engine; **`RequestWidgetRefresh`** dedupes by widget pointer.
-- **`Constructor.BeginRenderUpdate`**, **`EndRenderUpdate`**, **`RequestWidgetRefresh`**, **`RenderCoalescerPendingCount`**, **`RenderCoalescerLastFlushCount`** — also forwarded on **`VCF.*`** when the compatible typelib is refreshed.
 
 ### Changed
 

@@ -21,14 +21,6 @@ Public Sub EndRenderUpdate()
     modRenderCoalescer.EndRenderUpdate
 End Sub
 
-Public Sub SafeEndRenderUpdate()
-    modRenderCoalescer.SafeEndRenderUpdate
-End Sub
-
-Public Sub Reset()
-    modRenderCoalescer.ResetRenderCoalescer
-End Sub
-
 Public Sub RequestWidgetRefresh(ByVal W As cWidgetBase)
     modRenderCoalescer.RequestWidgetRefresh W
 End Sub
@@ -39,8 +31,4 @@ End Function
 
 Public Function LastFlushCount() As Long
     LastFlushCount = modRenderCoalescer.LastFlushRefreshCount
-End Function
-
-Public Function UpdateDepth() As Long
-    UpdateDepth = modRenderCoalescer.RenderUpdateDepth
 End Function
