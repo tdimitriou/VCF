@@ -36,6 +36,33 @@
 
 ---
 
+---
+
+## [2.12.0] — 2026-06-21 — Phase 6a (Button Content — validated)
+
+Tag: **`v2.12.0-wpf-alignment-p6a`** · Phase0 **26/26** pass.
+
+### Added
+
+- **`Button.Content`** dependency property — string caption drawn in **`W_Paint`** (centered) using widget font style setters.
+- **XAML `Content="..."`** and **`Content="{Binding ...}"`** on `Button`.
+- **`Text` → `Content` alias** when `Content` DP exists (strict XAML accepts legacy `Text="..."` on Button).
+
+### Changed
+
+- Golden / layout Phase0 XAML samples use **`Content="OK"`** instead of widget-fallback **`Text`**.
+
+### Precedence
+
+- If the button has **visual children** (e.g. nested `TextBlock`), **children win** — string `Content` is not painted.
+- If there are **no children** and `Content` is a non-empty string, caption is painted on the button chrome.
+
+### Test
+
+- **P6a-CONTENT** in `.Tests/Phase0` (suite → **26** tests).
+
+---
+
 ## [2.11.0] — 2026-06-21 — Phase 5c (Row hierarchy — validated)
 
 Tag: **`v2.11.0-wpf-alignment-p5c`** · Phase0 **25/25** pass.

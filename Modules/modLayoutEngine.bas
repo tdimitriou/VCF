@@ -83,6 +83,8 @@ Public Function MapDesignPropertyAlias(ByVal Dep As IDependencyObject, ByVal Nam
             If Dep.DependencyProperties.Exists("Width") Then MapDesignPropertyAlias = "Width"
         Case "designheight"
             If Dep.DependencyProperties.Exists("Height") Then MapDesignPropertyAlias = "Height"
+        Case "text"
+            If Dep.DependencyProperties.Exists("Content") Then MapDesignPropertyAlias = "Content"
     End Select
 End Function
 

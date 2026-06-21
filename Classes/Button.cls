@@ -98,6 +98,18 @@ Attribute TmrRelease.VB_VarHelpID = -1
     Public Property Set CommandParameter(ByVal Value As Variant)
         Call m_DependencyProperties.SetValue("CommandParameter", Value)
     End Property
+
+    Public Property Get Content() As Variant
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Content"), Content)
+    End Property
+
+    Public Property Let Content(ByVal Value As Variant)
+        Call m_DependencyProperties.SetValue("Content", Value)
+    End Property
+
+    Public Property Set Content(ByVal Value As Object)
+        Call m_DependencyProperties.SetValue("Content", Value)
+    End Property
     
     Public Property Get ClickMode() As ClickMode
         ClickMode = m_ClickMode
@@ -262,6 +274,7 @@ Attribute TmrRelease.VB_VarHelpID = -1
             Call .Register("BorderColor", vbLong, , , , NewDependencyPropertyMetadata(False, True, True))
             Call .Register("ToolTip", vbString, , , , NewDependencyPropertyMetadata(False, True, False))
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
+            Call .Register("Content", vbVariant, , , , NewDependencyPropertyMetadata(False, True, False, OneWay))
 
             .SetValue "Style", Nothing
             
@@ -499,6 +512,7 @@ Catch:
             Case "BorderColor":     W.BorderColor = Property.GetValue
             Case "ToolTip":         W.ToolTip = Property.GetValue
             Case "Style":           ApplyStyle
+            Case "Content":         W.Refresh
         End Select
         
         ' Pass the new property value to the contained widgets
@@ -612,6 +626,7 @@ End Sub
         
         Call DrawBackground(CC, dx, dy, IsSelected)
         Call DrawBorder(CC, dx, dy, IsSelected)
+        Call DrawContent(CC, dx, dy)
         
         Call SetupOverlay(IsSelected)
         CC.Restore
@@ -630,6 +645,40 @@ End Sub
 '#End Region
 
 '#Region Drawing Functions
+    Private Function ContentCaption() As String
+        Dim V As Variant
+
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Content"), V)
+        If IsObject(V) Then Exit Function
+        If IsNull(V) Or IsEmpty(V) Then Exit Function
+        ContentCaption = CStr(V)
+    End Function
+
+    Private Sub DrawContent(CC As cCairoContext, dx As Double, dy As Double)
+        Dim Cap As String
+        Dim Offs As Single
+        Dim L As Double
+        Dim T As Double
+        Dim Wd As Double
+        Dim Ht As Double
+
+        If m_Children.Count > 0 Then Exit Sub
+
+        Cap = ContentCaption()
+        If Len(Cap) = 0 Then Exit Sub
+
+        Offs = CSng(m_BorderWidth)
+        If IsMouseDown Then Offs = CSng(BorderWidth + 1)
+
+        L = Offs
+        T = Offs
+        Wd = dx - 2# * Offs
+        Ht = dy - 2# * Offs
+
+        CC.SelectFont W.FontName, W.FontSize, W.ForeColor, W.FontBold, W.FontItalic, W.FontUnderline, W.FontStrikeThrough
+        CC.DrawText L, T, L + Wd, T + Ht, Cap, False, AlignmentConstants.vbCenter, , 1, dtHasAccelerators
+    End Sub
+
     Private Sub DrawBackground(CC As cCairoContext, dx As Double, dy As Double, ByVal Selected As Boolean)
         If Selected Or Not m_GradientBackground Then
             Call DrawBackgroundFlat(CC, dx, dy, Selected)

@@ -124,7 +124,8 @@ Private Sub RegisterFrameworkElementType()
     RegisterType "Border", "FrameworkElement", _
         Array("Child", vbObject, vbNullString, vbNullString, False, True, False, OneWay)
     RegisterType "UserControl", "FrameworkElement"
-    RegisterType "Button", "FrameworkElement"
+    RegisterType "Button", "FrameworkElement", _
+        Array("Content", vbVariant, vbNullString, vbNullString, False, True, False, OneWay)
     RegisterType "Window", "FrameworkElement"
 End Sub
 

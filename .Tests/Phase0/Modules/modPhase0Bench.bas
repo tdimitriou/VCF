@@ -35,12 +35,13 @@ Public Sub RunAll()
     If Not Phase5aBench_OwnerDrawListView() Then Failed = Failed + 1
     If Not Phase5bBench_MeasureRow() Then Failed = Failed + 1
     If Not Phase5cBench_RowLevel() Then Failed = Failed + 1
+    If Not Phase6aBench_ButtonContent() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (25 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (26 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
-        MsgBox Failed & " Phase 0/1/2/3/4/5 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
+        MsgBox Failed & " Phase 0/1/2/3/4/5/6 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
-        MsgBox "All Phase 0/1/2/3/4/5 tests passed.", vbInformation, "Phase0"
+        MsgBox "All Phase 0/1/2/3/4/5/6 tests passed.", vbInformation, "Phase0"
     End If
 End Sub
 
@@ -887,6 +888,66 @@ Fail:
     LogResult "P5c-HIER", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P5c-HIER — " & Err.Description
     Phase5cBench_RowLevel = False
+End Function
+
+Public Function Phase6aBench_ButtonContent() As Boolean
+    Dim Btn As Button
+    Dim Vm As Phase0ViewModel
+    Dim Expr As BindingExpression
+    Dim Reader As XAMLReader
+    Dim Root As Panel
+    Dim XamlBtn As Button
+    Dim LegacyBtn As Button
+    Dim SavedStrict As Boolean
+
+    On Error GoTo Fail
+
+    SavedStrict = VCF.StrictXamlLoad
+
+    Set Btn = New Button
+    Btn.Content = "Static"
+    If Btn.Content <> "Static" Then Err.Raise vbObjectError, , "Expected Static, got " & CStr(Btn.Content)
+
+    Set Vm = New Phase0ViewModel
+    Vm.Title = "Bound"
+    Set Expr = New BindingExpression
+    Expr.Attach Btn, "Content", Vm, "Title", OneWay
+
+    If Btn.Content <> "Bound" Then Err.Raise vbObjectError, , "Expected Bound, got " & CStr(Btn.Content)
+
+    Vm.Title = "Updated"
+    If Btn.Content <> "Updated" Then Err.Raise vbObjectError, , "Expected Updated after INPC, got " & CStr(Btn.Content)
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load("<Panel><Button Content=""OK""/></Panel>")
+    If Root Is Nothing Then Err.Raise vbObjectError, , "Content XAML returned Nothing"
+    Set XamlBtn = Root.Children(0)
+    If XamlBtn.Content <> "OK" Then Err.Raise vbObjectError, , "Expected OK from Content XAML, got " & CStr(XamlBtn.Content)
+
+    SavedStrict = VCF.StrictXamlLoad
+    VCF.StrictXamlLoad = True
+    Set LegacyBtn = Nothing
+    Set Root = Reader.Load("<Panel><Button Text=""Legacy""/></Panel>")
+    VCF.StrictXamlLoad = SavedStrict
+    Set LegacyBtn = Root.Children(0)
+    If LegacyBtn.Content <> "Legacy" Then Err.Raise vbObjectError, , "Expected Legacy from Text alias, got " & CStr(LegacyBtn.Content)
+
+    LogResult "P6a-CONTENT", 0, "OK Content DP + Text alias + OneWay bind"
+    Debug.Print "PASS  P6a-CONTENT Button Content DP"
+    Expr.Detach
+    Set Expr = Nothing
+    Set Btn = Nothing
+    Set Vm = Nothing
+    Phase6aBench_ButtonContent = True
+    Exit Function
+
+Fail:
+    On Error Resume Next
+    VCF.StrictXamlLoad = SavedStrict
+    If Not Expr Is Nothing Then Expr.Detach
+    LogResult "P6a-CONTENT", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6a-CONTENT — " & Err.Description
+    Phase6aBench_ButtonContent = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String
