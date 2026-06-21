@@ -21,6 +21,7 @@ Public Sub ApplyStyle(ByVal Style As Style, ByVal Target As Object)
         
     SetObjectProperties Target, Style
     modStyleTriggerEngine.ApplyActiveTriggers Style, Target
+    modControlTemplateEngine.ApplyControlTemplate Style, Target
     
     On Error Resume Next
     Target.Widget.Refresh

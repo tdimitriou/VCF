@@ -37,8 +37,9 @@ Public Sub RunAll()
     If Not Phase5cBench_RowLevel() Then Failed = Failed + 1
     If Not Phase6aBench_ButtonContent() Then Failed = Failed + 1
     If Not Phase6bBench_PropertyTrigger() Then Failed = Failed + 1
+    If Not Phase6cBench_ControlTemplate() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (27 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (28 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -987,6 +988,61 @@ Fail:
     LogResult "P6b-TRIG", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P6b-TRIG — " & Err.Description
     Phase6bBench_PropertyTrigger = False
+End Function
+
+Public Function Phase6cBench_ControlTemplate() As Boolean
+    Dim Tmpl As ControlTemplate
+    Dim St As Style
+    Dim Btn As Button
+    Dim B As Border
+    Dim Rad As VCF.CornerRadius
+    Dim Reader As XAMLReader
+    Dim Dom As cSimpleDOM
+    Dim XamlTmpl As ControlTemplate
+
+    On Error GoTo Fail
+
+    Set Tmpl = New ControlTemplate
+    Tmpl.TargetType = "Button"
+    Set B = New Border
+    Rad.TopLeft = 12
+    Rad.TopRight = 12
+    Rad.BottomLeft = 12
+    Rad.BottomRight = 12
+    B.CornerRadius = Rad
+    Tmpl.Children.Add B
+
+    Set St = NewStyle("Button")
+    Set St.Template = Tmpl
+
+    Set Btn = New Button
+    Set Btn.Style = St
+
+    If Btn.CornerRadius <> 12# Then Err.Raise vbObjectError, , "Expected CornerRadius 12, got " & Btn.CornerRadius
+
+    Set Reader = New XAMLReader
+    Set Dom = New_c.SimpleDOM
+    Dom.Xml = "<ControlTemplate TargetType=""Button""><Border CornerRadius=""12""/></ControlTemplate>"
+    If Not Dom.WellFormed Then Err.Raise vbObjectError, , "ControlTemplate XAML not well formed"
+    Set XamlTmpl = Reader.LoadElement(Dom.Root)
+    If XamlTmpl Is Nothing Then Err.Raise vbObjectError, , "ControlTemplate XAML load returned Nothing"
+    If XamlTmpl.Children.Count = 0 Then Err.Raise vbObjectError, , "ControlTemplate XAML has no visual child"
+
+    Set St = NewStyle("Button")
+    Set St.Template = XamlTmpl
+    Set Btn = New Button
+    Set Btn.Style = St
+    If Btn.CornerRadius <> 12# Then Err.Raise vbObjectError, , "Expected XAML template CornerRadius 12, got " & Btn.CornerRadius
+
+    LogResult "P6c-TMPL", 0, "OK ControlTemplate Border chrome on Button"
+    Debug.Print "PASS  P6c-TMPL ControlTemplate Button chrome"
+    Phase6cBench_ControlTemplate = True
+    Exit Function
+
+Fail:
+    LogResult "P6c-TMPL", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6c-TMPL — " & Err.Description
+    Phase6cBench_ControlTemplate = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

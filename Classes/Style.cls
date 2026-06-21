@@ -24,6 +24,7 @@ Private m_TargetType As String
 
 Private m_Setters As cCollection
 Private m_Triggers As cCollection
+Private m_Template As ControlTemplate
 Private IsInitialized As Boolean
 
 Private m_BasedOn As VCF.Style
@@ -133,6 +134,17 @@ Attribute ThemesManager.VB_VarHelpID = -1
     Public Property Get BasedOn() As VCF.Style
         Set BasedOn = m_BasedOn
     End Property
+
+    Public Property Get Template() As ControlTemplate
+        VerifyInitialization
+        Set Template = m_Template
+    End Property
+
+    Public Property Set Template(ByVal Value As ControlTemplate)
+        VerifyInitialization
+        Set m_Template = Value
+        OnStyleChanged
+    End Property
 '#End Region
 
 '#Region Public Functions
@@ -214,6 +226,7 @@ Attribute GetSetter.VB_UserMemId = 0
     Public Sub Clear()
         VerifyInitialization
         m_Setters.RemoveAll
+        Set m_Template = Nothing
         OnStyleChanged
     End Sub
     

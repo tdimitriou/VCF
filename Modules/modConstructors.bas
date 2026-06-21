@@ -248,6 +248,13 @@ Public Function NewPropertyTrigger(ByVal PropertyName As String, ByVal TriggerVa
     Set NewPropertyTrigger = Obj
 End Function
 
+Public Function NewControlTemplate(Optional ByVal TargetType As String = vbNullString) As ControlTemplate
+    Dim Obj As ControlTemplate
+    Set Obj = New ControlTemplate
+    If Len(TargetType) > 0 Then Obj.TargetType = TargetType
+    Set NewControlTemplate = Obj
+End Function
+
 Public Function Variable(Optional Value) As Variable
     Set Variable = New Variable
     If Not IsMissing(Value) Then Variable.Value = Value

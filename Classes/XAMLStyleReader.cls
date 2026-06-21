@@ -31,6 +31,7 @@ Public Sub LoadStyle(ByVal Resources As ResourceDictionary, Node As cElement)
         
         Style.Clear
         Style.ClearTriggers
+        Set Style.Template = Nothing
         For Each e In NewStyle
             Setter = e
             Style.SetSetter Setter.Key, Setter.Value
@@ -38,6 +39,7 @@ Public Sub LoadStyle(ByVal Resources As ResourceDictionary, Node As cElement)
         For i = 0 To NewStyle.TriggerCount - 1
             Style.AddTrigger NewStyle.TriggerAt(i).Clone
         Next
+        If Not NewStyle.Template Is Nothing Then Set Style.Template = NewStyle.Template.Clone
     Else
         Resources.Add NewStyle.Key, NewStyle
     End If
@@ -85,7 +87,11 @@ Private Function CreateStyle(Node As cElement) As VCF.Style
     For Each Child In Node.ChildElements
         Select Case Child.BaseName
             Case "Setter"
-                CreateStyle.SetSetter GetSetterPropertyName(Child), GetAttributeText(Child, "Value")
+                If IsTemplateSetter(Child) Then
+                    Set CreateStyle.Template = LoadControlTemplateNode(FindControlTemplateNode(Child))
+                Else
+                    CreateStyle.SetSetter GetSetterPropertyName(Child), GetAttributeText(Child, "Value")
+                End If
             Case "Style.Triggers"
                 LoadTriggers CreateStyle, Child
             Case "Trigger"
@@ -132,4 +138,39 @@ Private Function GetAttributeText(ByVal Node As cElement, ByVal Name As String) 
     On Error Resume Next
     GetAttributeText = Node.Attributes(Name).Text
     If Err Then Err.Clear
+End Function
+
+Private Function IsTemplateSetter(ByVal SetterNode As cElement) As Boolean
+    IsTemplateSetter = (LCase$(GetSetterPropertyName(SetterNode)) = "template")
+End Function
+
+Private Function FindControlTemplateNode(ByVal SetterNode As cElement) As cElement
+    Dim Child As cElement
+    Dim Inner As cElement
+
+    For Each Child In SetterNode.ChildElements
+        If Child.BaseName = "ControlTemplate" Then
+            Set FindControlTemplateNode = Child
+            Exit Function
+        End If
+        If Child.BaseName = "Setter.Value" Then
+            For Each Inner In Child.ChildElements
+                If Inner.BaseName = "ControlTemplate" Then
+                    Set FindControlTemplateNode = Inner
+                    Exit Function
+                End If
+            Next
+        End If
+    Next
+End Function
+
+Private Function LoadControlTemplateNode(ByVal Node As cElement) As ControlTemplate
+    Dim Reader As XAMLReader
+    Dim Obj As Object
+
+    If Node Is Nothing Then Exit Function
+
+    Set Reader = New XAMLReader
+    Set Obj = Reader.LoadElement(Node)
+    If TypeOf Obj Is ControlTemplate Then Set LoadControlTemplateNode = Obj
 End Function

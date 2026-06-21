@@ -38,6 +38,27 @@
 
 ---
 
+## [2.14.0] — 2026-06-21 — Phase 6c (ControlTemplate — validated)
+
+Tag: **`v2.14.0-wpf-alignment-p6c`** · Phase0 **28/28** pass.
+
+### Added
+
+- **`ControlTemplate`** — `TargetType` + visual tree (`Children`); **`Clone`** for resource merge.
+- **`Style.Template`** — assigned from code or XAML `<Setter Property="Template">` / nested **`ControlTemplate`**.
+- **`modControlTemplateEngine`** — applies template root to control chrome after style setters/triggers (Phase 6c: **Button** + **Border** root → **`CornerRadius`**, **`BackColor`**).
+- **XAML** — standalone **`ControlTemplate`** load via **`XAMLReader.LoadElement`**.
+
+### Changed
+
+- **`StyleManager.ApplyStyle`** — invokes control template application after triggers.
+
+### Test
+
+- **P6c-TMPL** in `.Tests/Phase0` (suite → **28** tests).
+
+---
+
 ## [2.13.0] — 2026-06-21 — Phase 6b (Style.Triggers — validated)
 
 Tag: **`v2.13.0-wpf-alignment-p6b`** · Phase0 **27/27** pass.
