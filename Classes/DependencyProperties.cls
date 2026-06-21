@@ -36,6 +36,7 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
     End Sub
 
     Public Sub SetCurrentValue(ByVal PropertyName As String, Value)
+        Call ValidateItemsSourceIfNeeded(PropertyName, Value)
         Dim p As DependencyProperty
         Set p = m_Props(PropertyName)
         
@@ -43,6 +44,7 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
     End Sub
     
     Public Sub SetValue(ByVal PropertyName As String, Value)
+        Call ValidateItemsSourceIfNeeded(PropertyName, Value)
         Dim p As DependencyProperty
         Set p = m_Props(PropertyName)
         
@@ -103,3 +105,19 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
         Set m_Props = New_c.SortedDictionary(TextCompare)
     End Sub
 '#End Region
+
+Private Sub ValidateItemsSourceIfNeeded(ByVal PropertyName As String, ByVal Value As Variant)
+    If PropertyName <> "ItemsSource" Then Exit Sub
+
+    Dim SourceName As String
+    Dim TargetObj As Object
+
+    Set TargetObj = API.CObj(Me.Target)
+    If TargetObj Is Nothing Then
+        SourceName = "ItemsControl"
+    Else
+        SourceName = TypeName(TargetObj)
+    End If
+
+    modItemTemplateEngine.ValidateItemsSourceValue Value, SourceName
+End Sub

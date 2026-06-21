@@ -113,6 +113,14 @@ Private Sub RegisterFrameworkElementType()
         Array("ItemsSource", vbObject, vbNullString, vbNullString, False, True, False, OneWay), _
         Array("ItemTemplate", vbObject, "DataTemplate", vbNullString, False, True, False, OneWay)
 
+    RegisterType "Selector", "ItemsControl", _
+        Array("SelectedItem", vbObject, vbNullString, vbNullString, False, True, False, TwoWay), _
+        Array("SelectedIndex", vbLong, vbNullString, vbNullString, False, True, False, TwoWay), _
+        Array("SelectedValue", vbVariant, vbNullString, vbNullString, False, True, False, TwoWay), _
+        Array("SelectedValuePath", vbString, vbNullString, vbNullString, False, True, False, OneWay)
+
+    RegisterType "ListView", "Selector"
+
     RegisterType "Border", "FrameworkElement", _
         Array("Child", vbObject, vbNullString, vbNullString, False, True, False, OneWay)
     RegisterType "UserControl", "FrameworkElement"

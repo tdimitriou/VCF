@@ -126,3 +126,14 @@ Private Function CloneTextBlockQuick(ByVal Source As TextBlock) As TextBlock
 
     Set CloneTextBlockQuick = Target
 End Function
+
+Public Sub ValidateItemsSourceValue(Value, ByVal SourceName As String)
+    If IsObject(Value) Then
+        If Value Is Nothing Then Exit Sub
+        If Not TypeOf Value Is ObservableCollection Then
+            Err.Raise vbObjectError + 4, SourceName, "ItemsSource must be an ObservableCollection"
+        End If
+    ElseIf Not IsEmpty(Value) And Not IsNull(Value) Then
+        Err.Raise vbObjectError + 4, SourceName, "ItemsSource must be an ObservableCollection"
+    End If
+End Sub

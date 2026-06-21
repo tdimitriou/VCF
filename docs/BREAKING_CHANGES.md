@@ -30,6 +30,30 @@
 
 ---
 
+## [2.8.0] — 2026-06-21 — Phase 4d (Selector — validated)
+
+Tag: **`v2.8.0-wpf-alignment-p4d`** · Phase0 **22/22** pass.
+
+### Added
+
+- **`Selector`** — WPF-aligned selection base on **`ItemsControl`**: **`SelectedItem`**, **`SelectedIndex`**, **`SelectedValue`**, **`SelectedValuePath`**; syncs with **`ListCollectionView`**.
+- **`ISelector`** interface · **`modSelectorEngine`** shared selection helpers.
+
+### Changed
+
+- **`ListView`** — implements **`ISelector`**; exposes selection DPs in XAML/code; **`IItemsControl_ItemTemplate`** wired.
+
+### Bug fixes
+
+- **B4 (ListView / Selector / ItemsControl):** non-**`ObservableCollection`** **`ItemsSource`** raises **`Err`** at **`DependencyProperties.SetValue`** (before CSEH-wrapped DP callback; no spurious IDE modal).
+- **ListView init:** silent list index/count setters avoid benchmark side effects; **`SelectedItem`** scalar values use **`SelectedValue`** in tests.
+
+### Test
+
+- **P4d-SEL** in `.Tests/Phase0` (suite → **22** tests).
+
+---
+
 ## [2.7.0] — 2026-06-20 — Phase 4c (ItemsControl — validated)
 
 Tag: **`v2.7.0-wpf-alignment-p4c`** · Phase0 **21/21** pass.

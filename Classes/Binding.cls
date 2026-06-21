@@ -307,6 +307,10 @@ Private Sub SetTargetPropertyValue()
     ' This will prevent further updates of the target (until the data context is changed)
     ' in the case when the Binding Mode is set to OneTime (2)
     IsTargetValueSet = True
+
+    If TargetProperty.Name = "ItemsSource" Then
+        modItemTemplateEngine.ValidateItemsSourceValue ProvideValue, TypeName(API.CObj(Me.Target))
+    End If
     
     Call TargetProperty.SetValue(ProvideValue)
 End Sub

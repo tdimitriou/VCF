@@ -30,7 +30,7 @@ Event ScrollIndexChange()
 Event HScrollChange()
 Event MouseUpClick()
 Event MouseMoveOnListItem(ByVal HoverIndex As Long, ByVal RelX As Single, ByVal RelY As Single)
-Event SelectedAll() 'J¸rgen
+Event SelectedAll() 'Jùrgen
 Event DimensionsAdjusted()
 Event ListIndexChanged()
 
@@ -129,14 +129,24 @@ Public Property Let ListCount(ByVal NewValue As Long)
   W_Resize
 End Property
 
+Friend Sub SetListCountSilent(ByVal NewValue As Long)
+  If NewValue < 0 Then Exit Sub
+  If NewValue < mListCount Then mHoverIndex = -1
+  mListCount = NewValue
+  If mListIndex > mListCount - 1 Then mListIndex = mListCount - 1
+End Sub
+
 Public Property Get ScrollerSize() As Long
   ScrollerSize = mScrollerSize
 End Property
 
 Public Property Get ScrollIndex() As Long
+  If VScrollBar Is Nothing Then Exit Property
   ScrollIndex = VScrollBar.Value
 End Property
 Public Property Let ScrollIndex(ByVal NewValue As Long)
+  If VScrollBar Is Nothing Then Exit Property
+  If VScrollBar.Widget Is Nothing Then Exit Property
   If Not VScrollBar.Widget.Visible Then Exit Property
   If NewValue < 0 Then NewValue = 0
   If NewValue > VScrollBar.Max Then NewValue = VScrollBar.Max
@@ -159,6 +169,18 @@ Public Property Let ListIndex(ByVal NewValue As Long)
   W.RaiseBubblingEvent Me, "Click"
 End Property
 
+Friend Sub SetListIndexSilent(ByVal NewValue As Long)
+  If NewValue < -1 Then Exit Sub
+  If mListCount > 0 Then
+    If NewValue > mListCount - 1 Then NewValue = mListCount - 1
+  Else
+    NewValue = -1
+  End If
+  If mListIndex = NewValue Then Exit Sub
+  mListIndex = NewValue
+  If Not W Is Nothing Then W.Refresh
+End Sub
+
 Public Property Get HoverIndex() As Long
   HoverIndex = mHoverIndex
 End Property
@@ -176,6 +198,10 @@ Dim NewPos&
 
   If mListIndex < 0 Then Exit Sub
   If mListIndex > mListCount Then Exit Sub
+  If VScrollBar Is Nothing Then
+    If Not W Is Nothing Then W.Refresh
+    Exit Sub
+  End If
   If mListIndex \ mVisibleCols < VScrollBar.Value Then
     VScrollBar.Value = mListIndex \ mVisibleCols
   End If
@@ -206,7 +232,7 @@ Public Function GetListIndexFromMouseXY(ByVal x As Long, ByVal y As Long) As Lon
 Dim CurYvirt As Long, TotalYvirt As Long
 Dim Posx As Long, PosY As Long, Index As Long
 
-  'Klick auﬂerhalb der Spalten?
+  'Klick auùerhalb der Spalten?
   If x > mVisibleCols * mColWidth Then
     GetListIndexFromMouseXY = -1
     Exit Function
@@ -513,12 +539,20 @@ End Sub
 
 Public Property Get DrawWidth() As Single
   DrawWidth = W.ScaleWidth - mRowSelectorWidth
-  If VScrollBar.Widget.Visible Then DrawWidth = DrawWidth - ScrollerSize
+  If Not VScrollBar Is Nothing Then
+    If Not VScrollBar.Widget Is Nothing Then
+      If VScrollBar.Widget.Visible Then DrawWidth = DrawWidth - ScrollerSize
+    End If
+  End If
 End Property
 
 Public Property Get DrawHeight() As Single
   DrawHeight = W.ScaleHeight - mHeaderHeight
-  If HScrollBar.Widget.Visible Then DrawHeight = DrawHeight - ScrollerSize
+  If Not HScrollBar Is Nothing Then
+    If Not HScrollBar.Widget Is Nothing Then
+      If HScrollBar.Widget.Visible Then DrawHeight = DrawHeight - ScrollerSize
+    End If
+  End If
 End Property
 
 Private Sub HScrollBar_Change(Value As Double)
@@ -608,6 +642,9 @@ End Sub
 Public Sub AdjustDimensions()
 Dim Rows As Long, Cols As Long, Zoom As Single
 Dim R As Long
+
+  If VScrollBar Is Nothing Or HScrollBar Is Nothing Then Exit Sub
+  If VScrollBar.Widget Is Nothing Or HScrollBar.Widget Is Nothing Then Exit Sub
 
   If dx = 0 Then dx = W.Width
   If dy = 0 Then dy = W.Height
@@ -919,7 +956,7 @@ FinalizeSelection:
   W.RaiseBubblingEvent Me, "Click"
   RaiseEvent MouseUpClick
   W.RaiseBubblingEvent Me, "MouseUpClick"
-  If mImageView = True Then EnsureVisibleSelection 'Aus MouseDown hierhin verlegt, damit bei halbverdeckten Items nicht mehrere Items ausgew‰hlt werden JS 29.11.2016
+  If mImageView = True Then EnsureVisibleSelection 'Aus MouseDown hierhin verlegt, damit bei halbverdeckten Items nicht mehrere Items ausgewùhlt werden JS 29.11.2016
 End Sub
 
 Private Sub W_MouseWheel(ByVal MouseKeys As Long, ByVal Rotation As Long, ByVal LineOffset As Long, ByVal xAbs As Single, ByVal yAbs As Single)
@@ -939,7 +976,7 @@ End Sub
 
 Private Sub W_DblClick()
   If bDblClick Then
-    mSelFirstState = True 'F¸r Lˆschen ¸ber DBL_Click
+    mSelFirstState = True 'Fùr Lùschen ùber DBL_Click
     RaiseEvent DblClick
     W.RaiseBubblingEvent Me, "DblClick"
   End If
@@ -1094,6 +1131,10 @@ End Sub
 
 Private Sub AdjustHScrollBar()
 Dim i As Long, xx As Long, DW As Long
+
+  If HScrollBar Is Nothing Then Exit Sub
+  If HScrollBar.Widget Is Nothing Then Exit Sub
+
   For i = 0 To UBound(mColWidths)
     xx = xx + ColumnWidth(i)
   Next i

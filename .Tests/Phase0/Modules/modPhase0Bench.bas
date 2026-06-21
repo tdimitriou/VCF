@@ -31,8 +31,9 @@ Public Sub RunAll()
     If Not Phase4bBench_BeginUpdateDefer() Then Failed = Failed + 1
     If Not Phase4bBench_Move() Then Failed = Failed + 1
     If Not Phase4bBench_ItemsControl() Then Failed = Failed + 1
+    If Not Phase4dBench_Selector() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (21 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (22 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -694,6 +695,109 @@ Fail:
     LogResult "P4b-ICtrl", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P4b-ICtrl — " & Err.Description
     Phase4bBench_ItemsControl = False
+End Function
+
+Public Function Phase4dBench_Selector() As Boolean
+    Dim LV As ListView
+    Dim Sel As Selector
+    Dim Coll As ObservableCollection
+    Dim Tmpl As DataTemplate
+    Dim Tb As TextBlock
+    Dim Bad As Panel
+
+    On Error GoTo Fail
+
+    Set Coll = New ObservableCollection
+    Coll.Add "alpha"
+    Coll.Add "beta"
+    Coll.Add "gamma"
+
+    On Error GoTo FailNew
+    Set LV = New ListView
+    On Error GoTo FailSource
+    Set LV.ItemsSource = Coll
+    On Error GoTo FailIndex1
+    LV.SelectedIndex = 1
+    If LV.SelectedIndex <> 1 Then Err.Raise vbObjectError, , "ListView SelectedIndex expected 1"
+    If LV.SelectedValue <> "beta" Then Err.Raise vbObjectError, , "ListView SelectedValue expected beta"
+
+    On Error GoTo FailIndex2
+    LV.SelectedIndex = 2
+    If LV.SelectedValue <> "gamma" Then Err.Raise vbObjectError, , "ListView SelectedValue expected gamma"
+
+    On Error GoTo FailSelector
+    Set Tmpl = New DataTemplate
+    Set Tb = New TextBlock
+    Tb.Text = "Item"
+    Tmpl.Children.Add Tb
+
+    Set Sel = New Selector
+    Set Sel.ItemTemplate = Tmpl
+    Set Sel.ItemsSource = Coll
+    Sel.SelectedIndex = 0
+    If Sel.SelectedIndex <> 0 Then Err.Raise vbObjectError, , "Selector SelectedIndex expected 0"
+    If Sel.SelectedValue <> "alpha" Then Err.Raise vbObjectError, , "Selector SelectedValue expected alpha"
+
+    Set Bad = New Panel
+
+    Dim BadErr As Long
+    On Error Resume Next
+    Set LV.ItemsSource = Bad
+    BadErr = Err.Number
+    Err.Clear
+    If BadErr <> vbObjectError + 4 Then
+        Err.Raise vbObjectError, , "ListView ItemsSource expected type error, got " & BadErr
+    End If
+
+    On Error Resume Next
+    Set Sel.ItemsSource = Bad
+    BadErr = Err.Number
+    Err.Clear
+    If BadErr <> vbObjectError + 4 Then
+        Err.Raise vbObjectError, , "Selector ItemsSource expected type error, got " & BadErr
+    End If
+
+    On Error GoTo Fail
+
+    LogResult "P4d-SEL", 0, "OK Selector DPs on ListView + Selector"
+    Debug.Print "PASS  P4d-SEL Selector SelectedIndex/Value"
+    Phase4dBench_Selector = True
+    Exit Function
+
+FailNew:
+    LogResult "P4d-SEL", 0, "FAIL at New ListView: " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — New ListView: " & Err.Description
+    Phase4dBench_Selector = False
+    Exit Function
+
+FailSource:
+    LogResult "P4d-SEL", 0, "FAIL at ListView ItemsSource: " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — ListView ItemsSource: " & Err.Description
+    Phase4dBench_Selector = False
+    Exit Function
+
+FailIndex1:
+    LogResult "P4d-SEL", 0, "FAIL at ListView SelectedIndex=1: " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — ListView SelectedIndex=1: " & Err.Description
+    Phase4dBench_Selector = False
+    Exit Function
+
+FailIndex2:
+    LogResult "P4d-SEL", 0, "FAIL at ListView SelectedIndex=2: " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — ListView SelectedIndex=2: " & Err.Description
+    Phase4dBench_Selector = False
+    Exit Function
+
+FailSelector:
+    LogResult "P4d-SEL", 0, "FAIL at Selector: " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — Selector: " & Err.Description
+    Phase4dBench_Selector = False
+    Exit Function
+
+Fail:
+    LogResult "P4d-SEL", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — " & Err.Description
+    Phase4dBench_Selector = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

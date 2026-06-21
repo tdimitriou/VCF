@@ -17,6 +17,7 @@ Implements IDependencyObject
 Implements IControl
 Implements IUIElement
 Implements IItemsControl
+Implements ISelector
 
 Private WithEvents W                            As cWidgetBase
 Attribute W.VB_VarHelpID = -1
@@ -49,6 +50,9 @@ Attribute m_Base.VB_VarHelpID = -1
 Private m_Name                                  As String
 Private m_ItemTemplate                          As DataTemplate
 Private ItemTemplates                           As List
+Private m_SelectedValuePath                     As String
+Private m_SyncingSelection                      As Boolean
+Private m_Ready                                   As Boolean
 
 '#Region Public Properties
     Public Property Get Base() As ListViewBase
@@ -121,6 +125,40 @@ Private ItemTemplates                           As List
     
     Public Property Set ItemTemplate(ByVal Value As DataTemplate)
         Set m_ItemTemplate = Value
+    End Property
+    
+    Public Property Get SelectedItem() As Object
+        Dim Value As Variant
+        Call API.CopyVariable(m_DependencyProperties.GetValue("SelectedItem"), Value)
+        If IsObject(Value) Then Set SelectedItem = Value
+    End Property
+
+    Public Property Set SelectedItem(ByVal Value As Object)
+        Call m_DependencyProperties.SetValue("SelectedItem", Value)
+    End Property
+
+    Public Property Get SelectedIndex() As Long
+        SelectedIndex = CLng(m_DependencyProperties.GetValue("SelectedIndex"))
+    End Property
+
+    Public Property Let SelectedIndex(ByVal Value As Long)
+        Call m_DependencyProperties.SetValue("SelectedIndex", Value)
+    End Property
+
+    Public Property Get SelectedValue() As Variant
+        SelectedValue = m_DependencyProperties.GetValue("SelectedValue")
+    End Property
+
+    Public Property Let SelectedValue(ByVal Value As Variant)
+        Call m_DependencyProperties.SetValue("SelectedValue", Value)
+    End Property
+
+    Public Property Get SelectedValuePath() As String
+        SelectedValuePath = m_SelectedValuePath
+    End Property
+
+    Public Property Let SelectedValuePath(ByVal Value As String)
+        Call m_DependencyProperties.SetValue("SelectedValuePath", Value)
     End Property
     
     Public Property Get Name() As String
@@ -229,6 +267,7 @@ Private ItemTemplates                           As List
 
 '#Region Class Events
     Private Sub Class_Initialize()
+        m_Ready = False
         Set m_Handlers = New_c.SortedDictionary(BinaryCompare)
         Set m_Bindings = New List
         Set m_DependencyProperties = NewDependencyProperties(Me)
@@ -237,7 +276,11 @@ Private ItemTemplates                           As List
         With m_DependencyProperties
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
             Call .Register("ItemsSource", vbObject)
-            Set Me.ItemsSource = Nothing
+            Call .Register("ItemTemplate", vbObject, "DataTemplate")
+            Call .Register("SelectedItem", vbObject, , , , NewDependencyPropertyMetadata(False, True, False, TwoWay))
+            Call .Register("SelectedIndex", vbLong, , , , NewDependencyPropertyMetadata(False, True, False, TwoWay))
+            Call .Register("SelectedValue", vbVariant, , , , NewDependencyPropertyMetadata(False, True, False, TwoWay))
+            Call .Register("SelectedValuePath", vbString, , , , NewDependencyPropertyMetadata(False, True, False, OneWay))
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
             .SetValue "Style", Nothing
         End With
@@ -260,6 +303,9 @@ Private ItemTemplates                           As List
         'EnumerateProperties Me
         
         Set Style = GetBaseStyle
+
+        m_Ready = True
+        m_DependencyProperties.SetCurrentValue "SelectedIndex", -1
 
 '        Set m_ItemTemplate = New DataTemplate
 '        Dim Tb As TextBlock
@@ -317,13 +363,46 @@ Private ItemTemplates                           As List
     End Property
     
     Private Property Set IItemsControl_ItemTemplate(ByVal RHS As DataTemplate)
-        '
+        Set ItemTemplate = RHS
     End Property
     
     Private Property Get IItemsControl_ItemTemplate() As DataTemplate
-        '
+        Set IItemsControl_ItemTemplate = ItemTemplate
     End Property
 '#End Region
+
+'#Region ISelector Interface Implementation
+    Private Property Set ISelector_SelectedItem(ByVal RHS As Object)
+        Set SelectedItem = RHS
+    End Property
+
+    Private Property Get ISelector_SelectedItem() As Object
+        Set ISelector_SelectedItem = SelectedItem
+    End Property
+
+    Private Property Let ISelector_SelectedIndex(ByVal RHS As Long)
+        SelectedIndex = RHS
+    End Property
+
+    Private Property Get ISelector_SelectedIndex() As Long
+        ISelector_SelectedIndex = SelectedIndex
+    End Property
+
+    Private Property Let ISelector_SelectedValue(ByVal RHS As Variant)
+        SelectedValue = RHS
+    End Property
+
+    Private Property Get ISelector_SelectedValue() As Variant
+        ISelector_SelectedValue = SelectedValue
+    End Property
+
+    Private Property Let ISelector_SelectedValuePath(ByVal RHS As String)
+        SelectedValuePath = RHS
+    End Property
+
+    Private Property Get ISelector_SelectedValuePath() As String
+        ISelector_SelectedValuePath = SelectedValuePath
+    End Property
 
 '#Region IUIElement Interface Implementation
     Private Property Get IUIElement_AttachedProperties() As ObservableDictionary
@@ -399,7 +478,12 @@ Private ItemTemplates                           As List
     End Sub
     
     Private Sub m_Base_ListIndexChanged()
+        If m_ListCollectionView Is Nothing Then Exit Sub
+        If m_SyncingSelection Then Exit Sub
+        m_SyncingSelection = True
         m_ListCollectionView.MoveCurrentToPosition m_Base.ListIndex
+        m_SyncingSelection = False
+        modSelectorEngine.PublishSelectorState m_DependencyProperties, m_ListCollectionView, m_SelectedValuePath, m_SyncingSelection
     End Sub
     
     Private Sub m_Base_OwnerDrawItem(ByVal Index As Long, CC As vbRichClient5.cCairoContext, ByVal dx As Single, ByVal dy As Single, ByVal Alpha As Single)
@@ -444,15 +528,31 @@ Private ItemTemplates                           As List
         Select Case Property.Name
             Case "ItemsSource":
                 Call API.CopyVariable(Property.GetValue, Value)
-                If Not IsObject(Value) Then Exit Sub
-                
                 If Value Is Nothing Then
                     SetItemSource Value
-                Else
-                    If Not TypeOf Value Is ObservableCollection Then Exit Sub
+                ElseIf TypeOf Value Is ObservableCollection Then
                     SetItemSource Value
                 End If
-        
+            Case "SelectedIndex":
+                If Not m_Ready Then Exit Sub
+                If m_SyncingSelection Then Exit Sub
+                ApplySelectedIndex CLng(Property.GetValue)
+            Case "SelectedItem":
+                If Not m_Ready Then Exit Sub
+                If m_SyncingSelection Then Exit Sub
+                Call API.CopyVariable(Property.GetValue, Value)
+                ApplySelectedItem Value
+            Case "SelectedValuePath":
+                If Not m_Ready Then Exit Sub
+                m_SelectedValuePath = CStr(Property.GetValue)
+                modSelectorEngine.PublishSelectorState m_DependencyProperties, m_ListCollectionView, m_SelectedValuePath, m_SyncingSelection
+            Case "ItemTemplate":
+                Call API.CopyVariable(Property.GetValue, Value)
+                If IsObject(Value) Then
+                    Set m_ItemTemplate = Value
+                Else
+                    Set m_ItemTemplate = Nothing
+                End If
             Case "Style":           ApplyStyle
         End Select
     End Sub
@@ -499,9 +599,9 @@ Private ItemTemplates                           As List
 
 '#Region ListCollectionView Events
     Private Sub m_ListCollectionView_CurrentChanged(Sender As Object, ByVal NewPosition As Long, ByVal OldPosition As Long)
-        On Error Resume Next
-        
-        m_Base.ListIndex = m_ListCollectionView.CurrentPosition
+        m_Base.SetListIndexSilent m_ListCollectionView.CurrentPosition
+        If m_SyncingSelection Then Exit Sub
+        modSelectorEngine.PublishSelectorState m_DependencyProperties, m_ListCollectionView, m_SelectedValuePath, m_SyncingSelection
     End Sub
 '#End Region
 
@@ -576,13 +676,16 @@ Private ItemTemplates                           As List
     End Sub
 
     Private Sub SetItemSource(ByVal Value As ObservableCollection)
-        On Error Resume Next
-        
         Set m_ItemsSource = Value
         
         Set m_ListCollectionView = Nothing
         
-        If m_ItemsSource Is Nothing Then Exit Sub
+        If m_ItemsSource Is Nothing Then
+            Set ItemTemplates = New List
+            m_Base.SetListCountSilent 0
+            modSelectorEngine.PublishSelectorState m_DependencyProperties, Nothing, m_SelectedValuePath, m_SyncingSelection
+            Exit Sub
+        End If
         
         Set m_ListCollectionView = modStaticClasses.CollectionViewSource.GetDefaultView(m_ItemsSource)
         
@@ -604,9 +707,23 @@ Private ItemTemplates                           As List
             End If
         Next
             
-        m_Base.ListCount = m_ItemsSource.Count
+        m_Base.SetListCountSilent m_ItemsSource.Count
         
-        m_Base.ListIndex = m_ListCollectionView.CurrentPosition
+        m_Base.SetListIndexSilent m_ListCollectionView.CurrentPosition
+        modSelectorEngine.PublishSelectorState m_DependencyProperties, m_ListCollectionView, m_SelectedValuePath, m_SyncingSelection
+    End Sub
+    
+    Private Sub ApplySelectedIndex(ByVal Index As Long)
+        modSelectorEngine.ApplySelectorIndex m_ListCollectionView, m_SyncingSelection, Index
+        modSelectorEngine.PublishSelectorState m_DependencyProperties, m_ListCollectionView, m_SelectedValuePath, m_SyncingSelection
+    End Sub
+    
+    Private Sub ApplySelectedItem(ByVal Value As Variant)
+        Dim Index As Long
+        
+        If m_ItemsSource Is Nothing Then Exit Sub
+        Index = modSelectorEngine.FindItemIndex(m_ItemsSource, Value)
+        If Index >= 0 Then ApplySelectedIndex Index
     End Sub
     
     Private Sub UpdateHandlers(e As VCF.CollectionChangedEventArgs)
