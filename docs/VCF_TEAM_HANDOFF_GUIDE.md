@@ -25,7 +25,8 @@ This is the **single entry point** for the VCF rewrite program. Read in order fo
 | 10 | [VCF_MIGRATION_TEMPLATE.md](./VCF_MIGRATION_TEMPLATE.md) | Step-by-step consumer migration guide | Release manager |
 | 11 | [MIGRATION.md](./MIGRATION.md) | Living migration guide (Phases 0–7) | DeNovo pin |
 | 12 | [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) | DeNovo manual smoke checklist | Phase 7 |
-| 13 | [VCF_KICKOFF_AGENDA.md](./VCF_KICKOFF_AGENDA.md) | Kickoff meeting — open items, decisions, Phase 1 | VCF lead |
+| 13 | [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md) | Cursor prompts + script companion | Phase 7b |
+| 14 | [VCF_KICKOFF_AGENDA.md](./VCF_KICKOFF_AGENDA.md) | Kickoff meeting — open items, decisions, Phase 1 | VCF lead |
 
 **Denovo context:** [UI_AND_PARTITIONING_BASELINE.md](./UI_AND_PARTITIONING_BASELINE.md) · [pos-v1/docs/DOCUMENTATION_INDEX.md](../../pos-v1/docs/DOCUMENTATION_INDEX.md)
 
@@ -172,7 +173,7 @@ Phase 6 — Templates & polish
   ~~Button Content DP~~ (6a) · ~~Style.Triggers PropertyTrigger~~ (6b) · ~~ControlTemplate~~ (6c) · ~~render coalescing~~ (6d)
 
 Phase 7 — POS migration support (denovo)
-  7a pin guide + POS smoke doc + P7a-SMOKE · XAML transform scripts · DeNovo integration
+  7a pin guide + POS smoke doc + P7a-SMOKE · 7b XAML script + Cursor prompts · DeNovo integration
 ```
 
 ### 4.1 Acceptance criteria (every phase)
@@ -348,6 +349,7 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-06-19 | Initial complete handoff package — 8 documents, full class/property inventory |
 | 2026-06-20 | Phase 0 complete — tag v2.0.0-wpf-alignment-p0; baselines recorded; kickoff agenda added |
 | 2026-06-20 | Phase 4 validated — tag v2.5.0-wpf-alignment-p4; Phase0 18/18 (P4-BIND, P4-DCTX, P4-DETACH) |
+| 2026-06-21 | Phase 7b — XAML migrate script + Cursor prompts (`v2.17.0-wpf-alignment-p7b`) |
 | 2026-06-21 | Phase 7a validated — tag v2.16.0-wpf-alignment-p7a; Phase0 30/30 (P7a-SMOKE); B-GOLD 19 ms, B-COLL 6 ms |
 | 2026-06-21 | Phase 6d validated — tag v2.15.0-wpf-alignment-p6d; Phase0 29/29; **Phase 6 complete** |
 | 2026-06-21 | Phase 6d started — v2.15.0; render coalescing, P6d-COAL (29 tests) |

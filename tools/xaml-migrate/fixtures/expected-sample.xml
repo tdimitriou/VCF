@@ -1,0 +1,9 @@
+<Scene Name="SalesOrder" BackColor="&HAC4702">
+	<UniformGrid Rows="1" Columns="2" Width="1024" Height="768" Margin="0,0,0,0">
+		<Panel Width="512" Height="768"/>
+		<ListView Name="Lines" Width="400" Height="300" Margin="4,8,0,0"/>
+	</UniformGrid>
+	<Button BackColor="&H008000" Content="OK" Width="80" Height="32" Margin="10,10,0,0"/>
+	<Setter Property="BackColor" Value="{DynamicResource ButtonBackground}"/>
+	<Setter Property="ForeColor" Value="{DynamicResource PrimaryBrush}"/>
+</Scene>

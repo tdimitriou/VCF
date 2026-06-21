@@ -1,0 +1,9 @@
+<Scene Name="SalesOrder" BackColor="&HAC4702">
+	<UniformGrid DesignLeft="0" DesignTop="0" DesignWidth="1024" DesignHeight="768" Rows="1" Columns="2">
+		<Panel DesignWidth="512" DesignHeight="768"/>
+		<UnboundListView Name="Lines" DesignLeft="4" DesignTop="8" DesignWidth="400" DesignHeight="300"/>
+	</UniformGrid>
+	<Button Text="OK" DesignLeft="10" DesignTop="10" DesignWidth="80" DesignHeight="32" BackColor="&H008000"/>
+	<Setter Property="BackColor" Value="{ThemeResource Key=ButtonBackground}"/>
+	<Setter Property="ForeColor" Value="{ThemeResource PrimaryBrush}"/>
+</Scene>

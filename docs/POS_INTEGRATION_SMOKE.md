@@ -48,7 +48,7 @@ Run on a **dev DB** with typical configuration. Record build tag and date.
 
 | Area | POS location | Action |
 |------|--------------|--------|
-| `Design*` XAML | `UI/Resources/XAML/` | Migrate to `Width`/`Height`/`Margin` over time; shims still work |
+| `Design*` XAML | `UI/Resources/XAML/` | Run [Invoke-VcfXamlMigration.ps1](../tools/xaml-migrate/Invoke-VcfXamlMigration.ps1) then [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md) |
 | `UnboundListView` | Dialog grids | → `ListView` (see MIGRATION 2.9.0) |
 | `{ThemeResource}` | `MyApp.xml` styles | → `{DynamicResource}` |
 | `res:` fragments | XAML includes | → `ResourceDictionary` / `MergedDictionaries` |

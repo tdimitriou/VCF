@@ -17,7 +17,8 @@
 
 See [VCF_TEAM_HANDOFF_GUIDE.md §8.1](./VCF_TEAM_HANDOFF_GUIDE.md) for No / Project / Binary compatibility during the rewrite.
 
-**POS smoke checklist:** [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md)
+**POS smoke checklist:** [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md)  
+**Bulk XAML:** [tools/xaml-migrate/README.md](../tools/xaml-migrate/README.md) · [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md)
 
 ---
 
@@ -183,7 +184,7 @@ Registered names are resolved in `CreateInstance` before `CreateObject` and befo
 | Slice | Tag | Deliverable |
 |-------|-----|-------------|
 | **7a** | `v2.16.0-wpf-alignment-p7a` | [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md), 2.15 pin guide above, **P7a-SMOKE** |
-| 7b | TBD | XAML transform scripts / Cursor migration prompts |
+| **7b** | `v2.17.0-wpf-alignment-p7b` | [Invoke-VcfXamlMigration.ps1](../tools/xaml-migrate/Invoke-VcfXamlMigration.ps1), [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md) |
 | 7c | TBD | DeNovo `@` template → DataTemplate migration |
 
 ---

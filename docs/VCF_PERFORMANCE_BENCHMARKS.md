@@ -1,6 +1,6 @@
 # Demac.VCF — performance benchmarks (Phase 0 baseline)
 
-**Status:** Phase 7a — **v2.16.0-wpf-alignment-p7a** (30 tests, validated)  
+**Status:** Phase 7b — **v2.17.0-wpf-alignment-p7b** (30 tests, tooling validated)  
 **Runner:** `.Tests/Phase0` (`modPhase0Bench`)  
 **Threshold policy:** Regressions > 10% vs previous tag require explanation in release notes.
 
@@ -91,6 +91,7 @@ Normal POS process **< 100 MB** without secondary customer-display video. Framew
 | 2026-06-20 | **v2.4.0 Phase 3 validated:** 15/15 pass; B-GOLD 22 ms, B-COLL 21 ms; P3-MERGE, P3-SOURCE, P3-DYNAMIC, P3-STRICT-PROP pass |
 | 2026-06-20 | **v2.4.0 Phase 3:** P3-MERGE, P3-SOURCE, P3-DYNAMIC, P3-STRICT-PROP added (15 total tests) |
 | 2026-06-20 | **v2.3.0 Phase 2 validated:** 11/11 pass; B-GOLD 19 ms, B-COLL 16 ms; P2-STACK, P2-STACK-LAY, P2-GRID pass |
+| 2026-06-21 | **v2.17.0 Phase 7b:** Invoke-VcfXamlMigration.ps1 + XAML_MIGRATION_PROMPTS (no new Phase0 test) |
 | 2026-06-21 | **v2.16.0 Phase 7a validated:** 30/30 pass; B-GOLD **19 ms**, B-COLL **6 ms**; P7a-SMOKE pass |
 | 2026-06-21 | **v2.16.0 Phase 7a started:** P7a-SMOKE, POS_INTEGRATION_SMOKE, MIGRATION 2.15 pin guide |
 | 2026-06-21 | **v2.15.0 Phase 6d validated:** 29/29 pass; B-GOLD **21 ms**, B-COLL **7 ms**; P6d-COAL pass |

@@ -40,6 +40,19 @@
 
 ---
 
+---
+
+## [2.17.0] — 2026-06-21 — Phase 7b (XAML transform tooling — validated)
+
+Tag: **`v2.17.0-wpf-alignment-p7b`** · **No DLL API changes** · Phase0 still **30/30** (no new bench test).
+
+### Added
+
+- **`tools/xaml-migrate/Invoke-VcfXamlMigration.ps1`** — mechanical transforms: `Design*` → layout DPs, `UnboundListView` → `ListView`, `{ThemeResource}` → `{DynamicResource}`, `Button Text` → `Content`; `-WhatIf`, `-ReportOnly`, `-SelfTest`.
+- **[XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md)** — Cursor prompts for scan, review, Button Content, Scene BackColor, `res:` fragments, MyApp styles.
+
+---
+
 ## [2.16.0] — 2026-06-21 — Phase 7a (POS migration package — validated)
 
 Tag: **`v2.16.0-wpf-alignment-p7a`** · Phase0 **30/30** pass. **No DLL API changes** — same `Demac.VCF.dll` as 2.15.0.
