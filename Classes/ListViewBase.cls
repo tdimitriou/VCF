@@ -33,10 +33,17 @@ Event MouseMoveOnListItem(ByVal HoverIndex As Long, ByVal RelX As Single, ByVal 
 Event SelectedAll() 'Jùrgen
 Event DimensionsAdjusted()
 Event ListIndexChanged()
+Event MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
 
 Private Alpha As Single, dx As Single, dy As Single
 Private mListCount As Long, mListIndex As Long, mHoverIndex As Long
 Private mRowHeight As Long, mVisibleRows As Long, mScrollerSize As Single
+Private mFixedRowHeight As Boolean
+Private mRowHeights() As Long
+Private mRowTops() As Long
+Private mTotalRowHeight As Long
+Private mRowMetricsDirty As Boolean
+Private mRowMetricsWidth As Single
 Private mHeaderHeight As Long, mRowSelectorWidth As Long
 Private mSelectionInProgress As Boolean, mMultiSelect As MultiSelectConstants
 Private mSelX As Single, mSelY As Single, mSelFirstState As Boolean, mSelFirstIndex As Long
@@ -83,6 +90,8 @@ Private Sub Class_Initialize()
     mAlternateRowColor = -1
     
     mRowHeight = 17
+    mFixedRowHeight = True
+    mRowMetricsDirty = True
     mColWidth = 150
     mListIndex = -1
     mHoverIndex = -1
@@ -126,6 +135,7 @@ Public Property Let ListCount(ByVal NewValue As Long)
   If NewValue < mListCount Then mHoverIndex = -1
   mListCount = NewValue
   If mListIndex > mListCount - 1 Then mListIndex = mListCount - 1
+  MarkRowMetricsDirty
   W_Resize
 End Property
 
@@ -134,6 +144,7 @@ Friend Sub SetListCountSilent(ByVal NewValue As Long)
   If NewValue < mListCount Then mHoverIndex = -1
   mListCount = NewValue
   If mListIndex > mListCount - 1 Then mListIndex = mListCount - 1
+  MarkRowMetricsDirty
 End Sub
 
 Public Property Get ScrollerSize() As Long
@@ -202,6 +213,11 @@ Dim NewPos&
     If Not W Is Nothing Then W.Refresh
     Exit Sub
   End If
+  If Not mFixedRowHeight And Not mImageView Then
+    EnsureVisibleSelectionVariable
+    W.Refresh
+    Exit Sub
+  End If
   If mListIndex \ mVisibleCols < VScrollBar.Value Then
     VScrollBar.Value = mListIndex \ mVisibleCols
   End If
@@ -217,6 +233,10 @@ End Sub
 
 Public Function GetListIndexFromMouseY(ByVal y As Long) As Long
 Dim CurYvirt As Long, TotalYvirt As Long
+  If Not mFixedRowHeight And Not mImageView Then
+    GetListIndexFromMouseY = IndexFromViewportY(y - mHeaderHeight)
+    Exit Function
+  End If
   CurYvirt = (-2 + y + VScrollBar.Value * mRowHeight)
   TotalYvirt = (-2 + mListCount * mRowHeight)
   
@@ -235,6 +255,11 @@ Dim Posx As Long, PosY As Long, Index As Long
   'Klick auùerhalb der Spalten?
   If x > mVisibleCols * mColWidth Then
     GetListIndexFromMouseXY = -1
+    Exit Function
+  End If
+  
+  If Not mFixedRowHeight And Not mImageView Then
+    GetListIndexFromMouseXY = IndexFromViewportY(y)
     Exit Function
   End If
   
@@ -384,8 +409,33 @@ Public Property Let RowHeight(ByVal NewValue As Long)
   If NewValue < 1 Then NewValue = 1
   If NewValue > 300 Then NewValue = 300
   mRowHeight = NewValue
+  MarkRowMetricsDirty
   W_Resize
 End Property
+
+Public Property Get FixedRowHeight() As Boolean
+  FixedRowHeight = mFixedRowHeight
+End Property
+
+Public Property Let FixedRowHeight(ByVal NewValue As Boolean)
+  If mFixedRowHeight = NewValue Then Exit Property
+  mFixedRowHeight = NewValue
+  MarkRowMetricsDirty
+  W_Resize
+End Property
+
+Public Sub InvalidateRowHeights()
+  MarkRowMetricsDirty
+  If Not W Is Nothing Then
+    AdjustDimensions
+    W.Refresh
+  End If
+End Sub
+
+Public Function MeasuredRowHeight(ByVal Index As Long) As Long
+  RebuildRowMetricsIfNeeded
+  MeasuredRowHeight = RowHeightAt(Index)
+End Function
  
 Public Property Get ColWidth() As Long
   ColWidth = mColWidth
@@ -658,6 +708,20 @@ Dim R As Long
     R = Int(mListCount Mod Cols)
     If R > 0 Then R = 1
   End If
+
+  If Not mFixedRowHeight And Not mImageView Then
+    RebuildRowMetricsIfNeeded
+    mVisibleRows = CountVisibleRowsAt(ScrollIndex, GetViewportHeight())
+    If mVisibleRows < 1 And mListCount > 0 Then mVisibleRows = 1
+    If mVisibleRows > 1 Then VScrollBar.LargeChange = mVisibleRows
+    If mListCount > 0 Then
+      VScrollBar.Max = mListCount - 1
+      Rows = mListCount - 1
+    Else
+      VScrollBar.Max = 0
+      Rows = 0
+    End If
+  Else
   mVisibleRows = (dy - 3 - mHeaderHeight - IIf(HScrollBar.Widget.Visible, mScrollerSize, 0)) \ mRowHeight
   If mVisibleRows = 0 And mListCount > 0 Then mVisibleRows = 1
   If mVisibleRows > 1 Then VScrollBar.LargeChange = mVisibleRows '- 1
@@ -669,6 +733,7 @@ Dim R As Long
   Else
     If mVisibleRows - 1 > mListCount Then Rows = mListCount Else Rows = mVisibleRows - 1
     If mListCount - Rows + 1 >= 0 Then VScrollBar.Max = mListCount - Rows - 1
+  End If
   End If
   
 
@@ -819,7 +884,7 @@ Dim NewSel As Long
    
     ChangeListIndex NewSel
     'mListIndex = NewSel
-    If y >= mRowHeight * mVisibleRows - 1 Then
+    If (Not mFixedRowHeight And Not mImageView And y >= GetViewportHeight() - 1) Or y >= mRowHeight * mVisibleRows - 1 Then
       If mAllowDrag And mMultiSelect <> vbMultiSelectExtended Then mSelectionInProgress = False
       ListIndex = mHoverIndex
       If mImageView = False Then EnsureVisibleSelection 'Sonst werden bei Selektion eines halbsichtbaren Items mehrere Items selektiert JS 29.11.2016
@@ -873,8 +938,8 @@ Dim NewSel&, i&, DoRefresh As Boolean
     If y <= 1 Then
       i = 300 + y * 10: If i < 10 Then i = 10
       TScroll.Tag = "Up": TScroll.Interval = i: If Not TScroll.Enabled Then TScroll.Enabled = True
-    ElseIf y - mRowHeight * mVisibleRows > 0 Then
-      i = 300 - (y - mRowHeight * mVisibleRows) * 10: If i < 10 Then i = 10
+    ElseIf y - IIf(mFixedRowHeight And Not mImageView, mRowHeight * mVisibleRows, GetViewportHeight()) > 0 Then
+      i = 300 - (y - IIf(mFixedRowHeight And Not mImageView, mRowHeight * mVisibleRows, GetViewportHeight())) * 10: If i < 10 Then i = 10
       TScroll.Tag = "Down": TScroll.Interval = i: If W.DragDetect And Not TScroll.Enabled Then TScroll.Enabled = True
     End If
     If HScrollBar.Widget.Visible Then
@@ -1033,6 +1098,9 @@ Dim i As Long, j As Long, c As Long, ArrowSize As Long, Width As Single, Pat As 
     
     W.SelectFontSettingsInto CC
     
+    If Not mFixedRowHeight And Not ImageView Then
+      DrawVariableHeightRows CC, Width, Alpha
+    Else
     For i = 0 To IIf(mVisibleRows = 1, 0, mVisibleRows)
       For c = 0 To mVisibleCols - 1
         j = i * mVisibleCols + c + (ScrollIndex * mVisibleCols)
@@ -1099,6 +1167,7 @@ Dim i As Long, j As Long, c As Long, ArrowSize As Long, Width As Single, Pat As 
       CC.TranslateDrawings IIf(ImageView, -mVisibleCols * Width, 0), mRowHeight
       
     Next i
+    End If
   CC.Restore
   
   If W.BorderColor < 0 Then Exit Sub
@@ -1217,3 +1286,216 @@ Dim PreviousColumnIdx%, OldColIdx%, LastState As ColumnSortState
   If mColDeltaStart > 0 Then mColDeltaStart = 0: AdjustDimensions ': Exit Sub
 End Sub
 
+'#Region Variable row height (Phase 5b)
+Private Sub MarkRowMetricsDirty()
+  mRowMetricsDirty = True
+End Sub
+
+Private Function ClientItemWidth() As Single
+  If dx > 0 Then
+    ClientItemWidth = dx - 4 - IIf(VScrollBar.Widget.Visible, mScrollerSize, 0)
+  ElseIf Not W Is Nothing Then
+    ClientItemWidth = W.Width - 4 - IIf(VScrollBar.Widget.Visible, mScrollerSize, 0)
+  Else
+    ClientItemWidth = mColWidth
+  End If
+  If ClientItemWidth < 1 Then ClientItemWidth = mColWidth
+  If ClientItemWidth < 1 Then ClientItemWidth = 100
+End Function
+
+Private Function GetViewportHeight() As Long
+  GetViewportHeight = dy - 3 - mHeaderHeight - IIf(HScrollBar.Widget.Visible, mScrollerSize, 0)
+  If GetViewportHeight < 1 Then GetViewportHeight = 1
+End Function
+
+Private Sub RebuildRowMetricsIfNeeded()
+  Dim i As Long
+  Dim h As Single
+  Dim w As Single
+  Dim total As Long
+
+  If mFixedRowHeight Then Exit Sub
+  w = ClientItemWidth()
+  If Not mRowMetricsDirty Then
+    If w = mRowMetricsWidth Then Exit Sub
+  End If
+
+  mRowMetricsWidth = w
+  mRowMetricsDirty = False
+  mTotalRowHeight = 0
+
+  If mListCount <= 0 Then
+    Erase mRowHeights
+    Erase mRowTops
+    Exit Sub
+  End If
+
+  ReDim mRowHeights(0 To mListCount - 1)
+  ReDim mRowTops(0 To mListCount)
+  mRowTops(0) = 0
+
+  For i = 0 To mListCount - 1
+    h = CSng(mRowHeight)
+    RaiseEvent MeasureRow(i, w, h)
+    If h < 1! Then h = 1!
+    If h > 300! Then h = 300!
+    mRowHeights(i) = CLng(h)
+    total = total + mRowHeights(i)
+    mRowTops(i + 1) = total
+  Next i
+
+  mTotalRowHeight = total
+End Sub
+
+Private Function RowHeightAt(ByVal Index As Long) As Long
+  If mFixedRowHeight Then
+    RowHeightAt = mRowHeight
+  ElseIf Index >= 0 And Index < mListCount Then
+    RowHeightAt = mRowHeights(Index)
+  Else
+    RowHeightAt = mRowHeight
+  End If
+End Function
+
+Private Function RowTopAt(ByVal Index As Long) As Long
+  If mFixedRowHeight Then
+    RowTopAt = Index * mRowHeight
+  ElseIf Index >= 0 And Index <= mListCount Then
+    RowTopAt = mRowTops(Index)
+  Else
+    RowTopAt = 0
+  End If
+End Function
+
+Private Function CountVisibleRowsAt(ByVal StartIndex As Long, ByVal ViewportHeight As Long) As Long
+  Dim idx As Long
+  Dim used As Long
+
+  CountVisibleRowsAt = 0
+  If ViewportHeight <= 0 Then Exit Function
+  RebuildRowMetricsIfNeeded
+
+  For idx = StartIndex To mListCount - 1
+    used = used + RowHeightAt(idx)
+    CountVisibleRowsAt = CountVisibleRowsAt + 1
+    If used >= ViewportHeight Then Exit Function
+  Next idx
+End Function
+
+Private Function IndexFromViewportY(ByVal y As Long) As Long
+  Dim idx As Long
+  Dim relY As Long
+
+  RebuildRowMetricsIfNeeded
+  relY = y + 2
+  idx = ScrollIndex
+
+  Do While idx < mListCount
+    If relY < RowHeightAt(idx) Then
+      IndexFromViewportY = idx
+      Exit Function
+    End If
+    relY = relY - RowHeightAt(idx)
+    idx = idx + 1
+  Loop
+
+  IndexFromViewportY = -1
+End Function
+
+Private Sub EnsureVisibleSelectionVariable()
+  Dim viewH As Long
+  Dim relTop As Long
+  Dim relBottom As Long
+
+  RebuildRowMetricsIfNeeded
+  viewH = GetViewportHeight()
+
+  If mListIndex < ScrollIndex Then
+    VScrollBar.Value = mListIndex
+  End If
+
+  Do While VScrollBar.Value <= VScrollBar.Max
+    relTop = RowTopAt(mListIndex) - RowTopAt(ScrollIndex)
+    relBottom = relTop + RowHeightAt(mListIndex)
+    If relTop >= 0 And relBottom <= viewH Then Exit Do
+    If relBottom > viewH And VScrollBar.Value < VScrollBar.Max Then
+      VScrollBar.Value = VScrollBar.Value + 1
+    ElseIf relTop < 0 And VScrollBar.Value > 0 Then
+      VScrollBar.Value = VScrollBar.Value - 1
+    Else
+      Exit Do
+    End If
+  Loop
+End Sub
+
+Private Sub DrawVariableHeightRows(CC As cCairoContext, ByVal Width As Single, ByVal Alpha As Single)
+  Dim rowIdx As Long
+  Dim drawY As Single
+  Dim rowH As Long
+  Dim viewH As Long
+
+  RebuildRowMetricsIfNeeded
+  viewH = GetViewportHeight()
+  drawY = 0
+
+  For rowIdx = ScrollIndex To mListCount - 1
+    rowH = RowHeightAt(rowIdx)
+    If drawY >= viewH Then Exit For
+    CC.Save
+    CC.TranslateDrawings 0, drawY
+    PaintRowAtIndex CC, rowIdx, Width, rowH, Alpha
+    CC.Restore
+    drawY = drawY + rowH
+  Next rowIdx
+End Sub
+
+Private Sub PaintRowAtIndex(CC As cCairoContext, ByVal j As Long, ByVal Width As Single, ByVal RowH As Long, ByVal Alpha As Single)
+  Dim ArrowSize As Long
+  Dim Pat As cCairoPattern
+
+  If mRowSelectorWidth > 0 And Selected(j) And j = mListIndex And ImageView = False Then
+    If mRowSelectorWidth > RowH Then ArrowSize = CLng(RowH * 0.6) Else ArrowSize = CLng(mRowSelectorWidth * 0.6)
+    Cairo.Theme.DrawTo CC, W, thmTypeArrow, 0, -(mRowSelectorWidth + ArrowSize) \ 2 + 0.5, (RowH - ArrowSize) \ 2, ArrowSize, ArrowSize, 0, thmDirectionRight
+  End If
+
+  CC.ClipExplicit 0, 0, Width + 1, RowH + 1
+  CC.SetLineWidth 1, True
+  CC.Rectangle 0, 1, Width + 1, RowH, True
+  If mAlternateRowColor <> -1 And ImageView = False Then
+    If j Mod 2 Then
+      CC.SetSourceColor mAlternateRowColor
+      CC.Fill
+    ElseIf mRowColor <> -1 Then
+      CC.SetSourceColor mRowColor
+      CC.Fill
+    End If
+  ElseIf mRowColor <> -1 Then
+    CC.SetSourceColor mRowColor
+    CC.Fill
+  End If
+  CC.ClearPath
+
+  If mShowHoverBar Then
+    If j = HoverIndex And W.MouseOver Then
+      Set Pat = Cairo.CreateLinearPattern(0, 0, 0, RowH)
+      Pat.AddColorStop 0, W.HoverColor, Alpha * 0.3, 1.1
+      Pat.AddColorStop 1, W.HoverColor, Alpha * 0.3, 1
+      CC.RoundedRect 0, 1, Width, RowH - 1, 3, True
+      CC.Fill True, Pat
+      CC.SetSourceColor W.HoverColor, Alpha * 0.8, 1.07
+      CC.Stroke
+    End If
+  End If
+
+  If mShowSelection And Selected(j) Then
+    Cairo.Theme.DrawTo CC, W, thmTypeListSelection, 0, 0, 0, Width, RowH + 1, 3
+  End If
+  If mMultiSelect <> vbMultiSelectNone And j = mListIndex And W.Focused Then
+    Cairo.Theme.DrawTo CC, W, thmTypeDottedRectangle, 0, 1, 1, Width - 2, RowH - 1, 2
+  End If
+
+  RaiseEvent OwnerDrawItem(j, CC, Width, RowH + 1, Alpha)
+  W.RaiseBubblingEvent Me, "OwnerDrawItem", j, CC, Width, RowH + 1, Alpha
+  CC.ResetClip
+End Sub
+'#End Region

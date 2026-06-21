@@ -32,6 +32,28 @@
 
 ---
 
+---
+
+## [2.10.0] — 2026-06-21 — Phase 5b (MeasureRow — validated)
+
+Tag: **`v2.10.0-wpf-alignment-p5b`** · Phase0 **24/24** pass.
+
+### Added
+
+- **`ListViewBase.MeasureRow`** event — host sets per-row height when **`FixedRowHeight = False`**.
+- **`ListViewBase.FixedRowHeight`** (default **`True`**) · **`InvalidateRowHeights`** · **`MeasuredRowHeight(Index)`**.
+- **`ListView.MeasureRow`** — bubbled from engine for owner-draw / InvoiceGrid adapters.
+
+### Changed
+
+- Variable-height paint, hit-test, scroll, and **`EnsureVisibleSelection`** for single-column lists (**`ImageView = False`**). Fixed-height and grid **`ImageView`** paths unchanged.
+
+### Test
+
+- **P5b-MSR** in `.Tests/Phase0` (suite → **24** tests).
+
+---
+
 ## [2.9.0] — 2026-06-21 — Phase 5a (ListView merge — validated)
 
 Tag: **`v2.9.0-wpf-alignment-p5a`** · Phase0 **23/23** pass.

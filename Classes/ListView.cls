@@ -33,6 +33,7 @@ Event MouseMoveOnListItem(ByVal HoverIndex As Long, ByVal RelX As Single, ByVal 
 Event SelectedAll()
 Event DimensionsAdjusted()
 Event ListIndexChanged()
+Event MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
 
 Private WithEvents W                            As cWidgetBase
 Attribute W.VB_VarHelpID = -1
@@ -601,6 +602,10 @@ Private m_Ready                                   As Boolean
 
     Private Sub m_Base_SelectedAll()
         RaiseEvent SelectedAll
+    End Sub
+
+    Private Sub m_Base_MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
+        RaiseEvent MeasureRow(Index, ItemWidth, RowHeight)
     End Sub
 '#End Region
 
