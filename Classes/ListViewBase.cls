@@ -34,13 +34,16 @@ Event SelectedAll() 'Jùrgen
 Event DimensionsAdjusted()
 Event ListIndexChanged()
 Event MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
+Event QueryRowLevel(ByVal Index As Long, Level As Long)
 
 Private Alpha As Single, dx As Single, dy As Single
 Private mListCount As Long, mListIndex As Long, mHoverIndex As Long
 Private mRowHeight As Long, mVisibleRows As Long, mScrollerSize As Single
 Private mFixedRowHeight As Boolean
+Private mRowIndentPerLevel As Long
 Private mRowHeights() As Long
 Private mRowTops() As Long
+Private mRowLevels() As Long
 Private mTotalRowHeight As Long
 Private mRowMetricsDirty As Boolean
 Private mRowMetricsWidth As Single
@@ -91,6 +94,7 @@ Private Sub Class_Initialize()
     
     mRowHeight = 17
     mFixedRowHeight = True
+    mRowIndentPerLevel = 16
     mRowMetricsDirty = True
     mColWidth = 150
     mListIndex = -1
@@ -436,6 +440,26 @@ Public Function MeasuredRowHeight(ByVal Index As Long) As Long
   RebuildRowMetricsIfNeeded
   MeasuredRowHeight = RowHeightAt(Index)
 End Function
+
+Public Function MeasuredRowLevel(ByVal Index As Long) As Long
+  MeasuredRowLevel = RowLevelAt(Index)
+End Function
+
+Public Function MeasuredRowIndent(ByVal Index As Long) As Long
+  MeasuredRowIndent = RowIndentAt(Index)
+End Function
+
+Public Property Get RowIndentPerLevel() As Long
+  RowIndentPerLevel = mRowIndentPerLevel
+End Property
+
+Public Property Let RowIndentPerLevel(ByVal NewValue As Long)
+  If NewValue < 0 Then NewValue = 0
+  If mRowIndentPerLevel = NewValue Then Exit Property
+  mRowIndentPerLevel = NewValue
+  MarkRowMetricsDirty
+  W_Resize
+End Property
  
 Public Property Get ColWidth() As Long
   ColWidth = mColWidth
@@ -1100,6 +1124,8 @@ Dim i As Long, j As Long, c As Long, ArrowSize As Long, Width As Single, Pat As 
     
     If Not mFixedRowHeight And Not ImageView Then
       DrawVariableHeightRows CC, Width, Alpha
+    ElseIf Not ImageView Then
+      DrawFixedHeightRows CC, Width, Alpha
     Else
     For i = 0 To IIf(mVisibleRows = 1, 0, mVisibleRows)
       For c = 0 To mVisibleCols - 1
@@ -1286,7 +1312,7 @@ Dim PreviousColumnIdx%, OldColIdx%, LastState As ColumnSortState
   If mColDeltaStart > 0 Then mColDeltaStart = 0: AdjustDimensions ': Exit Sub
 End Sub
 
-'#Region Variable row height (Phase 5b)
+'#Region Row layout ù variable height (5b) + hierarchy indent (5c)
 Private Sub MarkRowMetricsDirty()
   mRowMetricsDirty = True
 End Sub
@@ -1313,8 +1339,9 @@ Private Sub RebuildRowMetricsIfNeeded()
   Dim h As Single
   Dim w As Single
   Dim total As Long
+  Dim lvl As Long
+  Dim indent As Long
 
-  If mFixedRowHeight Then Exit Sub
   w = ClientItemWidth()
   If Not mRowMetricsDirty Then
     If w = mRowMetricsWidth Then Exit Sub
@@ -1327,6 +1354,19 @@ Private Sub RebuildRowMetricsIfNeeded()
   If mListCount <= 0 Then
     Erase mRowHeights
     Erase mRowTops
+    Erase mRowLevels
+    Exit Sub
+  End If
+
+  ReDim mRowLevels(0 To mListCount - 1)
+
+  If mFixedRowHeight Then
+    For i = 0 To mListCount - 1
+      lvl = 0
+      RaiseEvent QueryRowLevel(i, lvl)
+      If lvl < 0 Then lvl = 0
+      mRowLevels(i) = lvl
+    Next i
     Exit Sub
   End If
 
@@ -1335,8 +1375,13 @@ Private Sub RebuildRowMetricsIfNeeded()
   mRowTops(0) = 0
 
   For i = 0 To mListCount - 1
+    lvl = 0
+    RaiseEvent QueryRowLevel(i, lvl)
+    If lvl < 0 Then lvl = 0
+    mRowLevels(i) = lvl
+    indent = lvl * mRowIndentPerLevel
     h = CSng(mRowHeight)
-    RaiseEvent MeasureRow(i, w, h)
+    RaiseEvent MeasureRow(i, w - indent, h)
     If h < 1! Then h = 1!
     If h > 300! Then h = 300!
     mRowHeights(i) = CLng(h)
@@ -1346,6 +1391,17 @@ Private Sub RebuildRowMetricsIfNeeded()
 
   mTotalRowHeight = total
 End Sub
+
+Private Function RowLevelAt(ByVal Index As Long) As Long
+  RebuildRowMetricsIfNeeded
+  If Index >= 0 And Index < mListCount Then
+    RowLevelAt = mRowLevels(Index)
+  End If
+End Function
+
+Private Function RowIndentAt(ByVal Index As Long) As Long
+  RowIndentAt = RowLevelAt(Index) * mRowIndentPerLevel
+End Function
 
 Private Function RowHeightAt(ByVal Index As Long) As Long
   If mFixedRowHeight Then
@@ -1449,18 +1505,41 @@ Private Sub DrawVariableHeightRows(CC As cCairoContext, ByVal Width As Single, B
   Next rowIdx
 End Sub
 
+Private Sub DrawFixedHeightRows(CC As cCairoContext, ByVal Width As Single, ByVal Alpha As Single)
+  Dim i As Long
+  Dim j As Long
+  Dim lastRow As Long
+
+  lastRow = IIf(mVisibleRows = 1, 0, mVisibleRows)
+  For i = 0 To lastRow
+    j = i + ScrollIndex
+    If j >= mListCount Then Exit For
+    PaintRowAtIndex CC, j, Width, mRowHeight, Alpha
+    CC.TranslateDrawings 0, mRowHeight
+  Next i
+End Sub
+
 Private Sub PaintRowAtIndex(CC As cCairoContext, ByVal j As Long, ByVal Width As Single, ByVal RowH As Long, ByVal Alpha As Single)
   Dim ArrowSize As Long
   Dim Pat As cCairoPattern
+  Dim indent As Long
+  Dim drawWidth As Single
+
+  indent = RowIndentAt(j)
+  drawWidth = Width - indent
+  If drawWidth < 1 Then drawWidth = 1
+
+  CC.Save
+  CC.TranslateDrawings indent, 0
 
   If mRowSelectorWidth > 0 And Selected(j) And j = mListIndex And ImageView = False Then
     If mRowSelectorWidth > RowH Then ArrowSize = CLng(RowH * 0.6) Else ArrowSize = CLng(mRowSelectorWidth * 0.6)
     Cairo.Theme.DrawTo CC, W, thmTypeArrow, 0, -(mRowSelectorWidth + ArrowSize) \ 2 + 0.5, (RowH - ArrowSize) \ 2, ArrowSize, ArrowSize, 0, thmDirectionRight
   End If
 
-  CC.ClipExplicit 0, 0, Width + 1, RowH + 1
+  CC.ClipExplicit 0, 0, drawWidth + 1, RowH + 1
   CC.SetLineWidth 1, True
-  CC.Rectangle 0, 1, Width + 1, RowH, True
+  CC.Rectangle 0, 1, drawWidth + 1, RowH, True
   If mAlternateRowColor <> -1 And ImageView = False Then
     If j Mod 2 Then
       CC.SetSourceColor mAlternateRowColor
@@ -1480,22 +1559,27 @@ Private Sub PaintRowAtIndex(CC As cCairoContext, ByVal j As Long, ByVal Width As
       Set Pat = Cairo.CreateLinearPattern(0, 0, 0, RowH)
       Pat.AddColorStop 0, W.HoverColor, Alpha * 0.3, 1.1
       Pat.AddColorStop 1, W.HoverColor, Alpha * 0.3, 1
-      CC.RoundedRect 0, 1, Width, RowH - 1, 3, True
+      CC.RoundedRect 0, 1, drawWidth, RowH - 1, 3, True
       CC.Fill True, Pat
       CC.SetSourceColor W.HoverColor, Alpha * 0.8, 1.07
       CC.Stroke
     End If
   End If
 
-  If mShowSelection And Selected(j) Then
-    Cairo.Theme.DrawTo CC, W, thmTypeListSelection, 0, 0, 0, Width, RowH + 1, 3
+  If mShowSelection And mVisibleRows = 1 Then
+    If (W.Root.MouseKeyDown > 0 And j = ScrollIndex) Or j = mListIndex Then
+      Cairo.Theme.DrawTo CC, W, thmTypeListSelection, 0, 0, 0, drawWidth, RowH + 1, 3
+    End If
+  ElseIf mShowSelection And Selected(j) Then
+    Cairo.Theme.DrawTo CC, W, thmTypeListSelection, 0, 0, 0, drawWidth, RowH + 1, 3
   End If
   If mMultiSelect <> vbMultiSelectNone And j = mListIndex And W.Focused Then
-    Cairo.Theme.DrawTo CC, W, thmTypeDottedRectangle, 0, 1, 1, Width - 2, RowH - 1, 2
+    Cairo.Theme.DrawTo CC, W, thmTypeDottedRectangle, 0, 1, 1, drawWidth - 2, RowH - 1, 2
   End If
 
-  RaiseEvent OwnerDrawItem(j, CC, Width, RowH + 1, Alpha)
-  W.RaiseBubblingEvent Me, "OwnerDrawItem", j, CC, Width, RowH + 1, Alpha
+  RaiseEvent OwnerDrawItem(j, CC, drawWidth, RowH + 1, Alpha)
+  W.RaiseBubblingEvent Me, "OwnerDrawItem", j, CC, drawWidth, RowH + 1, Alpha
   CC.ResetClip
+  CC.Restore
 End Sub
 '#End Region

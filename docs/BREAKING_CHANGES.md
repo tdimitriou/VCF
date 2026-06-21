@@ -34,6 +34,28 @@
 
 ---
 
+---
+
+## [2.11.0] — 2026-06-21 — Phase 5c (Row hierarchy — validated)
+
+Tag: **`v2.11.0-wpf-alignment-p5c`** · Phase0 **25/25** pass.
+
+### Added
+
+- **`ListViewBase.QueryRowLevel`** event — host sets **`Level`** (0 = parent, 1+ = child) per flat row index.
+- **`ListViewBase.RowIndentPerLevel`** (default **16**) · **`MeasuredRowLevel`** · **`MeasuredRowIndent`**.
+- **`ListView.QueryRowLevel`** — bubbled from engine.
+
+### Changed
+
+- Row paint and **`MeasureRow`** width account for hierarchy indent (single-column / owner-draw path).
+
+### Test
+
+- **P5c-HIER** in `.Tests/Phase0` (suite → **25** tests).
+
+---
+
 ## [2.10.0] — 2026-06-21 — Phase 5b (MeasureRow — validated)
 
 Tag: **`v2.10.0-wpf-alignment-p5b`** · Phase0 **24/24** pass.

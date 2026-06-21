@@ -34,6 +34,7 @@ Event SelectedAll()
 Event DimensionsAdjusted()
 Event ListIndexChanged()
 Event MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
+Event QueryRowLevel(ByVal Index As Long, Level As Long)
 
 Private WithEvents W                            As cWidgetBase
 Attribute W.VB_VarHelpID = -1
@@ -606,6 +607,10 @@ Private m_Ready                                   As Boolean
 
     Private Sub m_Base_MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
         RaiseEvent MeasureRow(Index, ItemWidth, RowHeight)
+    End Sub
+
+    Private Sub m_Base_QueryRowLevel(ByVal Index As Long, Level As Long)
+        RaiseEvent QueryRowLevel(Index, Level)
     End Sub
 '#End Region
 

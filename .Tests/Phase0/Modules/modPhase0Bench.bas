@@ -34,8 +34,9 @@ Public Sub RunAll()
     If Not Phase4dBench_Selector() Then Failed = Failed + 1
     If Not Phase5aBench_OwnerDrawListView() Then Failed = Failed + 1
     If Not Phase5bBench_MeasureRow() Then Failed = Failed + 1
+    If Not Phase5cBench_RowLevel() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (24 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (25 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -858,6 +859,34 @@ Fail:
     LogResult "P5b-MSR", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P5b-MSR — " & Err.Description
     Phase5bBench_MeasureRow = False
+End Function
+
+Public Function Phase5cBench_RowLevel() As Boolean
+    Dim Host As Phase0MeasureRowHost
+
+    On Error GoTo Fail
+
+    Set Host = New Phase0MeasureRowHost
+    Host.Setup 40, 20, 3, 16
+
+    If Host.MeasuredLevel(0) <> 0 Then Err.Raise vbObjectError, , "Expected row 0 level 0"
+    If Host.MeasuredLevel(1) <> 1 Then Err.Raise vbObjectError, , "Expected row 1 level 1"
+    If Host.MeasuredLevel(2) <> 1 Then Err.Raise vbObjectError, , "Expected row 2 level 1"
+    If Host.MeasuredIndent(0) <> 0 Then Err.Raise vbObjectError, , "Expected row 0 indent 0"
+    If Host.MeasuredIndent(1) <> 16 Then Err.Raise vbObjectError, , "Expected row 1 indent 16"
+    If Host.MeasuredIndent(2) <> 16 Then Err.Raise vbObjectError, , "Expected row 2 indent 16"
+    If Host.MeasuredHeight(0) <> 40 Then Err.Raise vbObjectError, , "Expected row 0 height 40 with indent"
+    If Host.MeasuredHeight(1) <> 20 Then Err.Raise vbObjectError, , "Expected row 1 height 20 with indent"
+
+    LogResult "P5c-HIER", 0, "OK QueryRowLevel parent/child indent"
+    Debug.Print "PASS  P5c-HIER QueryRowLevel parent/child indent"
+    Phase5cBench_RowLevel = True
+    Exit Function
+
+Fail:
+    LogResult "P5c-HIER", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P5c-HIER — " & Err.Description
+    Phase5cBench_RowLevel = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

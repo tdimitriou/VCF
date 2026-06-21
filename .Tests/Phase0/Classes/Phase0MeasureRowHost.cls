@@ -18,10 +18,11 @@ Attribute m_LV.VB_VarHelpID = -1
 Private m_ParentHeight As Single
 Private m_ChildHeight As Single
 
-Public Sub Setup(ByVal ParentHeight As Single, ByVal ChildHeight As Single, ByVal RowCount As Long)
+Public Sub Setup(ByVal ParentHeight As Single, ByVal ChildHeight As Single, ByVal RowCount As Long, Optional ByVal IndentPerLevel As Long = 16)
     m_ParentHeight = ParentHeight
     m_ChildHeight = ChildHeight
     Set m_LV = New ListView
+    m_LV.Base.RowIndentPerLevel = IndentPerLevel
     m_LV.Base.FixedRowHeight = False
     m_LV.Base.ListCount = RowCount
 End Sub
@@ -30,10 +31,26 @@ Public Function MeasuredHeight(ByVal Index As Long) As Long
     MeasuredHeight = m_LV.Base.MeasuredRowHeight(Index)
 End Function
 
+Public Function MeasuredLevel(ByVal Index As Long) As Long
+    MeasuredLevel = m_LV.Base.MeasuredRowLevel(Index)
+End Function
+
+Public Function MeasuredIndent(ByVal Index As Long) As Long
+    MeasuredIndent = m_LV.Base.MeasuredRowIndent(Index)
+End Function
+
 Private Sub m_LV_MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
     If Index = 0 Then
         RowHeight = m_ParentHeight
     Else
         RowHeight = m_ChildHeight
+    End If
+End Sub
+
+Private Sub m_LV_QueryRowLevel(ByVal Index As Long, Level As Long)
+    If Index = 0 Then
+        Level = 0
+    Else
+        Level = 1
     End If
 End Sub
