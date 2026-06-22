@@ -2,7 +2,7 @@
 
 PowerShell script for **mechanical** POS XAML transforms (Phases 1–6). Non-destructive review modes included.
 
-**Docs:** [XAML_MIGRATION_PROMPTS.md](../../docs/XAML_MIGRATION_PROMPTS.md) · [MIGRATION.md](../../docs/MIGRATION.md)
+**Docs:** [XAML_MIGRATION_PROMPTS.md](../../docs/XAML_MIGRATION_PROMPTS.md) · [MIGRATION.md](../../docs/MIGRATION.md) · [POS_RUNTIME_FEEDBACK.md](../../docs/POS_RUNTIME_FEEDBACK.md)
 
 ---
 
@@ -16,7 +16,19 @@ PowerShell script for **mechanical** POS XAML transforms (Phases 1–6). Non-des
 | **ThemeResource** | `{ThemeResource Key=X}`, `{ThemeResource X}` | `{DynamicResource X}` |
 | **ButtonText** | `<Button Text="…"/>` | `<Button Content="…"/>` |
 
-**Report-only (no edit):** `Scene BackColor=`, `res:` includes, `@` dialog fragments, `Button` + `TextBlock` child pairs.
+### Layout transform exceptions (legacy types)
+
+**Skipped** on types without layout DPs — keeps `DesignLeft` / `DesignTop` / `DesignWidth` / `DesignHeight`:
+
+`TextBlock`, `Image`, `Scene`, `UniformGrid`, `TextBox`, `WindowsFormsHost`
+
+**Report-only:** legacy tags that already have `Margin` / `Width` / `Height` (from an earlier script run) flag **“needs layout shim DLL or revert to Design*”**.
+
+See [POS_RUNTIME_FEEDBACK.md](../../docs/POS_RUNTIME_FEEDBACK.md). Pin **`v2.18.0-wpf-alignment-p7c-layout-shim`** (or later) when POS XAML was fully migrated before this script fix.
+
+---
+
+**Report-only (no edit):** `Scene BackColor=`, `res:` includes (incl. shortened paths), `@` dialog fragments, `Button` + `TextBlock` child pairs.
 
 ---
 
@@ -54,7 +66,8 @@ Requires **PowerShell 5.1+** (Windows). Does not require VCF DLL.
 2. `-ReportOnly` on `UI/Resources/XAML` — triage manual items.
 3. `-WhatIf` then apply mechanical script.
 4. Cursor prompts from [XAML_MIGRATION_PROMPTS.md](../../docs/XAML_MIGRATION_PROMPTS.md) for Button Content, Scene BackColor, `res:`.
-5. Recompile DeNovo; run [POS_INTEGRATION_SMOKE.md](../../docs/POS_INTEGRATION_SMOKE.md).
+5. Pin DLL with layout shim if XAML already has `Margin` on `TextBlock` (see POS_RUNTIME_FEEDBACK).
+6. Recompile DeNovo; run [POS_INTEGRATION_SMOKE.md](../../docs/POS_INTEGRATION_SMOKE.md).
 
 ---
 
@@ -72,8 +85,8 @@ Requires **PowerShell 5.1+** (Windows). Does not require VCF DLL.
 - **Attribute order** may change (semantically equivalent).
 - **Margin conflicts** (existing `Margin` + `DesignLeft`) are skipped and reported.
 - Does **not** flatten `Button` > `TextBlock` trees (use Cursor Prompt 3).
-- Does **not** migrate `res:` or `@` templates (Phase 7c).
+- Does **not** migrate `res:` or `@` templates (Phase 7c dialog work).
 
 ---
 
-*Phase 7b — `v2.17.0-wpf-alignment-p7b`*
+*Updated for layout shim — `v2.18.0-wpf-alignment-p7c-layout-shim`*

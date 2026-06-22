@@ -1,0 +1,3 @@
+<Panel DesignWidth="400" DesignHeight="300">
+	<TextBlock Margin="10,20,0,0" Width="200" Height="30" Text="Hello" FontSize="12" ScaleFont="0"/>
+</Panel>

@@ -53,6 +53,26 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Types without Width/Height/Margin DPs — keep Design* in XAML (see docs/POS_RUNTIME_FEEDBACK.md).
+$script:LegacyLayoutElements = @(
+    'TextBlock'
+    'Image'
+    'Scene'
+    'UniformGrid'
+    'TextBox'
+    'WindowsFormsHost'
+)
+
+function Test-LegacyLayoutElement {
+    param([string]$TagName)
+
+    $base = $TagName
+    if ($TagName -match ':([^:./]+)$') {
+        $base = $Matches[1]
+    }
+    return $script:LegacyLayoutElements -contains $base
+}
+
 function Test-TransformEnabled {
     param([string]$Name)
     return ($Transform -contains 'All') -or ($Transform -contains $Name)
@@ -122,30 +142,37 @@ function Convert-XamlOpeningTag {
     }
 
     if (Test-TransformEnabled 'Layout') {
-        if ($attrs.Contains('DesignWidth')) {
-            $attrs['Width'] = $attrs['DesignWidth']
-            $attrs.Remove('DesignWidth')
-            $changed = $true
-        }
-        if ($attrs.Contains('DesignHeight')) {
-            $attrs['Height'] = $attrs['DesignHeight']
-            $attrs.Remove('DesignHeight')
-            $changed = $true
-        }
-
-        $hasLeft = $attrs.Contains('DesignLeft')
-        $hasTop = $attrs.Contains('DesignTop')
-        if ($hasLeft -or $hasTop) {
-            if ($attrs.Contains('Margin')) {
-                $ManualReview.Add("Margin conflict: <$tagName> has Margin and DesignLeft/DesignTop - review manually")
+        if (Test-LegacyLayoutElement $tagName) {
+            if ($attrs.Contains('Margin') -or $attrs.Contains('Width') -or $attrs.Contains('Height')) {
+                $ManualReview.Add("Legacy tag <$tagName> has Margin/Width/Height - needs layout shim DLL or revert to Design*")
             }
-            else {
-                $left = if ($hasLeft) { $attrs['DesignLeft'] } else { '0' }
-                $top = if ($hasTop) { $attrs['DesignTop'] } else { '0' }
-                $attrs['Margin'] = "$left,$top,0,0"
-                if ($hasLeft) { $attrs.Remove('DesignLeft') }
-                if ($hasTop) { $attrs.Remove('DesignTop') }
+        }
+        elseif (-not (Test-LegacyLayoutElement $tagName)) {
+            if ($attrs.Contains('DesignWidth')) {
+                $attrs['Width'] = $attrs['DesignWidth']
+                $attrs.Remove('DesignWidth')
                 $changed = $true
+            }
+            if ($attrs.Contains('DesignHeight')) {
+                $attrs['Height'] = $attrs['DesignHeight']
+                $attrs.Remove('DesignHeight')
+                $changed = $true
+            }
+
+            $hasLeft = $attrs.Contains('DesignLeft')
+            $hasTop = $attrs.Contains('DesignTop')
+            if ($hasLeft -or $hasTop) {
+                if ($attrs.Contains('Margin')) {
+                    $ManualReview.Add("Margin conflict: <$tagName> has Margin and DesignLeft/DesignTop - review manually")
+                }
+                else {
+                    $left = if ($hasLeft) { $attrs['DesignLeft'] } else { '0' }
+                    $top = if ($hasTop) { $attrs['DesignTop'] } else { '0' }
+                    $attrs['Margin'] = "$left,$top,0,0"
+                    if ($hasLeft) { $attrs.Remove('DesignLeft') }
+                    if ($hasTop) { $attrs.Remove('DesignTop') }
+                    $changed = $true
+                }
             }
         }
     }
@@ -223,6 +250,12 @@ function Get-ManualReviewNotes {
 
         if ($line -match '<Scene\b[^>]*\bBackColor=') {
             $notes.Add("$FilePath`:$lineNo Scene BackColor= - not a Scene DP under StrictXamlLoad; use Style or code")
+        }
+        if ($line -match '\bres:([^"\s<>\\]+)"') {
+            $resPath = $Matches[1]
+            if ($resPath -notmatch '\\') {
+                $notes.Add("$FilePath`:$lineNo res: path '$resPath' has no fragment - preserve full path (e.g. res:Widgets\StatusBar)")
+            }
         }
         if ($line -match '<res:') {
             $notes.Add("$FilePath`:$lineNo res: include - migrate to ResourceDictionary / MergedDictionaries (manual)")

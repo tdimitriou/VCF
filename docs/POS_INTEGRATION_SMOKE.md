@@ -15,7 +15,9 @@
 | 4 | **Full recompile** DeNovo EXE (Project Compatibility — mandatory) |
 | 5 | `regsvr32 Demac.VCF.dll` on test machines |
 
-**Recommended first pin:** `v2.15.0-wpf-alignment-p6d` (Phases 0–6 complete).
+**Recommended first pin:** `v2.15.0-wpf-alignment-p6d` (Phases 0–6 only).
+
+**Migrated POS XAML (Margin on TextBlock, etc.):** pin **`v2.18.0-wpf-alignment-p7c-layout-shim`** — see [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md).
 
 ---
 

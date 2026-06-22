@@ -637,6 +637,13 @@ Private Sub SetProperty(ByVal Obj As Object, ByVal Name As String, ByVal Value A
     
     Err.Clear
     
+    If TypeOf Obj Is IUIElement Then
+        Dim UIElement As IUIElement
+        Set UIElement = Obj
+        If ApplyLegacyLayoutProperty(UIElement, Name, PropertyValue) Then Exit Sub
+        Err.Clear
+    End If
+    
     ' Pass the final property value, (PropertyValue) directly to the inner object
     ' to avoid the extra call to the MarkupExtensions.GetMarkupValue
     

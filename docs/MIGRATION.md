@@ -18,11 +18,28 @@
 See [VCF_TEAM_HANDOFF_GUIDE.md §8.1](./VCF_TEAM_HANDOFF_GUIDE.md) for No / Project / Binary compatibility during the rewrite.
 
 **POS smoke checklist:** [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md)  
-**Bulk XAML:** [tools/xaml-migrate/README.md](../tools/xaml-migrate/README.md) · [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md)
+**Bulk XAML:** [tools/xaml-migrate/README.md](../tools/xaml-migrate/README.md) · [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md)  
+**DeNovo consumer policy:** denovo monorepo → `docs/migration/DENOVO_VCF_MIGRATION_POLICY.md`  
+**POS runtime feedback (2026-06-19):** [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md) — layout shim **`v2.18.0-wpf-alignment-p7c-layout-shim`**
 
 ---
 
-## Upgrading to 2.15.0 (Phases 0–6 complete — recommended POS pin)
+## Upgrading to 2.18.0 (POS layout shim — migrated XAML)
+
+**When:** DeNovo applied mechanical XAML migration (`Margin` on `TextBlock`, etc.) and needs runtime layout on pin ≥ 2.15.0.
+
+**Tag:** **`v2.18.0-wpf-alignment-p7c-layout-shim`**
+
+| Item | Action |
+|------|--------|
+| DLL | Rebuild/register VCF; copy to DeNovo lib path |
+| XAML script | Re-run `Invoke-VcfXamlMigration.ps1` (legacy types skip `Margin` transform) or keep migrated XAML + use shim DLL |
+| Themes | `ActiveThemeName` non-empty when using `{DynamicResource}` in `MyApp.xml` |
+| Verify | Phase0 **31/31**; DeNovo smoke §3 |
+
+---
+
+## Upgrading to 2.15.0 (Phases 0–6 complete — framework baseline)
 
 ### DLL pin
 
@@ -47,8 +64,10 @@ Details per release: [BREAKING_CHANGES.md](./BREAKING_CHANGES.md).
 | Before | After |
 |--------|-------|
 | `DesignWidth` / `DesignHeight` | `Width` / `Height` (shim accepts both) |
+| `DesignLeft` / `DesignTop` on **`TextBlock`**, **`Image`**, other legacy types | **Keep `Design*`** or use DLL with [POS layout shim](./POS_RUNTIME_FEEDBACK.md) — **`Margin` is ignored** on types without layout DPs |
 | `<UnboundListView …/>` | `<ListView …/>` without `ItemsSource` |
 | `{ThemeResource Key=…}` | `{DynamicResource …}` |
+| `ThemesManager` `ActiveThemeName=""` with `{DynamicResource}` styles | Set **`ActiveThemeName`** to a valid theme key (e.g. `Default`) before styles apply |
 | `<res:Path\Fragment/>` | Merged `ResourceDictionary` + `{StaticResource …}` |
 | `Button` caption via `Text` | `Content` (layout engine aliases `Text` → `Content`) |
 | `Scene BackColor="…"` | Style or widget API (not a Scene DP today; strict XAML rejects it) |
@@ -185,7 +204,8 @@ Registered names are resolved in `CreateInstance` before `CreateObject` and befo
 |-------|-----|-------------|
 | **7a** | `v2.16.0-wpf-alignment-p7a` | [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md), 2.15 pin guide above, **P7a-SMOKE** |
 | **7b** | `v2.17.0-wpf-alignment-p7b` | [Invoke-VcfXamlMigration.ps1](../tools/xaml-migrate/Invoke-VcfXamlMigration.ps1), [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md) |
-| 7c | TBD | DeNovo `@` template → DataTemplate migration |
+| **7c-layout** | `v2.18.0-wpf-alignment-p7c-layout-shim` | POS layout shim + **P7c-LAY** + script legacy-type skip ([POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md)) |
+| 7c-dialog | TBD | DeNovo `@` template → DataTemplate migration |
 
 ---
 

@@ -5,6 +5,31 @@
 
 ---
 
+## [2.18.0] — 2026-06-19 — POS layout shim (DeNovo integration — validate in IDE)
+
+Tag: **`v2.18.0-wpf-alignment-p7c-layout-shim`** · Phase0 **31/31** (includes **P7c-LAY**).
+
+**Source:** [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md) — DeNovo pin `2.15.0` + mechanical XAML migration.
+
+### Added
+
+- **`ApplyLegacyLayoutProperty`** (`modLayoutEngine.bas`) — when XAML `SetProperty` cannot assign `Margin` / `Width` / `Height`, map to `IUIElement.DesignLeft` / `DesignTop` / `DesignWidth` / `DesignHeight`.
+- **`XAMLReader.SetProperty`** — invokes shim for `IUIElement` after `CallByName` failure.
+- **P7c-LAY** — loads migrated POS XAML (`Margin` on `TextBlock` → `Design*`).
+- **`Invoke-VcfXamlMigration.ps1`** — skip layout transforms on legacy types (`TextBlock`, `Image`, `Scene`, `UniformGrid`, `TextBox`, `WindowsFormsHost`); report `Margin` on legacy tags.
+
+### Migration note (not breaking API)
+
+- **`Design*` → `Margin`** on legacy types is unsafe on **`v2.15.0`** alone; use **this tag** or keep `Design*` on those elements.
+- Set **`ActiveThemeName`** non-empty in `MyApp.xml` when using `{DynamicResource}`.
+
+### Verification
+
+- [ ] Phase0 **31/31** (validate in IDE)
+- [ ] DeNovo POS smoke §3 on pinned build
+
+---
+
 ## [2.0.0] — 2026-06-20 — Phase 0 (foundation)
 
 ### Breaking

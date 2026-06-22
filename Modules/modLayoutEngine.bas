@@ -88,6 +88,43 @@ Public Function MapDesignPropertyAlias(ByVal Dep As IDependencyObject, ByVal Nam
     End Select
 End Function
 
+' POS XAML migration maps DesignLeft/Top to Margin; legacy IUIElement types
+' (TextBlock, etc.) still arrange via Design* until they register layout DPs.
+Public Function ApplyLegacyLayoutProperty( _
+    ByVal UI As IUIElement, _
+    ByVal Name As String, _
+    ByVal PropertyValue As Variant) As Boolean
+
+    On Error Resume Next
+    ApplyLegacyLayoutProperty = False
+
+    Select Case LCase$(Name)
+        Case "margin"
+            Dim Thk As Thickness
+            If IsObject(PropertyValue) Then
+                Set Thk = PropertyValue
+            Else
+                With New XAMLThicknessConstructor
+                    Set Thk = .NewThickness(CStr(PropertyValue))
+                End With
+            End If
+            If Thk Is Nothing Then Exit Function
+            ' VB6: Thk.Left resolves to Form.Left — use CallByName on Thickness fields.
+            UI.DesignLeft = CallByName(Thk, "Left", VbGet)
+            UI.DesignTop = CallByName(Thk, "Top", VbGet)
+            ApplyLegacyLayoutProperty = (Err.Number = 0)
+            Err.Clear
+        Case "width"
+            UI.DesignWidth = CDbl(PropertyValue)
+            ApplyLegacyLayoutProperty = (Err.Number = 0)
+            Err.Clear
+        Case "height"
+            UI.DesignHeight = CDbl(PropertyValue)
+            ApplyLegacyLayoutProperty = (Err.Number = 0)
+            Err.Clear
+    End Select
+End Function
+
 Public Function ParseGridLength(ByVal Spec As String) As GridLength
     Dim Text As String
     Dim StarPos As Long

@@ -40,8 +40,9 @@ Public Sub RunAll()
     If Not Phase6cBench_ControlTemplate() Then Failed = Failed + 1
     If Not Phase6dBench_RenderCoalesce() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
+    If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (30 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (31 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1128,6 +1129,37 @@ Fail:
     LogResult "P7a-SMOKE", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P7a-SMOKE — " & Err.Description
     Phase7aBench_PosSalesOrderShell = False
+End Function
+
+Public Function Phase7cBench_LegacyLayoutShim() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As Panel
+    Dim Tb As TextBlock
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load(LoadTextFile(App.Path & "\Resources\PosMigratedTextBlockLayout.xml"))
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "POS migrated layout returned Nothing"
+    If Root.Children.Count <> 1 Then Err.Raise vbObjectError, , "Expected 1 child, got " & Root.Children.Count
+
+    Set Tb = Root.Children(0)
+    If TypeName(Tb) <> "TextBlock" Then Err.Raise vbObjectError, , "Expected TextBlock, got " & TypeName(Tb)
+    If Tb.DesignLeft <> 10# Then Err.Raise vbObjectError, , "Expected DesignLeft=10, got " & Tb.DesignLeft
+    If Tb.DesignTop <> 20# Then Err.Raise vbObjectError, , "Expected DesignTop=20, got " & Tb.DesignTop
+    If Tb.DesignWidth <> 200# Then Err.Raise vbObjectError, , "Expected DesignWidth=200, got " & Tb.DesignWidth
+    If Tb.DesignHeight <> 30# Then Err.Raise vbObjectError, , "Expected DesignHeight=30, got " & Tb.DesignHeight
+
+    LogResult "P7c-LAY", 0, "OK Margin/Width/Height on TextBlock -> Design*"
+    Debug.Print "PASS  P7c-LAY legacy layout shim (migrated TextBlock)"
+    Phase7cBench_LegacyLayoutShim = True
+    Exit Function
+
+Fail:
+    LogResult "P7c-LAY", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P7c-LAY — " & Err.Description
+    Phase7cBench_LegacyLayoutShim = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String
