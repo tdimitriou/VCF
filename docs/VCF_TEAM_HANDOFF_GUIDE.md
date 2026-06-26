@@ -26,7 +26,10 @@ This is the **single entry point** for the VCF rewrite program. Read in order fo
 | 11 | [MIGRATION.md](./MIGRATION.md) | Living migration guide (Phases 0–7) | DeNovo pin |
 | 12 | [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) | DeNovo manual smoke checklist | Phase 7 |
 | 13 | [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md) | Cursor prompts + script companion | Phase 7b |
-| 14 | [VCF_KICKOFF_AGENDA.md](./VCF_KICKOFF_AGENDA.md) | Kickoff meeting — open items, decisions, Phase 1 | VCF lead |
+| 14 | [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md) | VCF response — harness-first Phase 1 validation | Phase 7d |
+| 15 | [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) | Legacy vs WPF resize; nested Border gap (Login finding) | Phase 7d |
+| 16 | [`.Tests/DeNovoSmoke/README.md`](../.Tests/DeNovoSmoke/README.md) | DeNovo UI harness (VCF runner + DeNovo fixtures) | Phase 7d |
+| 17 | [VCF_KICKOFF_AGENDA.md](./VCF_KICKOFF_AGENDA.md) | Kickoff meeting — open items, decisions, Phase 1 | VCF lead |
 
 **Denovo context:** [UI_AND_PARTITIONING_BASELINE.md](./UI_AND_PARTITIONING_BASELINE.md) · [pos-v1/docs/DOCUMENTATION_INDEX.md](../../pos-v1/docs/DOCUMENTATION_INDEX.md)
 

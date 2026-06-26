@@ -1,0 +1,8 @@
+<Border Style="{StaticResource ListWrapper}" CornerRadius="0" BorderColor="&H666666">
+	<TextBlock HorizontalAlignment="1" Text="POS-" ForeColor="&H000000" FontName="Segoe UI" FontSize="9" FontBold="1" ScaleFont="0" Width="100" Height="25" Margin="0,0,0,0"/>
+	<TextBlock HorizontalAlignment="0" Text="{Binding TerminalID, Source={StaticResource ResourceKey=AppProperties}, StringFormat=00}" ForeColor="&H000000" FontName="Segoe UI" FontSize="9" FontBold="1" ScaleFont="0" Width="50" Height="25" Margin="100,0,0,0"/>
+	<TextBlock HorizontalAlignment="2" Text="|" ForeColor="&H808080" FontName="Segoe UI" FontSize="9" FontBold="1" ScaleFont="0" Width="30" Height="25" Margin="150,0,0,0"/>
+	<TextBlock HorizontalAlignment="2" Text="{Binding CurrentUser, Source={StaticResource ResourceKey=AppProperties}}" ForeColor="&H000000" FontName="Segoe UI" FontSize="9" FontBold="1" ScaleFont="0" Width="470" Height="25" Margin="180,0,0,0"/>
+	<TextBlock HorizontalAlignment="2" Text="|" ForeColor="&H808080" FontName="Segoe UI" FontSize="9" FontBold="1" ScaleFont="0" Width="30" Height="25" Margin="650,0,0,0"/>
+	<TextBlock HorizontalAlignment="2" Width="344" Height="25" Margin="680,0,0,0" Text="{Binding CurrentTime, Source={StaticResource ResourceKey=AppProperties}, StringFormat=dd/MM/yyyy HH:mm:ss}" ForeColor="&H000000" FontName="Segoe UI" FontSize="9" FontBold="1" ScaleFont="0"/>
+</Border>

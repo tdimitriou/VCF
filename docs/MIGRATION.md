@@ -20,7 +20,9 @@ See [VCF_TEAM_HANDOFF_GUIDE.md §8.1](./VCF_TEAM_HANDOFF_GUIDE.md) for No / Proj
 **POS smoke checklist:** [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md)  
 **Bulk XAML:** [tools/xaml-migrate/README.md](../tools/xaml-migrate/README.md) · [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md)  
 **DeNovo consumer policy:** denovo monorepo → `docs/migration/DENOVO_VCF_MIGRATION_POLICY.md`  
-**POS runtime feedback (2026-06-19):** [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md) — layout shim **`v2.18.0-wpf-alignment-p7c-layout-shim`**
+**POS runtime feedback (2026-06-19):** [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md) — layout shim **`v2.18.0-wpf-alignment-p7c-layout-shim`**  
+**Harness (Phase 1 validation):** [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md) · [`.Tests/DeNovoSmoke/README.md`](../.Tests/DeNovoSmoke/README.md)  
+**Layout resize (nested Border):** [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md)
 
 ---
 
@@ -205,6 +207,7 @@ Registered names are resolved in `CreateInstance` before `CreateObject` and befo
 | **7a** | `v2.16.0-wpf-alignment-p7a` | [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md), 2.15 pin guide above, **P7a-SMOKE** |
 | **7b** | `v2.17.0-wpf-alignment-p7b` | [Invoke-VcfXamlMigration.ps1](../tools/xaml-migrate/Invoke-VcfXamlMigration.ps1), [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md) |
 | **7c-layout** | `v2.18.0-wpf-alignment-p7c-layout-shim` | POS layout shim + **P7c-LAY** + script legacy-type skip ([POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md)) |
+| **7d-harness** | `v2.19.0-wpf-alignment-p7d-denovo-smoke` | DeNovo UI harness — [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md), [`.Tests/DeNovoSmoke/`](../.Tests/DeNovoSmoke/README.md); DeNovo fixtures: `denovo/docs/migration/DENOVO_HARNESS_MILESTONE1.md` |
 | 7c-dialog | TBD | DeNovo `@` template → DataTemplate migration |
 
 ---

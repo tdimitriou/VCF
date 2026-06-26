@@ -149,19 +149,19 @@ Public Name As String
     End Property
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
-        If Parent Is Nothing Then Exit Sub
-        
-        'If Parent.Widgets.Exists(Widget.Key) Then Parent.Widgets.Remove Widget.Key
-        'Parent.Widgets.Add Me, "_" & ObjPtr(Me), Left, Top, Width, Height
-        
         W.Move Left, Top, Width, Height
-        
+        m_Layout.OnHostResize m_Children, W
         ApplyVisibility W, Visibility
     End Sub
 
     Public Property Set Parent(ByVal Value As IControl)
-        m_ParentPtr = ObjPtr(Value)
+        If Value Is Nothing Then
+            m_ParentPtr = 0
+        Else
+            m_ParentPtr = ObjPtr(Value)
+        End If
         DependencyPropertiesStatic.InheritPropertyValues Me
+        If Not Value Is Nothing And Not IsRootLayoutLocked() Then m_Layout.OnHostResize m_Children, W
     End Property
     
     Public Property Get Parent() As IControl
@@ -377,6 +377,25 @@ Catch:
         m_Layout.OnHostResize m_Children, W
     End Sub
 '#End Region
+
+Friend Sub ApplyDeferredHostLayout()
+    If Not m_Children Is Nothing Then m_Layout.OnHostResize m_Children, W
+End Sub
+
+Private Function IsRootLayoutLocked() As Boolean
+    On Error Resume Next
+    Dim P As IUIElement
+    Dim Win As Window
+    Set P = Me
+    Do While Not P Is Nothing
+        If TypeOf P Is Window Then
+            Set Win = P
+            IsRootLayoutLocked = Win.Form.WidgetRoot.LockRefresh
+            Exit Function
+        End If
+        Set P = P.Parent
+    Loop
+End Function
 
 Friend Sub Initialize(Superclass As IUserControl)
     Superclass.InitializeComponent

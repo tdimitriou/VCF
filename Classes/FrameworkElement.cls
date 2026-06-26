@@ -171,9 +171,34 @@ Public Sub ArrangeChildren( _
         End If
 
         If m_LegacyScaleLayout Then
+            Dim HostDesignW As Double
+            Dim HostDesignH As Double
+            Dim DesignLeft As Double
+            Dim DesignTop As Double
+            Dim DesignWidth As Double
+            Dim DesignHeight As Double
+            Dim Marg As Thickness
+            HostDesignW = Width
+            HostDesignH = Height
+            If HostDesignW <= 0 Then HostDesignW = UIHost.DesignWidth
+            If HostDesignH <= 0 Then HostDesignH = UIHost.DesignHeight
+            DesignLeft = ChildUI.DesignLeft
+            DesignTop = ChildUI.DesignTop
+            DesignWidth = ReadChildWidth(Child)
+            DesignHeight = ReadChildHeight(Child)
+            If DesignWidth <= 0 Then DesignWidth = ChildUI.DesignWidth
+            If DesignHeight <= 0 Then DesignHeight = ChildUI.DesignHeight
+            ' Migrated POS XAML uses Margin instead of DesignLeft/DesignTop while LegacyScaleLayout is on.
+            If DesignLeft = 0 And DesignTop = 0 Then
+                Set Marg = ReadChildMargin(Child)
+                If Not Marg Is Nothing Then
+                    DesignLeft = Marg.Left
+                    DesignTop = Marg.Top
+                End If
+            End If
             R = LayoutRectFromDesign( _
-                ChildUI.DesignLeft, ChildUI.DesignTop, ChildUI.DesignWidth, ChildUI.DesignHeight, _
-                HostWidth, HostHeight, Width, Height)
+                DesignLeft, DesignTop, DesignWidth, DesignHeight, _
+                HostWidth, HostHeight, HostDesignW, HostDesignH)
         Else
             R = LayoutRectFromMargin(ReadChildMargin(Child), ReadChildWidth(Child), ReadChildHeight(Child))
         End If
@@ -273,11 +298,21 @@ Private Function ReadChildVisibility(ByVal Child As Object) As Visibility
 End Function
 
 Private Function ReadChildMargin(ByVal Child As Object) As Thickness
-    Dim DefaultMargin As Thickness
-    Set ReadChildMargin = DefaultMargin
     On Error Resume Next
     If Child.DependencyProperties.Exists("Margin") Then
         Set ReadChildMargin = Child.DependencyProperties.GetValue("Margin")
+    End If
+    ' Migrated POS XAML: Margin maps to DesignLeft/Top on types without a Margin DP (TextBlock, Image, …).
+    If ReadChildMargin Is Nothing Then
+        If TypeOf Child Is IUIElement Then
+            Dim UI As IUIElement
+            Set UI = Child
+            Set ReadChildMargin = modConstructors.NewThickness(UI.DesignLeft, UI.DesignTop, 0, 0)
+        Else
+            Set ReadChildMargin = modConstructors.NewThickness(0, 0, 0, 0)
+        End If
+    Else
+        Set ReadChildMargin = modLayoutEngine.MarginFromDesignWhenUnset(Child, ReadChildMargin)
     End If
 End Function
 

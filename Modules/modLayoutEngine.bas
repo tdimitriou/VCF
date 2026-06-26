@@ -193,8 +193,34 @@ Public Function ReadElementMargin(ByVal Child As Object) As Thickness
         Set ReadElementMargin = Child.DependencyProperties.GetValue("Margin")
     End If
     If ReadElementMargin Is Nothing Then
-        Set ReadElementMargin = modConstructors.NewThickness(0, 0, 0, 0)
+        If TypeOf Child Is IUIElement Then
+            Set ReadElementMargin = modConstructors.NewThickness(Child.DesignLeft, Child.DesignTop, 0, 0)
+        Else
+            Set ReadElementMargin = modConstructors.NewThickness(0, 0, 0, 0)
+        End If
+    Else
+        Set ReadElementMargin = MarginFromDesignWhenUnset(Child, ReadElementMargin)
     End If
+End Function
+
+' Border/Panel types register a Margin DP defaulting to 0; migrated XAML still sets DesignLeft/Top.
+Public Function MarginFromDesignWhenUnset(ByVal Child As Object, ByVal Margin As Thickness) As Thickness
+    On Error Resume Next
+    If Not TypeOf Child Is IUIElement Then
+        Set MarginFromDesignWhenUnset = Margin
+        Exit Function
+    End If
+    Dim UI As IUIElement
+    Set UI = Child
+    If UI.DesignLeft = 0 And UI.DesignTop = 0 Then
+        Set MarginFromDesignWhenUnset = Margin
+        Exit Function
+    End If
+    If Margin.Left <> 0 Or Margin.Top <> 0 Then
+        Set MarginFromDesignWhenUnset = Margin
+        Exit Function
+    End If
+    Set MarginFromDesignWhenUnset = modConstructors.NewThickness(UI.DesignLeft, UI.DesignTop, 0, 0)
 End Function
 
 Public Function ReadElementWidth(ByVal Child As Object) As Double

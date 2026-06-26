@@ -1,0 +1,38 @@
+<UniformGrid Rows="4" Columns="3" Padding="4" ShowGridLines="0">
+	<Button Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="7">
+		<TextBlock Style="{StaticResource ButtonText16}" Text="7"/>
+	</Button>
+	<Button Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="8">
+		<TextBlock Style="{StaticResource ButtonText16}" Text="8"/>
+	</Button>
+	<Button Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="9">
+		<TextBlock Style="{StaticResource ButtonText16}" Text="9"/>
+	</Button>
+	<Button Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="4">
+		<TextBlock Style="{StaticResource ButtonText16}" Text="4"/>
+	</Button>
+	<Button Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="5">
+		<TextBlock Style="{StaticResource ButtonText16}" Text="5"/>
+	</Button>
+	<Button Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="6">
+		<TextBlock Style="{StaticResource ButtonText16}" Text="6"/>
+	</Button>
+	<Button Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="1">
+		<TextBlock Style="{StaticResource ButtonText16}" Text="1"/>
+	</Button>
+	<Button Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="2">
+		<TextBlock Style="{StaticResource ButtonText16}" Text="2"/>
+	</Button>
+	<Button Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="3">
+		<TextBlock Style="{StaticResource ButtonText16}" Text="3"/>
+	</Button>
+	<Button Style="{StaticResource ButtonCancel}" Command="{Binding ClearInput}">
+		<TextBlock Style="{StaticResource ButtonText12B}" Text="{Binding Text[Clear], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}"/>
+	</Button>
+	<Button Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="0">
+		<TextBlock Style="{StaticResource ButtonText16}" Text="0"/>
+	</Button>
+	<Button Style="{StaticResource ButtonSubmit}" Command="{Binding LoginCommand}">
+		<TextBlock Style="{StaticResource ButtonText12B}" Text="{Binding Text[Login], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}"/>
+	</Button>
+</UniformGrid>

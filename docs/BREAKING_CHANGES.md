@@ -5,6 +5,30 @@
 
 ---
 
+## [2.19.0] — 2026-06-27 — Phase 7d (DeNovoSmoke harness + host navigation)
+
+Tag: **`v2.19.0-wpf-alignment-p7d-denovo-smoke`**
+
+### Added
+
+- **`.Tests/DeNovoSmoke/`** — minimal POS UI harness (VCF + vbRichClient5): Splash → Login, stub VMs, fixture sync from denovo.
+- **`Window.RelayoutChildren`**, **`Window.RebuildNamedItemsList`**, **`Window.ApplyDeferredChildLayout`** — documented host-app APIs for visibility-based view navigation.
+- **`UserControl.ApplyDeferredHostLayout`** (Friend) — invoked from `Window.RelayoutChildren`.
+- **Docs:** [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md), [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md).
+
+### Changed
+
+- **`FrameworkElement` / `modLayoutEngine`** — legacy arrange reads `Margin`/`Design*` consistently when `LegacyScaleLayout` is on (migrated POS XAML).
+- **`UserControl.Move`** — propagates `OnHostResize` to children after parent arrange.
+- **`Border.Move`** — propagates `OnHostResize` after widget resize (WPF child reflow when parent scales).
+
+### Verification
+
+- [ ] Phase0 **31/31**
+- [ ] DeNovoSmoke milestone 1 (Splash → Login, pinned **2.18.0+** DLL)
+
+---
+
 ## [2.18.0] — 2026-06-19 — POS layout shim (DeNovo integration — validate in IDE)
 
 Tag: **`v2.18.0-wpf-alignment-p7c-layout-shim`** · Phase0 **31/31** (includes **P7c-LAY**).

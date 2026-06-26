@@ -1,0 +1,117 @@
+<UserControl x:Class="LoginView" DataContext="LoginViewModel" DesignLeft="0" DesignTop="0" DesignWidth="1024" DesignHeight="768" Width="1024" Height="768" Alpha="1">
+
+	<Border DesignLeft="38" DesignTop="29" DesignWidth="283" DesignHeight="56" CornerRadius="0" BorderColor="-1" BackColor="&HB1A200" Alpha="0">
+
+
+
+		<TextBlock HorizontalAlignment="0" VerticalAlignment="0" DesignLeft="5" DesignTop="0" DesignWidth="273" DesignHeight="34" Padding="0" Text="D e N o v o" ForeColor="&HB1A200" FontSize="20" FontBold="1" ScaleFont="0"/>
+
+
+
+		<TextBlock HorizontalAlignment="0" VerticalAlignment="2" DesignLeft="5" DesignTop="28" DesignWidth="273" DesignHeight="34" Padding="0" Text="Retail Point Of Sales" ForeColor="&HFFFFFF" FontSize="16" FontBold="0" ScaleFont="0"/>
+
+
+
+	</Border>
+
+
+
+	<Border Style="{StaticResource InnerBorder}" DesignLeft="225" DesignTop="200" DesignWidth="574" DesignHeight="358">
+
+
+
+		<Border Style="{StaticResource ListWrapper}" DesignLeft="16" DesignTop="16" DesignWidth="204" DesignHeight="326">
+
+
+
+			<ListView Name="MyList" RowHeight="50" FontSize="14" FontBold="1" BorderColor="-1" DesignLeft="4" DesignTop="4" DesignWidth="196" DesignHeight="318">
+
+
+
+
+
+
+
+			</ListView>
+
+
+
+		</Border>
+
+
+
+		<TextBox Style="{StaticResource PasswordBox}" Name="Pwd" CueBanner="PASSWORD / PIN / SWIPE CARD" Text="{Binding PasswordText}" DesignLeft="234" DesignTop="16" DesignWidth="320" DesignHeight="40"/>
+
+
+
+		<UniformGrid Columns="1" Rows="1" DesignLeft="230" DesignTop="64" DesignWidth="328" DesignHeight="282" Padding="0" ShowGridLines="0">
+
+
+
+			<res:Screens\Login\LoginPad/>
+
+
+
+		</UniformGrid>
+
+
+
+	</Border>
+
+
+
+	<Button Command="{Binding ClockInOutCommand, Source={StaticResource ResourceKey=AppCommands}}" Enabled="False" DesignLeft="816" DesignTop="8" DesignWidth="200" DesignHeight="72">
+
+
+
+		<Image DesignLeft="4" DesignTop="4" DesignWidth="64" DesignHeight="64" ImageKey="Resources\ClockIn.png"/>
+
+
+
+		<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="68" DesignTop="4" DesignWidth="132" DesignHeight="64" Text="Clock In/Out"/>		
+
+
+
+	</Button>
+
+
+
+	<Button Style="{StaticResource ButtonSubmit}" Command="{Binding RestartCommand, Source={StaticResource ResourceKey=AppCommands}}" DesignLeft="816" DesignTop="566" DesignWidth="200" DesignHeight="72">
+
+
+
+		<Image DesignLeft="4" DesignTop="4" DesignWidth="64" DesignHeight="64" ImageKey="Resources\Reboot.png"/>
+
+
+
+		<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="68" DesignTop="4" DesignWidth="132" DesignHeight="64" Text="{Binding Text[Restart], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}"/>		
+
+
+
+	</Button>	
+
+
+
+	<Button Style="{StaticResource ButtonCancel}" Command="{Binding ShutdownCommand, Source={StaticResource ResourceKey=AppCommands}}" DesignLeft="816" DesignTop="654" DesignWidth="200" DesignHeight="72">
+
+
+
+		<Image DesignLeft="4" DesignTop="4" DesignWidth="64" DesignHeight="64" ImageKey="Resources\Close.png"/>
+
+
+
+		<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="68" DesignTop="4" DesignWidth="132" DesignHeight="64" Text="{Binding Text[Exit], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}"/>		
+
+
+
+	</Button>	
+
+
+
+	<res:Widgets\StatusBar DesignLeft="0" DesignTop="743" DesignWidth="1024" DesignHeight="25"/>
+
+
+
+</UserControl>
+
+

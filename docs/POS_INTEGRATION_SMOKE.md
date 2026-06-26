@@ -25,12 +25,30 @@
 
 | Check | Command / location | Pass |
 |-------|-------------------|------|
-| Phase0 suite | `.Tests/Phase0` → `RunAll` | 29/29 (30/30 after Phase 7a) |
+| Phase0 suite | `.Tests/Phase0` → `RunAll` | **31/31** (includes **P7c-LAY**) |
 | Strict XAML | `VCF.StrictXamlLoad = True` in test bootstrap | B-STRICT-* pass |
+| DeNovoSmoke harness | `.Tests/DeNovoSmoke` (when scaffold lands) | Milestone screens per [README](../.Tests/DeNovoSmoke/README.md) |
+
+**Phase 1 sign-off (UI/XAML):** Phase0 + DeNovoSmoke harness with stub VMs — **not** full `DeNovo.exe`. See [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md).
 
 ---
 
-## 3. POS manual smoke (required)
+## 2b. DeNovoSmoke harness — milestone 1 (Phase 1)
+
+Minimal exe: **VCF + vbRichClient5 only** (no KernelLib / Data / DB). DeNovo contributes XAML + stub VMs; VCF owns the runner.
+
+| # | Screen | Pass criteria |
+|---|--------|---------------|
+| 1 | **SplashView.xml** | Loads; layout OK; theme resolves; no XAML error |
+| 2 | **LoginView.xml** | Loads; stub `DataContext`; bindings OK; focus OK |
+
+Run F5 in &lt; 30 s. Pin **`v2.18.0-wpf-alignment-p7c-layout-shim`** until harness tag ships.
+
+**Phase 2** (full POS): §3 below after harness green + documented breaking changes.
+
+---
+
+## 3. POS manual smoke (Phase 2 — full DeNovo.exe)
 
 Run on a **dev DB** with typical configuration. Record build tag and date.
 
@@ -63,8 +81,8 @@ Run on a **dev DB** with typical configuration. Record build tag and date.
 
 | Role | Name | Date | Tag | Result |
 |------|------|------|-----|--------|
-| VCF | | | | Phase0 green |
-| DeNovo | | | | POS smoke §3 pass |
+| VCF | | | | Phase0 + DeNovoSmoke milestone green |
+| DeNovo | | | | Harness §2b pass; then POS smoke §3 (Phase 2) |
 
 ---
 

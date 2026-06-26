@@ -127,6 +127,8 @@ These remain in `denovo` repo — listed for context only:
 | Tag + `BREAKING_CHANGES.md` entry | VCF |
 | Pin tag, recompile, `regsvr32`, smoke §3 | DeNovo |
 | Update `DENOVO_VCF_MIGRATION_POLICY.md` pin row | DeNovo |
+| Phase 1 harness | DeNovo + VCF — see [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md) |
+| Layout resize (nested Border / multi-resolution) | [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) |
 
 ---
 

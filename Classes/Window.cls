@@ -37,6 +37,7 @@ Private m_BaseUIElement As UIElementBase
 Private m_Layout As FrameworkElement
 
 Private m_W As Long, m_H As Long
+Private m_DeferredLayout As Boolean
 
 Private WithEvents m_DependencyProperties As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
@@ -319,12 +320,16 @@ Try:
         End If
                 
         If Not e.NewItems Is Nothing Then
-            For Each Child In e.NewItems
-                MoveChild Child
-            Next
+            If WRoot.LockRefresh Then
+                m_DeferredLayout = True
+            Else
+                For Each Child In e.NewItems
+                    MoveChild Child
+                Next
+            End If
         End If
         
-        WRoot.Refresh
+        If Not WRoot.LockRefresh Then WRoot.Refresh
         
         Exit Sub
         
@@ -432,8 +437,43 @@ Catch:
     End Function
     
     Friend Sub OnChildElementsChanged(ByVal Sender As Object, e As CollectionChangedEventArgs)
+        If WRoot.LockRefresh Then Exit Sub
         BuildNamedItemsList
-        SetFocus
+    End Sub
+    
+    Public Sub ApplyDeferredChildLayout()
+        If Not m_DeferredLayout Then Exit Sub
+        m_DeferredLayout = False
+        RelayoutChildren
+    End Sub
+    
+    Public Sub RelayoutChildren()
+        On Error Resume Next
+        m_DeferredLayout = False
+        If m_Children Is Nothing Then Exit Sub
+        If Form Is Nothing Then Exit Sub
+        
+        m_Layout.OnHostResize m_Children, WRoot, Form.ScaleWidth, Form.ScaleHeight
+        
+        Dim Child As Object
+        For Each Child In m_Children
+            ApplyChildHostLayout Child
+        Next
+    End Sub
+    
+    Private Sub ApplyChildHostLayout(ByVal Child As Object)
+        On Error Resume Next
+        If TypeOf Child Is IUserControl Then
+            Dim IU As IUserControl
+            Set IU = Child
+            IU.Base.ApplyDeferredHostLayout
+        ElseIf TypeOf Child Is UserControl Then
+            Child.ApplyDeferredHostLayout
+        End If
+    End Sub
+    
+    Public Sub RebuildNamedItemsList()
+        BuildNamedItemsList
     End Sub
     
     Private Sub BuildNamedItemsList()
@@ -442,7 +482,12 @@ Catch:
         m_NamedChildren.Clear
                         
         For Each Obj In m_Children
+            On Error Resume Next
+            If TypeOf Obj Is IUserControl Then
+                If Obj.Visibility = VisibilityCollapsed Then GoTo NextChild
+            End If
             AddNamedItem Obj
+NextChild:
         Next
     End Sub
     

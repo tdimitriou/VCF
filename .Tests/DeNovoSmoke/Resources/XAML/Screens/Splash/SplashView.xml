@@ -1,0 +1,5 @@
+<UserControl x:Class="SplashView" DataContext="SplashViewModel" DesignLeft="0" DesignTop="0" DesignWidth="1024" DesignHeight="768" Width="1024" Height="768" Alpha="1">
+	<TextBlock DesignLeft="400" DesignTop="359" DesignWidth="224" DesignHeight="50" HorizontalAlignment="2" VerticalAlignment="1" ForeColor="&HFFFFFF" Text="{Binding Text[Loading], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}" FontName="Segoe UI" FontSize="30" FontBold="1" ScaleFont="0" Alpha="1"/>
+	<TextBlock DesignLeft="400" DesignTop="400" DesignWidth="224" DesignHeight="50" HorizontalAlignment="2" VerticalAlignment="1" ForeColor="&H00FF00" Text="{Binding Progress}" FontName="Segoe UI" FontSize="30" FontBold="1" ScaleFont="0" Alpha="1"/>
+	<TextBlock DesignLeft="8" DesignTop="710" DesignWidth="324" DesignHeight="50" HorizontalAlignment="0" VerticalAlignment="1" ForeColor="&HFFFFFF" Text="{Binding InfoMessage}" FontName="Segoe UI" FontSize="12" FontBold="0" ScaleFont="0" Alpha="1"/>
+</UserControl>
