@@ -70,6 +70,7 @@ DeNovoSmoke.vbp              StdExe, Startup = Sub Main
 |--------|--------|
 | **SplashView.xml** | Parses; layout; theme; no XAML load error |
 | **LoginView.xml** | Parses; stub `DataContext`; bindings resolve; focus OK |
+| **LoginViewWpf.xml** (7e) | WPF **Grid** layout — inner panel scales on resize; toggle via `modHarnessConfig.USE_WPF_LOGIN_LAYOUT` |
 
 **Run:** F5 in VB6 IDE, &lt; 30 s, no database.
 
@@ -83,6 +84,7 @@ Copy into `Resources/XAML/` (preserve `res:` paths):
 |------|-----------------|
 | `SplashView.xml` | `UI/Resources/XAML/Screens/Splash/SplashView.xml` |
 | `LoginView.xml` | `UI/Resources/XAML/Screens/Login/LoginView.xml` |
+| `LoginViewWpf.xml` | VCF harness only — WPF Grid reference (not synced from denovo) |
 | `LoginPad.xml` | `UI/Resources/XAML/Screens/Login/LoginPad.xml` |
 | `StatusBar.xml` | `UI/Resources/XAML/Widgets/StatusBar.xml` |
 | `MyApp.xml` | `UI/Resources/XAML/MyApp.xml` (styles / theme slice) |
@@ -163,4 +165,14 @@ Both must pass before Phase 7 UI tags that affect DeNovo integration.
 
 **Pass (milestone 1):** no XAML load error; Splash layout + bindings; Login list + password pad + focus.
 
-**Out of scope (milestone 1):** multi-resolution / nested Border resize — see [docs/POS_LAYOUT_RESIZE.md](../../docs/POS_LAYOUT_RESIZE.md). Production POS is borderless; XAML design canvas is 1024×768 but runtime supports 800×600, widescreen, etc.
+### Resize validation (7e — `LoginViewWpf.xml`)
+
+With `USE_WPF_LOGIN_LAYOUT = True`, resize the harness window and confirm the **inner login panel** (user list + numpad) grows/shrinks with the window. Side action buttons stay in the right column. Legacy `LoginView.xml` (`USE_WPF_LOGIN_LAYOUT = False`) reproduces the known nested-`Design*` issue — see [docs/POS_LAYOUT_RESIZE.md](../../docs/POS_LAYOUT_RESIZE.md).
+
+| Size | Check |
+|------|--------|
+| 1024×768 | Design baseline |
+| 800×600 | Inner panel scales; no clipped numpad |
+| Widescreen | List + pad share horizontal space |
+
+**Out of scope (legacy LoginView):** nested Border + `Design*` does not scale — use WPF layout for production migration.

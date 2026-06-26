@@ -40,7 +40,7 @@ Public Sub InitializeViews()
     m_Splash.LoadView
     
     Set m_Login = New HarnessScreen
-    m_Login.Configure "Screens\Login\LoginView", True
+    m_Login.Configure LoginViewResourceKey(), True
     m_Login.LoadView
 End Sub
 

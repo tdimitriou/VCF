@@ -120,9 +120,10 @@ LoginView (UserControl, legacy scale)
 | Item | Action |
 |------|--------|
 | Milestone 1 scope | XAML load, bind, theme, navigation — **fixed 1024×768 client** acceptable |
-| Resize parity | **Out of milestone 1** until §6 resolved |
-| Optional harness | Borderless window; client area exactly 1024×768 (match production) |
-| Re-sync XAML | `pos-v1/tools/Sync-DeNovoSmokeFixtures.ps1` |
+| **7e reference layout** | `.Tests/DeNovoSmoke/Resources/XAML/Screens/Login/LoginViewWpf.xml` — root **Grid**, inner panel **Grid** (list \| password+pad); toggle `modHarnessConfig.USE_WPF_LOGIN_LAYOUT` |
+| Resize parity | Manual checklist in [`.Tests/DeNovoSmoke/README.md`](../.Tests/DeNovoSmoke/README.md) § resize validation |
+| Harness shell | Borderless **1024×768** client (`ShellWindow`, `BorderStyle=0`) |
+| Re-sync XAML | `pos-v1/tools/Sync-DeNovoSmokeFixtures.ps1` (legacy `LoginView.xml` only) |
 
 ---
 
@@ -133,7 +134,7 @@ LoginView (UserControl, legacy scale)
 | Document finding | VCF | **Done** (this file) |
 | DeNovo confirms on production borderless | DeNovo | Pending |
 | VCF implements B/C + P7d-LAY-RESIZE | VCF | Pending |
-| Login inner panel Grid migration | DeNovo | Backlog |
+| Login inner panel Grid migration | VCF harness **7e** (`LoginViewWpf.xml`) · DeNovo production XAML | **In progress** (harness reference) |
 
 ---
 

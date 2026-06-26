@@ -208,6 +208,7 @@ Registered names are resolved in `CreateInstance` before `CreateObject` and befo
 | **7b** | `v2.17.0-wpf-alignment-p7b` | [Invoke-VcfXamlMigration.ps1](../tools/xaml-migrate/Invoke-VcfXamlMigration.ps1), [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md) |
 | **7c-layout** | `v2.18.0-wpf-alignment-p7c-layout-shim` | POS layout shim + **P7c-LAY** + script legacy-type skip ([POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md)) |
 | **7d-harness** | `v2.19.0-wpf-alignment-p7d-denovo-smoke` | DeNovo UI harness — [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md), [`.Tests/DeNovoSmoke/`](../.Tests/DeNovoSmoke/README.md); DeNovo fixtures: `denovo/docs/migration/DENOVO_HARNESS_MILESTONE1.md` |
+| **7e-login-wpf** | (in progress) | Login **Grid** reference layout (`LoginViewWpf.xml`), harness resize validation — [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) |
 | 7c-dialog | TBD | DeNovo `@` template → DataTemplate migration |
 
 ---
