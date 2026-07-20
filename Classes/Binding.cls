@@ -97,9 +97,12 @@ Friend Property Set SrcDepObj(ByVal Value As DependencyProperty)
     ' Remove the Callback of the previous Source DependencyProperty if it has been set before
     If Not SrcDepObj Is Nothing Then SrcDepObj.RemoveCallback Me
     
-    m_SrcDepObjPtr = ObjPtr(Value)
+    If Value Is Nothing Then
+        m_SrcDepObjPtr = 0
+        Exit Property
+    End If
     
-    If Value Is Nothing Then Exit Property
+    m_SrcDepObjPtr = ObjPtr(Value)
     
     Value.AddCallback Me
     
@@ -127,21 +130,19 @@ Public Property Set Source(ByVal Value As Object)
     Set SourcePropertyChangedEvent = Nothing
     m_SourceInpcConnected = False
     
-    If Not Value Is Nothing Then
-        If TypeOf Value Is DependencyProperty Then
-            Set SrcDepObj = Value
-            Exit Property
-        End If
-    Else
-        Set SrcDepObj = Value
-    End If
-    
-    m_SourcePtr = ObjPtr(Value)
-    
     If Value Is Nothing Then
+        Set SrcDepObj = Nothing
+        m_SourcePtr = 0
         Set m_SourceProperty = Nothing
         Exit Property
     End If
+    
+    If TypeOf Value Is DependencyProperty Then
+        Set SrcDepObj = Value
+        Exit Property
+    End If
+    
+    m_SourcePtr = ObjPtr(Value)
     
     SetSourceProperty
     
@@ -162,9 +163,13 @@ Public Property Get Target() As IDependencyObject
 End Property
 
 Public Property Set Target(ByVal Value As IDependencyObject)
-    m_TargetPtr = ObjPtr(Value)
+    If Value Is Nothing Then
+        m_TargetPtr = 0
+        Exit Property
+    End If
     
-    If Not Value Is Nothing Then SetTargetPropertyValue
+    m_TargetPtr = ObjPtr(Value)
+    SetTargetPropertyValue
 End Property
 
 Public Property Get TargetProperty() As DependencyProperty
@@ -179,9 +184,12 @@ Public Property Set TargetProperty(ByVal Value As DependencyProperty)
 
     Set TargetPropertyChangedEvent = Nothing
     
-    m_TargetPropertyPtr = ObjPtr(Value)
+    If Value Is Nothing Then
+        m_TargetPropertyPtr = 0
+        Exit Property
+    End If
     
-    If Value Is Nothing Then Exit Property
+    m_TargetPropertyPtr = ObjPtr(Value)
     
     Set TargetPropertyChangedEvent = Value.PropertyChangedEvent
     
@@ -361,6 +369,7 @@ Friend Sub RefreshTarget()
 End Sub
 
 Friend Sub DetachBinding()
+    On Error Resume Next
     If m_Detached Then Exit Sub
     m_Detached = True
 
@@ -382,14 +391,12 @@ Friend Sub DetachBinding()
     Set SourcePropertyChangedEvent = Nothing
     Set TargetPropertyChangedEvent = Nothing
 
-    Set Me.TargetProperty = Nothing
     If Not m_SourceProperty Is Nothing Then m_SourceProperty.Detach
-    Set Me.Source = Nothing
-    Set Me.Target = Nothing
+    Set m_SourceProperty = Nothing
 
+    m_TargetPropertyPtr = 0
     m_TargetPtr = 0
     m_SourcePtr = 0
-    m_TargetPropertyPtr = 0
     m_SrcDepObjPtr = 0
     m_Path = vbNullString
     IsTargetValueSet = False

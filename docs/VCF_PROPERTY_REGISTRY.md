@@ -22,7 +22,7 @@ End With
 
 | Flag | Meaning |
 |------|---------|
-| `IsInheritable` | Parent pushes to children via `DependencyPropertiesStatic.PassPropertyValue` |
+| `IsInheritable` | Effective value may pull from parent via `DependencyProperty.GetValue` (Phase 8b); ancestor changes notify descendant bindings |
 | `AffectsRender` | Control should `W.Refresh` on change |
 | `AffectsMeasure` | **Defined but unused** — no InvalidateMeasure pipeline |
 | `BindingMode` | Default for `{Binding}` when Mode=Default |

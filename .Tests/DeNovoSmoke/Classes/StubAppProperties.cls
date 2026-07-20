@@ -36,6 +36,10 @@ Public Sub StartClock()
     Set m_Timer = New_c.Timer(1000, True)
 End Sub
 
+Public Sub StopClock()
+    Set m_Timer = Nothing
+End Sub
+
 Private Function INotifyPropertyChanged_PropertyChangedEvent() As VCF.PropertyChangedEvent
     Set INotifyPropertyChanged_PropertyChangedEvent = m_Event
 End Function
@@ -47,7 +51,7 @@ End Sub
 
 Private Sub Class_Terminate()
     On Error Resume Next
-    m_Event.Unregister
+    If Not m_Event Is Nothing Then m_Event.Unregister
 End Sub
 
 Private Sub m_Timer_Timer()

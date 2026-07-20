@@ -3,7 +3,7 @@
 **Status:** Ready for VCF team review  
 **Audience:** Demac VCF maintainers (primary) · POS / DeNovo (requirements, migration)  
 **VCF source repo:** `Projects\Demac\Framework\Demac.VCF` → ships as `Demac.VCF.dll`  
-**Last updated:** 2026-06-19  
+**Last updated:** 2026-06-20  
 
 ---
 
@@ -30,6 +30,8 @@ This is the **single entry point** for the VCF rewrite program. Read in order fo
 | 15 | [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) | Legacy vs WPF resize; nested Border gap (Login finding) | Phase 7d |
 | 16 | [`.Tests/DeNovoSmoke/README.md`](../.Tests/DeNovoSmoke/README.md) | DeNovo UI harness (VCF runner + DeNovo fixtures) | Phase 7d |
 | 17 | [VCF_KICKOFF_AGENDA.md](./VCF_KICKOFF_AGENDA.md) | Kickoff meeting — open items, decisions, Phase 1 | VCF lead |
+| 18 | [WINDOW_LIFECYCLE.md](./WINDOW_LIFECYCLE.md) | Window init, BorderStyle precedence, show, shutdown (7d validated) | Phase 7d+ |
+| 19 | [VCF_PERFORMANCE_BENCHMARKS.md](./VCF_PERFORMANCE_BENCHMARKS.md) | Baselines, deferred benches, P7f load targets | QA / perf |
 
 **Denovo context:** [UI_AND_PARTITIONING_BASELINE.md](./UI_AND_PARTITIONING_BASELINE.md) · [pos-v1/docs/DOCUMENTATION_INDEX.md](../../pos-v1/docs/DOCUMENTATION_INDEX.md)
 
@@ -143,6 +145,28 @@ Full table: [VCF_FRAMEWORK_REWRITE_SPEC.md §3 & §19](./VCF_FRAMEWORK_REWRITE_S
 | **B12** | Low | Multiple | Active `Debug.Print` on binding/DP errors | Structured logging or remove |
 | **B13** | Medium | `IUserControl.Move` vs `IUIElement.Move` | **ByRef vs by-value** signature mismatch | Unify in rewrite |
 
+### 3.1 Runtime lessons — Phase 7d (validated in DeNovoSmoke)
+
+Closed or documented during harness work; see [WINDOW_LIFECYCLE.md](./WINDOW_LIFECYCLE.md).
+
+| ID | Area | Issue | Fix / contract |
+|----|------|-------|----------------|
+| **L1** | Shutdown | Error 91 on `Set Shell = Nothing` after `RemoveAll` | `DetachBindingsTree` in `Window.Form_Unload`; shell cleared before stubs in `ResetSession` |
+| **L2** | Window chrome | Border flash (bordered → borderless) | `Create(0)`; host `SetValue` in `InitializeComponent` **before** `GetBaseStyle`; sync only at init end + `Show` |
+| **L3** | Window chrome | Click hide / IDE hang | **Never** assign `Form.BorderStyle` during `WRoot.Refresh` / `CollectionChanged` |
+| **L4** | Lifetime | Shell dies while form visible | `Application.Windows` registry via `NewWindow` — shell must implement `IWindow` |
+| **L5** | Harness | `x:Class` mismatch (SplashView vs HarnessScreen) | Adapt `x:Class` in memory before `LoadSuperclassData` |
+
+### 3.2 Anti-patterns (do not ship)
+
+| Do not | Why |
+|--------|-----|
+| Manual `DetachBindingsTree` before `RemoveAll` | `Form_Unload` auto-detaches when using current VCF |
+| `SyncFormBorderStyle` during widget refresh | Re-entrancy; form teardown (L3) |
+| `PrepareForShutdown` / clear `Form` before `RemoveAll` | IDE hang; empty window stuck (reverted in 7d) |
+| Assume **B-GOLD ~21 ms** ≈ Login load time | Golden panel is minimal; real POS screens are 10–100× larger |
+| Eager preload all views in harness when measuring startup | Misleading vs production lazy navigation — see Phase **7f** |
+
 ---
 
 ## 4. Phased program (execution order)
@@ -176,7 +200,16 @@ Phase 6 — Templates & polish
   ~~Button Content DP~~ (6a) · ~~Style.Triggers PropertyTrigger~~ (6b) · ~~ControlTemplate~~ (6c) · ~~render coalescing~~ (6d)
 
 Phase 7 — POS migration support (denovo)
-  7a pin guide + POS smoke doc + P7a-SMOKE · 7b XAML script + Cursor prompts · DeNovo integration
+  7a pin guide + POS smoke doc + P7a-SMOKE · 7b XAML script + Cursor prompts
+  7d DeNovoSmoke harness — milestone 1 (Splash/Login, shutdown, borderless shell)
+  7e Login WPF Grid reference (LoginViewWpf.xml) + resize checklist
+  7f Load performance — ~~XAML batching, P7d-LOAD benchmarks, lazy Login in harness~~
+  8a Inheritance batch + DataContext coalesce — ~~done~~
+  8b Lazy GetValue parent-walk (WPF pull model) — ~~done~~
+  m2 DeNovoSmoke MainMenu milestone — ~~done~~ (Login→MainMenu, Shift+M, lazy load + P7d-LOAD-MAINMENU)
+  m3 Sales order layout-only — pending
+     B-RESZ · B-NAV · Measure/Arrange · ListView bind hotspot
+  later  WPF Margin/Padding defaults (phased) — see POS_LAYOUT_RESIZE.md §6 deferred
 ```
 
 ### 4.1 Acceptance criteria (every phase)
@@ -217,16 +250,25 @@ Each **major** or **breaking minor** release MUST include:
 | Binding graph | Binding + NestedProperty + 3× WithEvents | BindingExpression, detach on navigate |
 | Layout resize | Design* MoveChild cascade + Widgets.RemoveAll | Measure/Arrange, stable widget tree |
 | ListView bind | Template clone + 6 bindings/cell (POS menu grid) | Framework-first; POS VM deferred |
+| **XAML tree load** | Per-node refresh; push DataContext O(n) | **7f:** `LockRefresh`/`BeginRenderUpdate` in `LoadSuperclassData`; lazy inheritance §2.8 |
+| **Real-screen load time** | B-GOLD is minimal only | **7f:** P7d-LOAD-SPLASH / LOGIN timed gates |
 
-**Phase 0 benchmarks** (add to `.Tests`):
+**Phase 0 benchmarks** (implemented — `.Tests/Phase0`):
 
-- Golden XAML load (POS Sales subset)
-- 1000× `ObservableCollection.Add`
+- Golden XAML load (minimal tree) — **B-GOLD** (~21 ms; not POS Login)
+- 1000× `ObservableCollection.Add` — **B-COLL**
 - Two simultaneous `ListCollectionView` instances (B1)
-- Window resize nested UniformGrid 50×
-- 50× view navigation binding leak test
+- POS SalesOrder shell smoke — **P7a-SMOKE** (correctness, no ms gate)
 
----
+**Deferred / Phase 8** (see [VCF_PERFORMANCE_BENCHMARKS.md](./VCF_PERFORMANCE_BENCHMARKS.md)):
+
+- ~~**P7d-LOAD-SPLASH** / **P7d-LOAD-LOGIN** / **P7d-LOAD-BORDERED**~~ — DeNovoSmoke Immediate logs (7f); baselines TBD
+- **P7d-SHUTDOWN** — `RemoveAll` after full harness session (no error 91) — validated in m1; keep as regression check
+- **B-RESZ** — window resize nested UniformGrid 50×
+- **B-NAV** — 50× view navigation binding leak + `Windows` registry
+- **B-CHROME** — first-frame borderless shell + bordered dialog (manual or screenshot)
+
+**Profiling split (7f):** time separately — `InitializeApplication` (MyApp/resources), per-screen `LoadView`, first `Show`/`Refresh`.
 
 ## 7. POS integration points (do not break without migration doc)
 
@@ -239,6 +281,20 @@ Each **major** or **breaking minor** release MUST include:
 | **Menu grid hotspot** | `MenuItemsGridButton.xml` — 6 bindings/cell | Deferred POS fix; framework Selector helps |
 | **Invoice grid** | Codejock on `FormMain` — out of VCF | Target: VCF ListView Phase 5 |
 | **Themes** | `MyApp.xml` styles | `{ThemeResource}` → `{DynamicResource}` |
+| **Window lifetime** | `NewWindow` / `Application.Windows` | Shell class must stay registered until `Form_Unload` — [WINDOW_LIFECYCLE.md](./WINDOW_LIFECYCLE.md) |
+| **Shutdown** | `AppManager.Shutdown` → `RemoveAll` | No manual binding detach; `Window.Form_Unload` auto-detaches |
+| **Borderless shell** | `ShellWindow` / production main window | `SetValue BorderStyle 0` in `InitializeComponent` before style apply |
+| **DeNovoSmoke shortcuts** | `.Tests/DeNovoSmoke` | Shift+L Login · Shift+B bordered chrome test · Exit → `RemoveAll` |
+
+### 7.1 DeNovoSmoke smoke flows (Phase 7d)
+
+| Flow | Pass criteria |
+|------|----------------|
+| Splash → Login (~2.5 s) | No XAML error; bindings; numpad focus |
+| Shift+L | Early Login navigation |
+| Shift+B | `BorderTestWindow` bordered from first frame |
+| Exit | `Run` returns; IDE second F5 without error 91 |
+| Login resize (7e) | `LoginViewWpf.xml` Grid path + **Option B** Border Design* scale for legacy Login — [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) |
 
 ---
 
@@ -289,6 +345,11 @@ From [VCF_WPF_ALIGNMENT_NOTES.md §8](./VCF_WPF_ALIGNMENT_NOTES.md):
 | Utilities DLL split | Monolith vs VCF.Core | **Split in Phase 0** if build allows; else Phase 6 |
 | `ObservableCollection.BeginUpdate` | Phase 4 vs later | **Phase 4** with ListView batch updates |
 | ViewBase / codegen | Manual vs tool | **Optional ViewBase** in Phase 1; codegen P2 |
+| Harness eager vs lazy Login load | Eager both views (m1) vs lazy Login (production-like) | **7f done:** lazy default (`EAGER_LOGIN_LOAD`); Splash still eager |
+| Remove `VCF_SHUTDOWN_DIAG` instrumentation | Before consumer pin vs keep | **DONE — removed** |
+| XAML load batching in `XAMLReader` | Phase 7f vs Phase 8 | **7f done:** `LockRefresh` + `BeginRenderUpdate` in `LoadSuperclassData` |
+| Border HWND always `Create(0)`? | vs create mode from final border | **Yes default**; XAML `BorderStyle=2` applied before `Form.Show` — [WINDOW_LIFECYCLE.md](./WINDOW_LIFECYCLE.md) |
+| WPF Margin/Padding defaults on all controls | Global sweep vs phased family-by-family | **Defer** — document in [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) §6; implement after Phase 8 / Option C / m2. Interim: ListView item pad 4,1,4,1 only |
 
 ---
 
@@ -322,7 +383,7 @@ From [VCF_WPF_ALIGNMENT_NOTES.md §8](./VCF_WPF_ALIGNMENT_NOTES.md):
 
 ### QA / release
 
-1. This guide §3 bugs, §4 acceptance, §6 benchmarks  
+1. This guide §3 bugs, §3.1 lessons, §4 acceptance, §6 benchmarks  
 2. [VCF_FRAMEWORK_REWRITE_SPEC.md §14](./VCF_FRAMEWORK_REWRITE_SPEC.md) test matrix  
 3. `.Tests` + POS smoke checklist §7  
 
@@ -341,14 +402,22 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 - `docs/VCF_FRAMEWORK_REWRITE_SPEC.md`
 - `docs/MIGRATION.md` (from [VCF_MIGRATION_TEMPLATE.md](./VCF_MIGRATION_TEMPLATE.md))
 - `docs/BREAKING_CHANGES.md` (from [VCF_BREAKING_CHANGES_TEMPLATE.md](./VCF_BREAKING_CHANGES_TEMPLATE.md))
-- `docs/VCF_PERFORMANCE_BENCHMARKS.md` (Phase 0)
-
----
+- `docs/VCF_PERFORMANCE_BENCHMARKS.md` (Phase 0 + 7f targets)
+- `docs/WINDOW_LIFECYCLE.md` (init, chrome, shutdown)
+- `docs/POS_LAYOUT_RESIZE.md` (nested Border / 7e Grid reference)
 
 ## 12. Changelog (this package)
 
 | Date | Change |
 |------|--------|
+| 2026-07-20 | Phase 8a — inheritance batch + DataContext coalesce; **P8-INHERIT**; Button visuals not inheritable |
+| 2026-07-20 | Phase 8b — lazy `GetValue` inherit + batched notify; Pass no-op; **complete** (Phase0 + IDE DeNovoSmoke) |
+| 2026-07-20 | DeNovoSmoke **m2** — MainMenuView + StubMainMenuViewModel; Login→MainMenu / Logout; Shift+M; lazy + `[P7d-LOAD-MAINMENU]` |
+| 2026-07-20 | Tag **`v2.22.0-wpf-alignment-p8b-denovo-m2`** — Phase 8b + nested-batch fix + DeNovoSmoke m2 |
+| 2026-07-20 | Deferred WPF Margin/Padding defaults (doc only) — after Phase 8 / Option C / m2 |
+| 2026-07-18 | Layout Option B — Border Design* → LegacyScaleLayout; Phase0 **P7d-LAY-RESIZE** |
+| 2026-07-18 | Phase 7f — XAML LoadSuperclassData batching; lazy Login; P7d-LOAD Immediate benches |
+| 2026-06-20 | Phase 7d lessons — WINDOW_LIFECYCLE.md; §3.1 L1–L5; Phase 7f/8 load perf plan; DeNovoSmoke smoke flows |
 | 2026-06-19 | Initial complete handoff package — 8 documents, full class/property inventory |
 | 2026-06-20 | Phase 0 complete — tag v2.0.0-wpf-alignment-p0; baselines recorded; kickoff agenda added |
 | 2026-06-20 | Phase 4 validated — tag v2.5.0-wpf-alignment-p4; Phase0 18/18 (P4-BIND, P4-DCTX, P4-DETACH) |

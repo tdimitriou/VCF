@@ -1,0 +1,27 @@
+<UserControl x:Class="MainMenuView" DataContext="MainMenuViewModel" DesignLeft="0" DesignTop="0" DesignWidth="1024" DesignHeight="768" Width="1024" Height="768" Alpha="1">
+
+	<Border DesignLeft="38" DesignTop="29" DesignWidth="400" DesignHeight="56" CornerRadius="0" BorderColor="-1" BackColor="&HB1A200" Alpha="0">
+		<TextBlock Name="MenuTitle" HorizontalAlignment="0" VerticalAlignment="0" DesignLeft="5" DesignTop="0" DesignWidth="390" DesignHeight="34" Padding="0" Text="{Binding Title}" ForeColor="&HB1A200" FontSize="20" FontBold="1" ScaleFont="0"/>
+		<TextBlock HorizontalAlignment="0" VerticalAlignment="2" DesignLeft="5" DesignTop="28" DesignWidth="390" DesignHeight="34" Padding="0" Text="{Binding Subtitle}" ForeColor="&HFFFFFF" FontSize="16" FontBold="0" ScaleFont="0"/>
+	</Border>
+
+	<Border Style="{StaticResource InnerBorder}" DesignLeft="225" DesignTop="180" DesignWidth="574" DesignHeight="280">
+		<TextBlock Name="WelcomeText" HorizontalAlignment="0" DesignLeft="24" DesignTop="24" DesignWidth="520" DesignHeight="40" Text="{Binding WelcomeMessage}" ForeColor="&HFFFFFF" FontSize="18" FontBold="1" ScaleFont="0"/>
+		<TextBlock DesignLeft="24" DesignTop="80" DesignWidth="520" DesignHeight="40" Text="{Binding CurrentUser, Source={StaticResource ResourceKey=AppProperties}}" ForeColor="&HFFFFFF" FontSize="14" FontBold="0" ScaleFont="0"/>
+
+		<Button Name="BtnSales" Style="{StaticResource ButtonSubmit}" Command="{Binding SalesCommand}" DesignLeft="24" DesignTop="160" DesignWidth="200" DesignHeight="72">
+			<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="200" DesignHeight="72" Text="Sales (m3)"/>
+		</Button>
+		<Button Name="BtnLogout" Style="{StaticResource ButtonCancel}" Command="{Binding LogoutCommand}" DesignLeft="248" DesignTop="160" DesignWidth="200" DesignHeight="72">
+			<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="200" DesignHeight="72" Text="Logout"/>
+		</Button>
+	</Border>
+
+	<Button Style="{StaticResource ButtonCancel}" Command="{Binding ShutdownCommand, Source={StaticResource ResourceKey=AppCommands}}" DesignLeft="816" DesignTop="654" DesignWidth="200" DesignHeight="72">
+		<Image DesignLeft="4" DesignTop="4" DesignWidth="64" DesignHeight="64" ImageKey="Resources\Close.png"/>
+		<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="68" DesignTop="4" DesignWidth="132" DesignHeight="64" Text="{Binding Text[Exit], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}"/>
+	</Button>
+
+	<res:Widgets\StatusBar DesignLeft="0" DesignTop="743" DesignWidth="1024" DesignHeight="25"/>
+
+</UserControl>

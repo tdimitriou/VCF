@@ -5,6 +5,89 @@
 
 ---
 
+## [2.22.0] — 2026-07-20 — Phase 8b (lazy GetValue inheritance) + DeNovoSmoke m2
+
+Tag: **`v2.22.0-wpf-alignment-p8b-denovo-m2`**
+
+### Changed
+
+- **Inheritable DPs** (notably **`DataContext`**) resolve via **`DependencyProperty.GetValue`** parent-walk when no explicit local/`SetCurrentValue` is present (WPF pull model).
+- **`PassPropertyValue`** no longer copies values to children (call sites kept; no fan-out).
+- **`InheritPropertyValues`** — no `SetCurrentValue` copy; notifies unset inheritable DPs on attach, or **defers inside `InheritanceBatch`** to one **`PropagateInheritableFrom`** on End.
+- On inheritable change, **`NotifyInheritableToDescendants`** refreshes **Binding** callbacks on pull descendants (also batched during load/style).
+- **`SetInheritanceBatchRoot`** only applies at batch depth 1 — nested `XAMLReader.Load` (`res:` fragments) must not replace the outer load root (fixes DataContext command/bindings on screens that embed StatusBar/LoginPad).
+
+### Behavior notes
+
+- Reading **`Child.DataContext`** after **`Root.DataContext = Vm`** returns **`Vm`** without storing a copy on the child.
+- A local **`SetValue`** / style **`SetCurrentValue`** on a child still blocks inheritance for that subtree.
+- Object DPs whose unset sentinel is **`Nothing`** cannot distinguish “cleared to null” from “unset” (pre-existing VCF limitation).
+
+### Harness (DeNovoSmoke m2)
+
+- **MainMenuView** + **StubMainMenuViewModel**; Login → MainMenu / Logout; **Shift+M**; lazy `[P7d-LOAD-MAINMENU]`.
+- Also includes Phase **7f** (lazy Login, load benches) and **8a** batch plumbing shipped with this pin.
+
+### Verification
+
+- [x] Phase0 — **P8-INHERIT** (`PassDuringLoad=0`) + **P4-DCTX** PASS (31/31)
+- [x] DeNovoSmoke — Splash → Login → MainMenu; named lookup; Sales stub
+- [ ] Optional: compiled VCF re-measure Splash/Login (expected tighter than IDE)
+
+---
+
+## [2.21.0] — 2026-07-20 — Phase 8a (inheritance batch + DataContext coalesce)
+
+### Changed
+
+- **`PassPropertyValue`** suppressed during **`InheritanceBatch`** (XAML `Load` / `LoadSuperclassData` + `StyleManager.ApplyStyle`); one coalesce propagate from batch root on `EndInheritanceUpdate`.
+- **`InheritPropertyValues`** iterates **inheritable DPs only** (tracked at `Register`).
+- **`Button`:** `Selected` / `BackColor` / `BorderColor` **`IsInheritable=False`** (no longer pushed to children).
+
+### Added
+
+- **`modInheritanceBatch`**, counters via `VCF.ResetInheritanceCounters` / `PassPropertyValueCalls` / `InheritPropertyValuesCalls`.
+- Phase0 **P8-INHERIT**.
+
+### Superseded by 8b
+
+- Full WPF lazy `GetValue` parent-walk — see **[2.22.0]**.
+
+### Verification
+
+- [ ] Rebuild `Demac.VCF.dll`, Phase0 — **P8-INHERIT** + **P4-DCTX** PASS
+- [ ] DeNovoSmoke — Login binds; compare `[P7d-LOAD-LOGIN]` vs prior baseline
+
+---
+
+## [2.20.0] — 2026-07-18 — Phase 7f + Layout Option B
+
+### Changed
+
+- **`XAMLReader.LoadSuperclassData`** — wraps tree build in root `LockRefresh` + `BeginRenderUpdate` / `EndRenderUpdate` (single refresh after load). Behavior-compatible; fewer intermediate paints.
+- **`VCF_SHUTDOWN_DIAG` removed** — `modShutdownDiag`, `Constructor.ShutdownDiag*` wrappers, and all TraceEnter/Leave/Step instrumentation deleted. Functional shutdown/detach logic unchanged.
+- **`Border` layout Option B** — multi-child Borders with `DesignLeft`/`DesignTop` use `LegacyScaleLayout`. **Single-child Borders always decorator-fill** (WPF `Border.Child`), honoring child **Margin** (uniform `Margin="4"` mirrored when only DesignLeft/Top shimmed).
+- **`ListView` item text** — default content inset **4,1,4,1** (Win10 WPF `ListBoxItem` Padding; classic was `2,0,0,0`).
+- **`ListView.Move`** — uses `W.Move` instead of Parent.Widgets Remove/Add.
+
+### Harness (DeNovoSmoke)
+
+- **Lazy Login** by default (`EAGER_LOGIN_LOAD = False`) — Login XAML loads on first `ShowLogin`.
+- **`[P7d-LOAD-*]`** Immediate timings via `ENABLE_LOAD_BENCH` (`modHarnessLoadBench`).
+
+### Tests
+
+- **P7d-LAY-RESIZE** (Phase0) — Border Design* children scale 400×300 → 200×150.
+
+### Verification
+
+- [ ] Rebuild `Demac.VCF.dll`, F5 Phase0 — **P7d-LAY-RESIZE** PASS
+- [ ] F5 DeNovoSmoke — `[P7d-LOAD-SPLASH]` at startup; `[P7d-LOAD-LOGIN]` only after Shift+L / splash timer
+- [ ] `USE_WPF_LOGIN_LAYOUT = False` → Shift+2/3 — legacy Login inner content scales
+- [ ] `USE_WPF_LOGIN_LAYOUT = True` → Shift+3 — list ~204px, star column grows
+
+---
+
 ## [2.19.0] — 2026-06-27 — Phase 7d (DeNovoSmoke harness + host navigation)
 
 Tag: **`v2.19.0-wpf-alignment-p7d-denovo-smoke`**
@@ -20,7 +103,8 @@ Tag: **`v2.19.0-wpf-alignment-p7d-denovo-smoke`**
 
 - **`FrameworkElement` / `modLayoutEngine`** — legacy arrange reads `Margin`/`Design*` consistently when `LegacyScaleLayout` is on (migrated POS XAML).
 - **`UserControl.Move`** — propagates `OnHostResize` to children after parent arrange.
-- **`Border.Move`** — propagates `OnHostResize` after widget resize (WPF child reflow when parent scales).
+- **`Border.Move`** — calls **`ArrangeBorderChild`** after resize so a single child (e.g. inner **Grid**) fills the border client; avoids 300×300 default grid clip.
+- **`Grid.Move`** — propagates **`ArrangePanel`** after widget resize (nested grid reflow).
 
 ### Verification
 

@@ -312,7 +312,7 @@ Private Function GetNestedObject(ByVal PropertyName As String) As Object
 End Function
 
 Friend Sub Detach()
-    Set ChildNotifier = Nothing
+    If Not ChildNotifier Is Nothing Then Set ChildNotifier = Nothing
     Set m_Child = Nothing
     m_SourcePtr = 0
     m_ParentPtr = 0

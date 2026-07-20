@@ -71,16 +71,17 @@
 
 ---
 
-### DependencyPropertiesStatic (65 lines) — **Refactor**
+### DependencyPropertiesStatic — **Keep** (Phase 8b)
 
 | Member | Role |
 |--------|------|
-| `PassPropertyValue(Children, Source)` | Push inheritance to children |
-| `InheritPropertyValues(Target)` | Pull from parent |
+| `PassPropertyValue(Children, Source)` | No-op (compat call sites) |
+| `InheritPropertyValues(Target)` | Attach notify for unset inheritable DPs (batch-deferred) |
+| `NotifyInheritableToDescendants` | Binding refresh on pull descendants |
+| `PropagateInheritableFrom` | Batch End coalesce notify |
+| `PassPropertyValueCalls` / `InheritPropertyValuesCalls` | Diagnostics |
 
-**Private:** `PassPropertyValueToChild`, `InheritPropertyValue`  
-**Target:** Lazy inheritance; batch DataContext propagation (§2.8 alignment).
-
+**Effective inherit:** `DependencyProperty.GetValue` parent-walk + `GetLocalEffectiveValue`.
 ---
 
 ### Thickness (19 lines) — **Keep**

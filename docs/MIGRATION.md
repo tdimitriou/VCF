@@ -22,7 +22,9 @@ See [VCF_TEAM_HANDOFF_GUIDE.md §8.1](./VCF_TEAM_HANDOFF_GUIDE.md) for No / Proj
 **DeNovo consumer policy:** denovo monorepo → `docs/migration/DENOVO_VCF_MIGRATION_POLICY.md`  
 **POS runtime feedback (2026-06-19):** [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md) — layout shim **`v2.18.0-wpf-alignment-p7c-layout-shim`**  
 **Harness (Phase 1 validation):** [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md) · [`.Tests/DeNovoSmoke/README.md`](../.Tests/DeNovoSmoke/README.md)  
-**Layout resize (nested Border):** [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md)
+**Layout resize (nested Border):** [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md)  
+**Window lifecycle (chrome, shutdown):** [WINDOW_LIFECYCLE.md](./WINDOW_LIFECYCLE.md)  
+**Load performance targets:** [VCF_PERFORMANCE_BENCHMARKS.md](./VCF_PERFORMANCE_BENCHMARKS.md) §7f
 
 ---
 
@@ -58,6 +60,8 @@ See [VCF_TEAM_HANDOFF_GUIDE.md §8.1](./VCF_TEAM_HANDOFF_GUIDE.md) for No / Proj
 | 4 | 2.5–2.8 | None | Binding rebind automatic; ItemsControl/Selector |
 | 5 | 2.9–2.11 | **`UnboundListView` → `ListView`** | MeasureRow, QueryRowLevel for hierarchy |
 | 6 | 2.12–2.15 | **`Button.Text` → `Content`** (shim remains) | PropertyTrigger, ControlTemplate, RenderCoalescer batch |
+| 8a | 2.21 | Button `Selected`/`BackColor`/`BorderColor` no longer inherit to children | Inheritance batch during XAML load/style — see BREAKING_CHANGES |
+| 8b | 2.22 | None expected for POS (DataContext still inherits) | Lazy `GetValue` pull; no `PassPropertyValue` copies — see BREAKING_CHANGES |
 
 Details per release: [BREAKING_CHANGES.md](./BREAKING_CHANGES.md).
 
@@ -82,6 +86,8 @@ Details per release: [BREAKING_CHANGES.md](./BREAKING_CHANGES.md).
 | `ListView` owner-draw only via `UnboundListView` | `ListView` (same API surface) |
 | Manual binding recreate on DataContext | Automatic rebind (Phase 4) |
 | Batch layout refresh storms | Optional `New RenderCoalescer` + `BeginRenderUpdate` / `EndRenderUpdate` |
+| Manual binding detach before `RemoveAll` | **Remove** — `Window.Form_Unload` auto-detaches (Phase 7d) |
+| Borderless shell | `SetValue BorderStyle, 0` in `IWindow_InitializeComponent` before style apply — [WINDOW_LIFECYCLE.md](./WINDOW_LIFECYCLE.md) |
 
 ### Verification
 

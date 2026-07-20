@@ -30,7 +30,7 @@ Friend Sub Init(Notifier As VCF.PropertyChangedEvent, LV As VCF.ListView)
 End Sub
 
 Friend Sub Disconnect()
-    Set m_Notifier = Nothing
+    If Not m_Notifier Is Nothing Then Set m_Notifier = Nothing
     m_ListViewPtr = 0
 End Sub
 
@@ -42,5 +42,6 @@ Private Sub m_Notifier_PropertyChanged(ByVal Sender As Object, e As Variant)
 End Sub
 
 Private Sub Class_Terminate()
+    On Error Resume Next
     Disconnect
 End Sub

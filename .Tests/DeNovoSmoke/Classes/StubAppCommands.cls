@@ -44,7 +44,8 @@ Public Sub KeyClickMethod(Parameter)
 End Sub
 
 Public Sub ShutdownMethod()
-    End
+    On Error Resume Next
+    modHarnessAppManager.Shutdown
 End Sub
 
 Private Function NoOpCommand() As ICommand

@@ -14,6 +14,7 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private m_Props As cSortedDictionary
+Private m_Inheritable As VCF.List
 Private m_TargetPtr As Long
 
 Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue)
@@ -33,6 +34,10 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
         Call p.Register(ObjPtr(Me), PropertyName, PropertyType, PropertyTypeName, ProgId, UnsetValue, Metadata)
         
         m_Props.Add PropertyName, p
+        
+        If Not Metadata Is Nothing Then
+            If Metadata.IsInheritable Then m_Inheritable.Add p
+        End If
     End Sub
 
     Public Sub SetCurrentValue(ByVal PropertyName As String, Value)
@@ -84,10 +89,21 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
         If Property.Name = "DataContext" Then
             modBindingExpressions.OnDataContextChanged Me.Target
         End If
+        
+        ' Phase 8b — push model removed; notify descendant bindings that pull this DP.
+        If Not Property.Metadata Is Nothing Then
+            If Property.Metadata.IsInheritable Then
+                DependencyPropertiesStatic.NotifyInheritableToDescendants Me.Target, Property
+            End If
+        End If
     End Sub
     
     Friend Property Get RegisteredProperties() As cSortedDictionary
         Set RegisteredProperties = m_Props
+    End Property
+    
+    Friend Property Get InheritableProperties() As VCF.List
+        Set InheritableProperties = m_Inheritable
     End Property
 '#End Region
 
@@ -103,6 +119,7 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
 '#Region Class Events
     Private Sub Class_Initialize()
         Set m_Props = New_c.SortedDictionary(TextCompare)
+        Set m_Inheritable = New List
     End Sub
 '#End Region
 

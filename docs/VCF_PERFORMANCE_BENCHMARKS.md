@@ -1,8 +1,10 @@
 # Demac.VCF — performance benchmarks (Phase 0 baseline)
 
-**Status:** Phase 7b — **v2.17.0-wpf-alignment-p7b** (30 tests, tooling validated)  
+**Status:** Phase 7f — **P7d-LOAD** timed gates in DeNovoSmoke Immediate window (`ENABLE_LOAD_BENCH`)
 **Runner:** `.Tests/Phase0` (`modPhase0Bench`)  
 **Threshold policy:** Regressions > 10% vs previous tag require explanation in release notes.
+
+> **B-GOLD disclaimer:** **B-GOLD** (~21 ms) loads a **minimal** golden panel only. It does **not** represent DeNovo **LoginView** / **SplashView** load time. Real POS screens include nested borders, ListView, numpad bindings, and `res:` fragments — use **P7d-LOAD-*** (planned) for regression gates.
 
 ---
 
@@ -55,8 +57,38 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P6c-TMPL | ControlTemplate Border chrome | `Phase6cBench_ControlTemplate` | **pass** | Button CornerRadius |
 | P6d-COAL | Render refresh coalescing | `Phase6dBench_RenderCoalesce` | **pass** | dedupe + Style batch |
 | P7a-SMOKE | POS SalesOrder shell XAML | `Phase7aBench_PosSalesOrderShell` | **pass** | Scene + UniformGrid |
-| B-RESZ | Window resize nested UniformGrid 50× | *Phase 1+* | — | deferred |
-| B-NAV | 50× view navigation binding leak | *Phase 4+* | — | deferred |
+| B-RESZ | Window resize nested UniformGrid 50× | *Phase 8* | — | deferred |
+| B-NAV | 50× view navigation binding leak | *Phase 8* | — | deferred |
+
+---
+
+## Phase 7f load benchmarks (DeNovoSmoke)
+
+Timed gates for **real POS fixtures**. Logs to Immediate window when `ENABLE_LOAD_BENCH = True` in `modHarnessConfig.bas`.
+
+| ID | Scenario | Fixture | Baseline | Threshold |
+|----|----------|---------|----------|-----------|
+| P7d-LOAD-SPLASH | Splash `LoadView` | `Screens\Splash\SplashView` | **24–41 ms** (8a: **24 ms** 2026-07-20) | Soft: &lt; 100 ms |
+| P7d-LOAD-LOGIN | Login `LoadView` (lazy, first ShowLogin) | `LoginViewWpf` + LoginPad | **403–670 ms** (8a: **403 ms** 2026-07-20) | Soft: &lt; 1000 ms |
+| P7d-LOAD-BORDERED | Bordered window XAML load | `BorderTestWindow.xml` (Shift+B) | *not recorded this run* | TBD |
+| P7d-LAY-RESIZE | Border Design* children scale with host | Phase0 `BorderDesignChildren.xml` | **pass** (Option B) | Half size → ~0.5 child geometry (±2 px) |
+| P8-INHERIT | Lazy GetValue inherit + DataContext | Phase0 `InheritanceNestedBorder.xml` | **pass** | PassPropertyValueCalls during load = 0; Mid/Inner DataContext pull from root |
+| P7d-SHUTDOWN | Full harness session → `RemoveAll` | DeNovoSmoke E2E | **pass** (2026-07-18) | No error 91; IDE second F5 |
+| B-CHROME | First-frame window chrome | Manual / screenshot | — | Borderless shell + bordered dialog, no flash |
+
+**Notes (2026-07-18 first 7f run):** Splash-only startup is cheap; Login dominates (~13× Splash) because of nested Border/Grid/ListView/LoginPad + bindings. Lazy policy confirmed — `[P7d-LOAD-LOGIN]` appears only after ShowLogin. Shutdown tears down Binding/`UIElementBase` terminations orderly (HarnessScreen → StubLoginViewModel last among views). **`VCF_SHUTDOWN_DIAG` instrumentation has been removed.**
+
+**Notes (2026-07-20 Phase 8b):** Lazy `GetValue` parent-walk; attach notify deferred inside `InheritanceBatch` (single End wave). IDE DeNovoSmoke (4 runs, both in IDE): Splash **27–41 ms**, Login **465–543 ms** (avg ~503). Prior: broken 8b ~831 → double-notify fix ~659 → coalesce **this band**; 8a IDE baseline Login **~403 ms**. Treat as relative; compiled VCF should tighten further.
+
+**XAML load batching (framework):** `XAMLReader.LoadSuperclassData` wraps tree build in `LockRefresh` + `BeginRenderUpdate` / `EndRenderUpdate` ([alignment §2.7.4 P0 #1](./VCF_WPF_ALIGNMENT_NOTES.md)).
+
+**Profiling split (record in bench log):**
+
+1. `InitializeApplication` — MyApp + resource dictionary  
+2. Per-screen `LoadView` / `LoadSuperclassData`  
+3. First `Show` + root `Refresh`
+
+**Harness policy (7f):** lazy **Login** load on first `ShowLogin` (`EAGER_LOGIN_LOAD = False`). Set `EAGER_LOGIN_LOAD = True` only for m1 A/B comparison — do not compare startup times across policies without noting it.
 
 ---
 
@@ -78,6 +110,8 @@ Normal POS process **< 100 MB** without secondary customer-display video. Framew
 | Collection Add | `New List` per notification | Single-item scratch buffers + batch Reset |
 | Binding graph | 3× WithEvents per binding | BindingExpression + Detach |
 | Layout resize | Design* cascade | Measure/Arrange |
+| XAML tree load | Per-node refresh during parse | **7f:** LockRefresh + BeginRenderUpdate in LoadSuperclassData |
+| DataContext push | O(n) on large trees | **8:** lazy inheritance §2.8 |
 
 ---
 
@@ -85,6 +119,14 @@ Normal POS process **< 100 MB** without secondary customer-display video. Framew
 
 | Date | Change |
 |------|--------|
+| 2026-07-18 | First 7f baselines — Splash **35 ms**, Login **448 ms**; shutdown pass |
+| 2026-07-20 | Phase 8a measured — Splash **24 ms**, Login **403 ms** (vs prior Login ~448–670 ms) |
+| 2026-07-20 | Phase 8a — inheritance batch; **P8-INHERIT**; soft Login ms compare after rebuild |
+| 2026-07-20 | Phase 8b IDE×4 — Splash **27–41 ms**, Login **465–543 ms** (vs 8a Login ~403; vs broken 8b ~831) |
+| 2026-07-18 | Layout Option B — Border Design* LegacyScaleLayout; **P7d-LAY-RESIZE** Phase0 gate |
+| 2026-07-18 | Removed `VCF_SHUTDOWN_DIAG` instrumentation (modShutdownDiag + harness/framework Trace*) |
+| 2026-07-18 | Phase 7f implemented — XAML LoadSuperclassData batching; DeNovoSmoke lazy Login + P7d-LOAD-* Immediate logs |
+| 2026-06-20 | Phase 7f planned — P7d-LOAD-* table, B-GOLD disclaimer, profiling split, harness lazy-Login note |
 | 2026-06-20 | Initial scaffold for Phase 0 |
 | 2026-06-20 | Baselines recorded: B-GOLD 14 ms, B-COLL 16 ms; all Phase0 tests pass |
 | 2026-06-20 | Validated build: B-COLL 19 ms; P1-WIDTH/P1-VIS pass (7/7) |

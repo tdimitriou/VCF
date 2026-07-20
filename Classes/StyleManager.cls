@@ -14,6 +14,11 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Public Sub ApplyStyle(ByVal Style As Style, ByVal Target As Object)
+    Dim InheritanceBatchStarted As Boolean
+    Dim FailNum As Long
+    Dim FailSrc As String
+    Dim FailDesc As String
+
     If TypeName(Target) <> Style.TargetType Then
         Err.Raise vbObjectError, TypeName(Me), "Target Type mismatch"
         Exit Sub
@@ -21,16 +26,30 @@ Public Sub ApplyStyle(ByVal Style As Style, ByVal Target As Object)
 
     On Error GoTo ApplyStyleFail
 
+    modInheritanceBatch.BeginInheritanceUpdate Target
+    InheritanceBatchStarted = True
+
     SetObjectProperties Target, Style
     modStyleTriggerEngine.ApplyActiveTriggers Style, Target
     modControlTemplateEngine.ApplyControlTemplate Style, Target
+
+    modInheritanceBatch.EndInheritanceUpdate
+    InheritanceBatchStarted = False
 
     modRenderCoalescer.RequestWidgetRefresh Target.Widget
 
     Exit Sub
 
 ApplyStyleFail:
-    Err.Raise Err.Number, Err.Source, Err.Description
+    FailNum = Err.Number
+    FailSrc = Err.Source
+    FailDesc = Err.Description
+    If InheritanceBatchStarted Then
+        On Error Resume Next
+        modInheritanceBatch.EndInheritanceUpdate
+        On Error GoTo 0
+    End If
+    Err.Raise FailNum, FailSrc, FailDesc
 End Sub
 
 'CSEH: ErrMsgBox

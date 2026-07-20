@@ -16,6 +16,8 @@ Option Explicit
 Public Sub SetActiveView(ByVal Host As Window, ByVal View As Object)
     On Error GoTo Fail
     
+    If View Is Nothing Then Exit Sub
+    
     Dim i As Long
     Dim Child As Object
     Dim InTree As Boolean
@@ -36,12 +38,15 @@ Public Sub SetActiveView(ByVal Host As Window, ByVal View As Object)
     
     Host.RelayoutChildren
     Host.RebuildNamedItemsList
-    Host.Form.WidgetRoot.Refresh
     
     If TypeOf View Is HarnessScreen Then View.OnActivated
+    
+    Host.Form.WidgetRoot.Refresh
     
     Exit Sub
     
 Fail:
+    
     Err.Raise Err.Number, Err.Source, Err.Description
+    
 End Sub

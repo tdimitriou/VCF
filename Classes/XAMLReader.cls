@@ -15,6 +15,12 @@ Option Explicit
 
 Public Function Load(XML As String) As Object
     Dim Dom As cSimpleDOM
+    Dim InheritanceBatchStarted As Boolean
+    Dim CustomClassname As String
+    Dim FailNum As Long
+    Dim FailSrc As String
+    Dim FailDesc As String
+
     Set Dom = New_c.SimpleDOM
     Dom.XML = XML
 
@@ -25,7 +31,6 @@ Public Function Load(XML As String) As Object
         Exit Function
     End If
 
-    Dim CustomClassname As String
     CustomClassname = GetCustomClass(Dom.Root)
 
     If Len(CustomClassname) > 0 Then
@@ -38,11 +43,29 @@ Public Function Load(XML As String) As Object
         End If
     End If
 
+    On Error GoTo LoadFail
+    modInheritanceBatch.BeginInheritanceUpdate
+    InheritanceBatchStarted = True
     Set Load = NewObject(Dom.Root)
+    modInheritanceBatch.SetInheritanceBatchRoot Load
+    modInheritanceBatch.EndInheritanceUpdate
+    InheritanceBatchStarted = False
 
     If Load Is Nothing And modConstructors.StrictXamlLoad Then
         RaiseXamlLoad "Failed to create root element '" & ElementTagName(Dom.Root) & "'.", ElementTagName(Dom.Root)
     End If
+    Exit Function
+
+LoadFail:
+    FailNum = Err.Number
+    FailSrc = Err.Source
+    FailDesc = Err.Description
+    If InheritanceBatchStarted Then
+        On Error Resume Next
+        modInheritanceBatch.EndInheritanceUpdate
+        On Error GoTo 0
+    End If
+    Err.Raise FailNum, FailSrc, FailDesc
 End Function
 
 Public Function LoadElement(ByVal Node As cElement) As Object
@@ -52,6 +75,14 @@ End Function
 Public Sub LoadSuperclassData(Superclass As Object, XML As String)
     Dim IsValidSuperclass As Boolean
     Dim Attr As cAttribute
+    Dim RootWidget As cWidgetBase
+    Dim WasLocked As Boolean
+    Dim HadWidget As Boolean
+    Dim BatchStarted As Boolean
+    Dim InheritanceBatchStarted As Boolean
+    Dim FailNum As Long
+    Dim FailSrc As String
+    Dim FailDesc As String
         
     With New_c.SimpleDOM
         .XML = XML
@@ -78,10 +109,60 @@ Public Sub LoadSuperclassData(Superclass As Object, XML As String)
             Exit Sub
         End If
         
-        SetObjData Superclass, .Root
-    End With
+        ' Phase 7f: coalesce per-node refresh storms during tree build (§2.7.4 P0 #1).
+        ' Phase 8a: suppress PassPropertyValue fan-out; propagate once at End.
+        Set RootWidget = TryGetLoadRootWidget(Superclass)
+        HadWidget = Not RootWidget Is Nothing
+        modInheritanceBatch.BeginInheritanceUpdate Superclass
+        InheritanceBatchStarted = True
+        modRenderCoalescer.BeginRenderUpdate
+        BatchStarted = True
+        If HadWidget Then
+            WasLocked = RootWidget.LockRefresh
+            RootWidget.LockRefresh = True
+        End If
         
+        On Error GoTo LoadSuperclassFail
+        SetObjData Superclass, .Root
+        
+        If HadWidget Then
+            RootWidget.LockRefresh = WasLocked
+            If Not RootWidget.LockRefresh Then RootWidget.Refresh
+        End If
+        modRenderCoalescer.EndRenderUpdate
+        BatchStarted = False
+        modInheritanceBatch.EndInheritanceUpdate
+        InheritanceBatchStarted = False
+    End With
+    Exit Sub
+
+LoadSuperclassFail:
+    FailNum = Err.Number
+    FailSrc = Err.Source
+    FailDesc = Err.Description
+    On Error Resume Next
+    If HadWidget Then
+        RootWidget.LockRefresh = WasLocked
+        If Not RootWidget.LockRefresh Then RootWidget.Refresh
+    End If
+    If BatchStarted Then modRenderCoalescer.EndRenderUpdate
+    If InheritanceBatchStarted Then modInheritanceBatch.EndInheritanceUpdate
+    Err.Raise FailNum, FailSrc, FailDesc
 End Sub
+
+Private Function TryGetLoadRootWidget(ByVal Superclass As Object) As cWidgetBase
+    On Error Resume Next
+    If TypeOf Superclass Is IWindow Then
+        Dim Win As IWindow
+        Set Win = Superclass
+        Set TryGetLoadRootWidget = Win.Base.Widget
+    ElseIf TypeOf Superclass Is IControl Then
+        Dim Ctl As IControl
+        Set Ctl = Superclass
+        Set TryGetLoadRootWidget = Ctl.Widget
+    End If
+    Err.Clear
+End Function
 
 'CSEH: ErrMsgBox
 Public Sub LoadApp(Superclass As Object, XML As String)

@@ -105,13 +105,31 @@ LoginView (UserControl, legacy scale)
 
 | ID | Option | Effort | Outcome |
 |----|--------|--------|---------|
-| **B** | `LegacyScaleLayout = True` on `Border` when children use `Design*` (POS mode) | Low | POS parity; delays pure WPF on Border |
-| **C** | Propagate parent scale into Border child arrange | Medium | POS parity without global Border legacy flag |
+| **B** | Multi-child `Border` + `DesignLeft`/`DesignTop` → `LegacyScaleLayout`; single-child always decorator fill | Low | **Done (2026-07-18)** — POS multi-child scale; LoginViewWpf ListView fills ListWrapper |
+| **C** | Propagate parent scale into Border child arrange | Medium | POS parity without Design* detection |
 | **D** | Migrate inner XAML to Grid/Margin; `LegacyScaleLayout = False` | High per screen | WPF-aligned; correct long-term |
 
-**Recommendation:** **C** (framework) + **D** (screen-by-screen) for Login/Sales.
+**Recommendation:** **B shipped** for legacy POS trees; continue **D** screen-by-screen (`LoginViewWpf.xml`). Option **C** remains optional if detection heuristics miss edge cases.
 
-**Test:** add **P7d-LAY-RESIZE** — load Login at 1024×768, 800×600, 1366×768; assert inner panel content scales or grid fills (criteria depend on chosen option).
+**Test:** **P7d-LAY-RESIZE** (Phase0) — Border with Design* children at 400×300 → 200×150; assert scaled positions.
+
+### Deferred — WPF Margin / Padding defaults (document now, implement later)
+
+**Status:** Agreed direction · **not scheduled** ahead of Phase 8 / Option C / harness milestone 2.
+
+**Goal:** Align framework `Margin`/`Padding` defaults with WPF (prefer Win10-era metrics where themes differ), so content controls share one model instead of one-off paint insets.
+
+**Agreed approach (when picked up):**
+
+1. Target **Win10-ish** content padding (e.g. ListBoxItem-style **4,1,4,1**); layout hosts (`Grid`, `Border`, `UserControl`) stay **0** unless WPF itself is non-zero.
+2. Register real **`Margin`/`Padding` DPs** on interactive controls (`ListView`, `TextBox`, `Button`, …) — do not rely only on hard-coded draw offsets or Design* shims.
+3. Ship **per control family** with Phase0/visual checks + `BREAKING_CHANGES` — start ItemsControl/Selector, then TextBox/Button.
+4. Keep **UniformGrid** default explicit (today **2**; decide 0 vs 2 vs 4 when implementing — POS XAML often sets `Padding="4"`).
+5. Prefer **explicit XAML** for large chrome gaps; defaults only for content insets.
+
+**Interim (already in tree):** `ListView` default item text inset **4,1,4,1**; single-child `Border` honors child Margin. Do not expand to other controls until this backlog item is scheduled.
+
+**Higher priority ahead of this:** Phase **8** (lazy DP inheritance / DataContext), layout Option **C** (if needed), DeNovoSmoke milestone **2** (MainMenu / lazy-load polish), consumer **pin/tag**.
 
 ---
 
@@ -122,7 +140,11 @@ LoginView (UserControl, legacy scale)
 | Milestone 1 scope | XAML load, bind, theme, navigation — **fixed 1024×768 client** acceptable |
 | **7e reference layout** | `.Tests/DeNovoSmoke/Resources/XAML/Screens/Login/LoginViewWpf.xml` — root **Grid**, inner panel **Grid** (list \| password+pad); toggle `modHarnessConfig.USE_WPF_LOGIN_LAYOUT` |
 | Resize parity | Manual checklist in [`.Tests/DeNovoSmoke/README.md`](../.Tests/DeNovoSmoke/README.md) § resize validation |
-| Harness shell | Borderless **1024×768** client (`ShellWindow`, `BorderStyle=0`) |
+| Harness shell | Borderless **1024×768** client (`ShellWindow`, `BorderStyle=0`) — [WINDOW_LIFECYCLE.md](../WINDOW_LIFECYCLE.md) |
+| Border chrome test | **Shift+B** → `BorderTestWindow.xml` (`BorderStyle=2`) | Manual first-frame check |
+| Load perf (7f) | Lazy Login + Immediate `[P7d-LOAD-*]`; XAML `LoadSuperclassData` batching | See [VCF_PERFORMANCE_BENCHMARKS.md](../VCF_PERFORMANCE_BENCHMARKS.md) §7f |
+| Resize (7e) | **Shift+1/2/3** preset client sizes; optional `USE_SIZABLE_SHELL_BORDER` for drag | Borderless shell has no resize grips |
+| Option B | `Border` auto-`LegacyScaleLayout` when children have Design* | Toggle `USE_WPF_LOGIN_LAYOUT=False` to exercise legacy Login inner scale |
 | Re-sync XAML | `pos-v1/tools/Sync-DeNovoSmokeFixtures.ps1` (legacy `LoginView.xml` only) |
 
 ---
@@ -133,8 +155,9 @@ LoginView (UserControl, legacy scale)
 |-------|-------|--------|
 | Document finding | VCF | **Done** (this file) |
 | DeNovo confirms on production borderless | DeNovo | Pending |
-| VCF implements B/C + P7d-LAY-RESIZE | VCF | Pending |
+| VCF implements B/C + P7d-LAY-RESIZE | VCF | **B + P7d-LAY-RESIZE Done**; C optional |
 | Login inner panel Grid migration | VCF harness **7e** (`LoginViewWpf.xml`) · DeNovo production XAML | **In progress** (harness reference) |
+| Phase 7f load benchmarks + XAML batching | VCF | **Done** (Splash 35–41 ms, Login 448–670 ms) |
 
 ---
 

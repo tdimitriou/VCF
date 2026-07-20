@@ -139,7 +139,7 @@ View/Window/UserControl → NewWindow/NewUserControl → LoadSuperclassData
 | Effective value | **`GetValue`:** ask **Listeners** (binding pull via `OnValueRequested`) → if local unset use **`m_CurrentValue`** → **`Conversion.TryCast`** |
 | Precedence (simplified) | **Local `SetValue`** beats **`SetCurrentValue`** (style/inherit) — **no** trigger/template layers |
 | Style | **`StyleManager`** applies setters via **`SetCurrentValue`** (WPF-like intent) |
-| Inheritance | **`DependencyPropertiesStatic.InheritPropertyValues`** on parent set; **`IsInheritable`** in metadata (e.g. `DataContext`) |
+| Inheritance | **Lazy `GetValue` parent-walk** (8b); **`NotifyInheritableToDescendants`**; **`IsInheritable`** (e.g. `DataContext`) |
 | Bindings | **`Binding`** implements **`IDependencyPropertyCallbackListener`**; **`AddListener`** on target DP; **`SetValue(ProvideValue)`** on source change; **DataContext** change via **Callback** on `DataContext` DP |
 | Metadata | **`IsInheritable`, `AffectsMeasure`, `AffectsRender`, `BindingMode`** — **no** coerce/validate/changed callbacks |
 | Attached | Partial: **`AttachedProperties`** dictionary (e.g. `Grid.ColumnSpan` on **`UniformGrid`**) — not full `RegisterAttached` |
@@ -422,6 +422,16 @@ XAMLReader.Load(XML) with x:Class on root:
 
 ## 2.8 Dependency property inheritance — performance review
 
+**Status (2026-07-20):** **Phase 8a + 8b shipped.**
+
+| Piece | Behavior |
+|-------|----------|
+| **`GetValue`** | Parent-walk for inheritable DPs when no explicit local/`SetCurrentValue` |
+| **`PassPropertyValue`** | No-op (call sites kept) |
+| **`InheritPropertyValues`** | Outside batch: notify unset inheritable DPs on attach. Inside **`InheritanceBatch`**: defer → one **`PropagateInheritableFrom`** on End |
+| **`NotifyInheritableToDescendants`** | Binding callbacks on pull descendants; batched during load/style |
+| **Button** | `Selected`/`BackColor`/`BorderColor` **`IsInheritable=False`** (8a) |
+
 **Symptom (POS):** UI feels slow on large trees; **inheritance** suspected as a contributor alongside layout/render (§2.7).
 
 **Verdict:** **Valid.** VCF uses **push inheritance** (copy parent → every child on change) instead of WPF **lazy pull** (walk parent chain on `GetValue` only). On sales screens with **hundreds of elements**, **`DataContext` propagation alone** triggers O(n) `SetCurrentValue` + event/callback work per assignment.
@@ -430,93 +440,62 @@ XAMLReader.Load(XML) with x:Class on root:
 
 ### 2.8.1 WPF vs VCF inheritance
 
-| | WPF | VCF today |
+| | WPF | VCF (8b) |
 |---|-----|-----------|
-| Model | **Lazy** — `GetValue` walks **visual parent** while value unset | **Push** — `SetCurrentValue` copied to **each direct child** |
-| On parent change | Children read on next `GetValue`; no mass update | **`PassPropertyValue`** → every child updated **immediately** |
-| On child attached | Implicit tree link | **`InheritPropertyValues`** — loops **all** registered DPs on child |
-| Depth | O(depth) per read, not O(n) per change | O(n) nodes × **event wave** per inheritable change |
+| Model | **Lazy** — `GetValue` walks **visual parent** while value unset | **Lazy** — same; `GetLocalEffectiveValue` on ancestors |
+| On parent change | Children read on next `GetValue`; bindings refresh via notify | **`NotifyInheritableToDescendants`** (no `SetCurrentValue` copy) |
+| On child attached | Implicit tree link | **`InheritPropertyValues`** notify (or batch End coalesce) |
+| Depth | O(depth) per read, not O(n) per change | O(depth) read + O(n) binding notify on ancestor change |
 
-### 2.8.2 Current implementation (hot paths)
+### 2.8.2 Implementation (post-8b)
 
-**`InheritPropertyValues(Target)`** — called when **`Parent` is set** (every control attach):
+**`GetValue`** — if inheritable and local/current still unset → walk parents via **`GetLocalEffectiveValue`** until an explicit value is found.
 
-```text
-For Each Prop In Target.DependencyProperties.RegisteredProperties   ' ALL props
-    InheritPropertyValue Prop, Target.Parent   ' skip if not IsInheritable
-Next
-```
+**`InheritPropertyValues(Target)`** — on **`Parent` set**; only **`InheritableProperties`** (8a list). Notifies binding callbacks (no store copy). Deferred inside **`InheritanceBatch`**.
 
-- Scans **every registered property** (TextBlock ~15, Button ~10) even though only **`DataContext`** (+ few Button visuals) are inheritable.
-- Calls **`Parent.DependencyProperties.GetProperty` → `Source.GetValue`** (runs **binding listeners** on `GetValue`).
+**`PassPropertyValue`** — retained at call sites; **no-op**.
 
-**`PassPropertyValue(Children, Source)`** — called from **`DependencyPropertyChanged`** on containers:
+**`NotifyInheritableToDescendants`** — on inheritable change (and batch End propagate); skips nodes with **`HasExplicitValue`**.
 
-| Control | Calls `PassPropertyValue` on every DP change? |
-|---------|-----------------------------------------------|
-| `Window`, `UserControl`, `Panel`, `Border`, `Button`, `UniformGrid`, `Scene` | **Yes** — all changes (early exit if not `IsInheritable`) |
-| `TextBlock`, `Image`, … | **No** — leaf controls do not push to descendants |
+**Inheritable in practice:** **`DataContext`** on major controls. Button visual DPs are not inheritable.
 
-**Cascade on `DataContext` change at root:**
+### 2.8.3 Why the old push model hurt POS
 
-```text
-Root SetValue/SetCurrentValue DataContext
-  → PassPropertyValue(direct children)     [each child SetCurrentValue]
-    → each container's DependencyPropertyChanged
-      → PassPropertyValue(its children)    [repeat depth times]
-        → leaf: SetCurrentValue + Binding SrcDepObj callbacks + INPC hooks
-```
+*(Historical — pre-8b.)* Deep trees × many `{Binding}`s × root **`DataContext`** caused O(n) `SetCurrentValue` + callback work per assignment and on every attach.
 
-**Inheritable properties in practice (metadata `IsInheritable=True`):**
+### 2.8.4 Optimizations — status
 
-- **`DataContext`** — all major controls (**primary cost** on screen switch / VM swap).
-- **`Button`:** `Selected`, `BackColor`, `BorderColor` (also `AffectsRender` — can trigger **`W.Refresh`** on change).
-- **`TextBlock` font/visual DPs** — `AffectsRender` but **`IsInheritable=False`** (not pushed; good).
+**P0 — done (8a/8b)**
 
-**Interaction with bindings:** `Binding` registers **callback** on target’s **`DataContext` DP** (`AddCallback`). Each pushed `SetCurrentValue` on a bound element runs **`OnDependencyPropertyChanged` → callbacks → `Set Me.Source`** even when the **same object reference** is re-pushed (partially mitigated by `Object.Equals` on `m_CurrentValue`, but **`GetValue` still runs twice** per `SetCurrentValue`).
+1. ~~**Lazy inheritance**~~ — `GetValue` parent-walk; `PassPropertyValue` no-op.
+2. ~~**DataContext**~~ — pull via `GetValue`; binding refresh via notify (not push store).
+3. ~~**`InheritableProperties` list**~~ — 8a.
 
-**Interaction with styles:** `StyleManager` applies setters via **`SetCurrentValue`** → each changed inheritable DP fires **`PassPropertyValue`** again during bulk style apply at load.
+**P1 — done (8a interim, still used)**
 
-### 2.8.3 Why this hurts POS nested grids
+4. ~~**InheritanceBatch**~~ — suppress notify during load/style; one End wave.
+5. ~~**Coalesce DataContext**~~ — via batch End `PropagateInheritableFrom`.
+6. ~~**Button visuals not inheritable**~~.
 
-- Sales screens: **deep tree** (§2.7) × **many `{Binding}`** elements × **`DataContext` on root view model**.
-- **Screen switch** (`SalesOrderView.DataContext = …`) → full-tree push + binding re-init (and TODO rebind not implemented — still pays inheritance cost).
-- **Tree build** (XAML load): each **`Parent = …`** → `InheritPropertyValues` × control count × registered prop count.
-- **Not O(n²)** on single DataContext change (shallow `PassPropertyValue` per level), but **high constant factor**: VB events, `GetValue`, `Object.Equals`, binding callbacks × **node count**.
+**P2 — separate from 8b (BindingExpression / §2.5)**
 
-### 2.8.4 Suggested optimizations (VCF team)
+7. On **`DataContext` change**, optional **`UpdateTarget`** walk of **`BindingExpression`** list (today: DataContext DP callbacks on each node).
+8. **`PropertyChangedCallback` in metadata** — still open.
 
-**P0 — Align with WPF (breaking OK — see §9)**
+**P3 — diagnostics**
 
-1. **Lazy inheritance** — remove **`PassPropertyValue`** from default path; **`GetValue`** resolves inheritable DPs by walking **`VisualParent`** until local/binding value found (WPF precedence).
-2. **`DataContext` special-case** — store on element; **`BindingExpression`** resolves from **nearest ancestor** with non-null context (no push to descendants).
-3. **`InheritPropertyValues`** — maintain **`InheritableProperties` list at `Register`**; do not scan all registered DPs.
-
-**P1 — Until lazy model ships (interim)**
-
-4. **`PassPropertyValue` DFS in one pass** — single recursive walk; **suppress `DependencyPropertyChanged` propagation** during batch (`InheritanceBatch.Begin/End`).
-5. **Coalesce `DataContext` updates** — one flag per layout/load; push once at end (or switch to lazy).
-6. **Remove `IsInheritable` from `BackColor`/`BorderColor`/`Selected` on `Button`** — use **styles/setters** instead; reduces spurious push + refresh (document in `MIGRATION.md`).
-
-**P2 — With `BindingExpression` (§2.5)**
-
-7. On **`DataContext` change**, **`UpdateTarget` on expressions** in subtree — **not** `SetCurrentValue` on every node’s DP store.
-8. **`PropertyChangedCallback` in metadata** — optional **`Inherits`** flag handled centrally, not duplicated in every control’s `DependencyPropertyChanged`.
-
-**P3 — Diagnostics**
-
-9. **Counter/timing** in `.Tests`: `PassPropertyValue` / `InheritPropertyValues` call counts during `LoadSuperclassData` on POS golden XAML.
+9. ~~Counters~~ — `PassPropertyValueCalls` / `InheritPropertyValuesCalls` + **P8-INHERIT**.
 
 ### 2.8.5 POS implication
 
-- Inheritance slowness is **real and architectural**, not misconfiguration.
-- **`DataContext` push** is the dominant cost; fixing **§2.5 P0 (`BindingExpression` + rebind)** and **§2.8 lazy inheritance** should be **one coordinated redesign**.
-- Until then, avoid redundant **`DataContext` assigns** in code-behind and prefer **one context at root** (already POS pattern).
+- Inheritance cost is **bounded**: O(depth) reads + one notify wave on context change / load End.
+- Prefer **one context at root** (existing POS pattern).
+- Further Login ms cuts are more likely from **XAML/binding/layout** than more inheritance work.
 
-### 2.8.6 Open inheritance questions (see §8)
+### 2.8.6 Open inheritance questions — resolved
 
-- [ ] **Lazy-only** vs one-release **batched push** shim during migration?
-- [ ] Keep **Button `BackColor` inheritance** or style-only?
+- [x] **Lazy-only** vs batched push shim → **lazy pull + batched notify** (8b).
+- [x] Keep **Button `BackColor` inheritance** → **no** (8a; style/setters).
 
 ---
 

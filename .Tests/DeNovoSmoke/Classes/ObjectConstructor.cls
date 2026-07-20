@@ -27,10 +27,17 @@ Public Function CreateInstance(ByVal Classname As String) As Object
             Set Login = New HarnessScreen
             Login.Configure "Screens\Login\LoginView", True
             Set CreateInstance = Login
+        Case "MainMenuView"
+            Dim MainMenu As HarnessScreen
+            Set MainMenu = New HarnessScreen
+            MainMenu.Configure "Screens\MainMenu\MainMenuView", False
+            Set CreateInstance = MainMenu
         Case "SplashViewModel"
             Set CreateInstance = New StubSplashViewModel
         Case "LoginViewModel"
             Set CreateInstance = New StubLoginViewModel
+        Case "MainMenuViewModel"
+            Set CreateInstance = New StubMainMenuViewModel
         Case "CaseConverter"
             Set CreateInstance = New StubCaseConverter
         Case Else

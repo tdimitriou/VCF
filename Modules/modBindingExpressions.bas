@@ -62,6 +62,35 @@ Public Sub DetachTargetBindings(ByVal Target As IDependencyObject)
     Next
 End Sub
 
+' Detach every binding in the visual tree while targets/sources are still valid.
+Public Sub DetachBindingsTree(ByVal Root As Object)
+    On Error Resume Next
+    If Root Is Nothing Then Exit Sub
+    
+    DetachBindingsOnNode Root
+    
+    If TypeOf Root Is IControl Then
+        Dim Ctrl As IControl
+        Dim Child As Object
+        Set Ctrl = Root
+        For Each Child In Ctrl.Children
+            DetachBindingsTree Child
+        Next
+    End If
+End Sub
+
+Private Sub DetachBindingsOnNode(ByVal Root As Object)
+    On Error Resume Next
+    
+    If TypeOf Root Is IUserControl Then
+        Dim Uc As IUserControl
+        Set Uc = Root
+        DetachTargetBindings Uc.Base
+    ElseIf TypeOf Root Is IDependencyObject Then
+        DetachTargetBindings Root
+    End If
+End Sub
+
 Private Function GetTargetBindings(ByVal Target As IDependencyObject) As List
     On Error Resume Next
     Set GetTargetBindings = API.CObj(Target).Bindings

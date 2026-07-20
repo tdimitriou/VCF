@@ -302,7 +302,7 @@ Private Function ReadChildMargin(ByVal Child As Object) As Thickness
     If Child.DependencyProperties.Exists("Margin") Then
         Set ReadChildMargin = Child.DependencyProperties.GetValue("Margin")
     End If
-    ' Migrated POS XAML: Margin maps to DesignLeft/Top on types without a Margin DP (TextBlock, Image, …).
+    ' Migrated POS XAML: Margin maps to DesignLeft/Top on types without a Margin DP (TextBlock, Image, ï¿½).
     If ReadChildMargin Is Nothing Then
         If TypeOf Child Is IUIElement Then
             Dim UI As IUIElement

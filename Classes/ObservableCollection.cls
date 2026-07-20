@@ -35,8 +35,9 @@ Private Sub Class_Initialize()
 End Sub
 
 Private Sub Class_Terminate()
-    modStaticClasses.CollectionViewSource.DestroyDefaultView m_Ptr
-    m_CollectionChangedEvent.Unregister
+    On Error Resume Next
+    If m_Ptr <> 0 Then modStaticClasses.CollectionViewSource.DestroyDefaultView m_Ptr
+    If Not m_CollectionChangedEvent Is Nothing Then m_CollectionChangedEvent.Unregister
 End Sub
 '#End Region
 

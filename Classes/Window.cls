@@ -60,6 +60,8 @@ Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long,
     Private Sub Form_Unload(Cancel As Integer)
         On Error Resume Next
         
+        modBindingExpressions.DetachBindingsTree Me
+        
         m_Subclass.UnHook
         If m_BasePtr <> 0 Then Application.Current.Base.Windows.Remove m_BasePtr
     End Sub
@@ -288,10 +290,12 @@ Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long,
 
 '#Region Public Methods
     Public Sub Show(Optional Modal As FormShowConstants = vbModeless, Optional Owner As Object, Optional Focused As Boolean = True)
+        SyncFormBorderStyle
         Form.Show Modal, Owner, Not Focused
     End Sub
     
     Public Function ShowDialog(Optional Owner As Object) As Boolean
+        SyncFormBorderStyle
         Form.Show vbModal, Owner
         
         ShowDialog = m_DialogResult
@@ -347,10 +351,12 @@ Catch:
             Case "BorderStyle":
                 
                 If Not Form Is Nothing Then
+                    Dim Desired As Long
+                    Desired = CLng(Property.GetValue)
                     If Form.IsChildWindow Then
                         Property.SetCurrentValue Form.BorderStyle
-                    Else
-                        Form.BorderStyle = Property.GetValue
+                    ElseIf Form.BorderStyle <> Desired Then
+                        Form.BorderStyle = Desired
                     End If
                 End If
             Case Else
@@ -520,7 +526,7 @@ Try:
 
 Catch:
         
-        Err.Raise Err.Number, Typename(Me), Err.Description, Err.HelpFile, Err.HelpContext
+        Err.Raise Err.Number, TypeName(Me), Err.Description, Err.HelpFile, Err.HelpContext
     
     End Sub
 '#End Region
@@ -532,6 +538,10 @@ Catch:
         m_BasePtr = ObjPtr(Superclass)
         Application.Current.Base.Windows.Add m_BasePtr, Superclass
         Superclass.InitializeComponent
+        
+        Set Style = GetBaseStyle
+        
+        SyncFormBorderStyle
     End Sub
 '#End Region
 
@@ -556,7 +566,9 @@ Catch:
             DefaultH = 768
             
             If ParentWindow Is Nothing Then
-                Set Form = Cairo.WidgetForms.Create(vbSizable, , , DefaultW, DefaultH)
+                Set Form = Cairo.WidgetForms.Create(0, , , DefaultW, DefaultH)
+                On Error Resume Next
+                Form.BorderStyle = 0
             Else
                 Set Form = Cairo.WidgetForms.CreateChild(ParentWindow.hWnd, , CanGetFocus)
             End If
@@ -584,14 +596,22 @@ Catch:
             NewUIElementBase Me, m_BaseUIElement
             
             'EnumerateProperties Me
-            
-            Set Style = GetBaseStyle
     End Sub
 '#End Region
 
+Private Sub SyncFormBorderStyle()
+    On Error Resume Next
+    If Form Is Nothing Then Exit Sub
+    If Form.IsChildWindow Then Exit Sub
+    
+    Dim Desired As Long
+    Desired = CLng(m_DependencyProperties.GetValue("BorderStyle"))
+    If Form.BorderStyle <> Desired Then Form.BorderStyle = Desired
+End Sub
+
 Private Function GetBaseStyle() As Style
     Dim Style
-    API.CopyVariable m_BaseUIElement.TryFindResource(Typename(Me) & ".BaseStyle"), Style
+    API.CopyVariable m_BaseUIElement.TryFindResource(TypeName(Me) & ".BaseStyle"), Style
     
     If Not IsObject(Style) Then Exit Function
     If TypeOf Style Is Style Then Set GetBaseStyle = Style

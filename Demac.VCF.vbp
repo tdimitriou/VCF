@@ -128,6 +128,7 @@ Module=modControlTemplateEngine; Modules\modControlTemplateEngine.bas
 Module=modSelectorEngine; Modules\modSelectorEngine.bas
 Module=modStyleTriggerEngine; Modules\modStyleTriggerEngine.bas
 Module=modRenderCoalescer; Modules\modRenderCoalescer.bas
+Module=modInheritanceBatch; Modules\modInheritanceBatch.bas
 Class=RenderCoalescer; Classes\RenderCoalescer.cls
 Startup="(None)"
 HelpFile=""

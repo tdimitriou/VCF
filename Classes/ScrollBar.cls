@@ -47,7 +47,8 @@ Private Sub Class_Initialize()
 End Sub
 
 Private Sub Class_Terminate()
-   Set mTimer = Nothing
+    On Error Resume Next
+    If Not mTimer Is Nothing Then Set mTimer = Nothing
 End Sub
 
 Public Property Get Widget() As cWidgetBase

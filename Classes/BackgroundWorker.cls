@@ -202,6 +202,8 @@ End Sub
 
 ' Class Destructor providing thread hardening features against memory leaks and orphan processes
 Private Sub Class_Terminate()
+    On Error Resume Next
+    
     ' Bail out immediately if no asynchronous operation is active
     If Not m_IsBusy Or m_TH Is Nothing Then Exit Sub
     

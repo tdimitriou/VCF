@@ -1,0 +1,4 @@
+<Window x:Class="BorderTestWindow" BorderStyle="2" DesignWidth="480" DesignHeight="280" Width="480" Height="280">
+	<TextBlock DesignLeft="16" DesignTop="16" DesignWidth="448" DesignHeight="32" Text="Border test window (BorderStyle=2)" FontSize="14" FontBold="1"/>
+	<TextBlock DesignLeft="16" DesignTop="56" DesignWidth="448" DesignHeight="120" Text="Verify title bar and border on the first frame (no borderless flash). Close with X or Esc. Open from shell: Shift+B." FontSize="11"/>
+</Window>

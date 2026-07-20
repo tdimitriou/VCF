@@ -88,9 +88,12 @@ Private Sub Class_Initialize()
     VCF.Application.Create Me
 End Sub
 
-Private Sub m_Base_Startup()
-End Sub
-
 Private Function AdaptMyAppXml(ByVal Xml As String) As String
     AdaptMyAppXml = Replace(Xml, "x:Class=""MyApp""", "x:Class=""AppHost""", , , vbTextCompare)
 End Function
+
+Private Sub Class_Terminate()
+    On Error Resume Next
+    VCF.SetCustomConstructor Nothing
+    VCF.ClearApplication
+End Sub

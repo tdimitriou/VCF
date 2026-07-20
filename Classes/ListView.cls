@@ -271,10 +271,10 @@ Private m_Ready                                   As Boolean
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
-        
-        If Parent.Widgets.Exists(Widget.Key) Then Parent.Widgets.Remove Widget.Key
-        Parent.Widgets.Add Me, "_" & ObjPtr(Me), Left, Top, Width, Height
-        
+
+        ' Size the widget in place — do not Remove/Add (key mismatch with AttachChildWidget
+        ' left ListView stuck at DesignWidth/Height defaults 100x30 inside ListWrapper).
+        W.Move Left, Top, Width, Height
         SetVisibility W, m_Visibility
     End Sub
 
@@ -722,6 +722,12 @@ Private m_Ready                                   As Boolean
         
         Dim Data
         Dim Text As String
+        Dim PadL As Single
+        Dim PadT As Single
+        Dim PadR As Single
+        Dim PadB As Single
+        Dim TextW As Double
+        Dim TextH As Double
         
         API.CopyVariable m_ItemsSource(Index), Data
             
@@ -734,9 +740,19 @@ Private m_Ready                                   As Boolean
         Text = Data
         If Err Then Text = "{" & Typename(Data) & "}"
         
+        ' Win10 WPF ListBoxItem default Padding="4,1,4,1" (classic was 2,0,0,0).
+        PadL = 4!
+        PadT = 1!
+        PadR = 4!
+        PadB = 1!
+        TextW = CDbl(dx) - PadL - PadR
+        TextH = CDbl(dy) - PadT - PadB
+        If TextW < 0# Then TextW = 0#
+        If TextH < 0# Then TextH = 0#
+        
         W.SelectFontSettingsInto CC, IIf(Index = m_Base.ListIndex, vbWhite, -1)
             
-        CC.DrawText 0, 0, CDbl(dx), CDbl(dy), Text, , , , 1
+        CC.DrawText PadL, PadT, TextW, TextH, Text, , , , 1
     End Sub
     
     Private Sub DrawItemBackground(ByVal Index As Long, CC As vbRichClient5.cCairoContext, ByVal dx As Single, ByVal dy As Single, ByVal Alpha As Single)

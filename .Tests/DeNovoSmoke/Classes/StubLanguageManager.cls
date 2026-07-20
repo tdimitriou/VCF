@@ -45,5 +45,5 @@ End Sub
 
 Private Sub Class_Terminate()
     On Error Resume Next
-    m_Event.Unregister
+    If Not m_Event Is Nothing Then m_Event.Unregister
 End Sub

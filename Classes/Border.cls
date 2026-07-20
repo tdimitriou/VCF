@@ -167,7 +167,7 @@ Public Name As String
         If Parent Is Nothing Then Exit Sub
         
         W.Move Left, Top, Width, Height
-        m_Layout.OnHostResize m_Children, W
+        ArrangeBorderChild
     End Sub
 
     Public Property Set Parent(ByVal Value As IControl)
@@ -352,12 +352,61 @@ Catch:
     End Sub
 
     Private Sub ArrangeBorderChild()
+        Dim UseDesign As Boolean
+        Dim Marg As Thickness
+        Dim InsetL As Single
+        Dim InsetT As Single
+        Dim InsetR As Single
+        Dim InsetB As Single
+
+        If m_Children Is Nothing Then Exit Sub
+        If m_Children.Count = 0 Then Exit Sub
+
+        ' Single child = WPF Border.Child fill (LoginViewWpf ListWrapper→ListView, InnerBorder→Grid).
+        ' Honor child Margin (WPF arrange). Margin="4" on ListView may only shim DesignLeft/Top —
+        ' ReadElementMargin reconstructs Thickness from Design* when Margin DP is absent.
         If m_Children.Count = 1 Then
-            ArrangeDecoratorChild m_Children(0), W
-        Else
-            m_Layout.ArrangeChildren m_Children, W
+            m_Layout.LegacyScaleLayout = False
+            Set Marg = ReadElementMargin(m_Children(0))
+            InsetL = 0!: InsetT = 0!: InsetR = 0!: InsetB = 0!
+            If Not Marg Is Nothing Then
+                On Error Resume Next
+                InsetL = CSng(CallByName(Marg, "Left", VbGet))
+                InsetT = CSng(CallByName(Marg, "Top", VbGet))
+                InsetR = CSng(CallByName(Marg, "Right", VbGet))
+                InsetB = CSng(CallByName(Marg, "Bottom", VbGet))
+                Err.Clear
+                On Error GoTo 0
+                ' Uniform Margin="4" on types without Margin DP only sets DesignLeft/Top —
+                ' mirror to Right/Bottom so inset is even.
+                If InsetL > 0! And InsetR = 0! And InsetB = 0! Then InsetR = InsetL
+                If InsetT > 0! And InsetB = 0! And InsetL = InsetR Then InsetB = InsetT
+            End If
+            ArrangeDecoratorChild m_Children(0), W, InsetL, InsetT, InsetR, InsetB
+            Exit Sub
         End If
+
+        ' Multi-child POS Borders (brand title, legacy InnerBorder with Design* siblings).
+        UseDesign = ChildrenUseDesignLayout()
+        m_Layout.LegacyScaleLayout = UseDesign
+        m_Layout.ArrangeChildren m_Children, W
     End Sub
+
+    ' Option B: POS multi-child Design* siblings scale with Border host.
+    ' Detect DesignLeft/Top only — DesignWidth/Height defaults are not a POS signal.
+    Private Function ChildrenUseDesignLayout() As Boolean
+        Dim Child As Object
+        Dim ChildUI As IUIElement
+
+        On Error Resume Next
+        For Each Child In m_Children
+            If TypeOf Child Is IUIElement Then
+                Set ChildUI = Child
+                If ChildUI.DesignLeft <> 0# Then ChildrenUseDesignLayout = True: Exit Function
+                If ChildUI.DesignTop <> 0# Then ChildrenUseDesignLayout = True: Exit Function
+            End If
+        Next
+    End Function
 '#End Region
 
 '#Region DependencyProperties Events

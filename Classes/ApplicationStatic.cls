@@ -16,6 +16,8 @@ Option Explicit
 Private m_CurrentPtr As Long
 
 Public Property Get Current() As VCF.IApplication
+    If m_CurrentPtr = 0 Then Exit Property
+    
     Dim Obj As Object
     Set Obj = API.ObjFromPtr(m_CurrentPtr)
     
@@ -23,7 +25,11 @@ Public Property Get Current() As VCF.IApplication
 End Property
 
 Public Property Set Current(ByVal Value As IApplication)
-    m_CurrentPtr = ObjPtr(Value)
+    If Value Is Nothing Then
+        m_CurrentPtr = 0
+    Else
+        m_CurrentPtr = ObjPtr(Value)
+    End If
 End Property
 
 Public Sub Create(ByVal Superclass As IApplication)

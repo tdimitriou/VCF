@@ -131,9 +131,99 @@ ReturnStored:
             Call API.CopyVariable(m_Value, GetValue)
         End If
         
+        ' Phase 8b — WPF-style lazy inherit: walk parent when no explicit local/current value.
+        If m_InGetValue = 0 Then
+            If Not m_Metadata Is Nothing Then
+                If m_Metadata.IsInheritable Then
+                    If Object.Equals(GetValue, m_UnsetValue) Then
+                        Call TryCopyInheritedValue(GetValue)
+                    End If
+                End If
+            End If
+        End If
+        
         API.CopyVariable Conversion.TryCast(GetValue, m_PropertyType), GetValue
         
     End Function
+    
+    ' Local effective value only (no listeners, no inherit). Used for parent-chain walks.
+    Friend Function GetLocalEffectiveValue() As Variant
+        If Object.Equals(m_Value, m_UnsetValue) Then
+            Call API.CopyVariable(m_CurrentValue, GetLocalEffectiveValue)
+        Else
+            Call API.CopyVariable(m_Value, GetLocalEffectiveValue)
+        End If
+    End Function
+    
+    ' True when SetValue or SetCurrentValue supplied a value (blocks parent inheritance).
+    Friend Function HasExplicitValue() As Boolean
+        If Not Object.Equals(m_Value, m_UnsetValue) Then
+            HasExplicitValue = True
+            Exit Function
+        End If
+        HasExplicitValue = Not Object.Equals(m_CurrentValue, m_UnsetValue)
+    End Function
+    
+    ' Binding callbacks when an ancestor's inheritable value changed (no local SetCurrentValue).
+    Friend Sub NotifyInheritedValueChanged()
+        Dim NewVal
+        Dim Callback As IDependencyPropertyCallbackListener
+        Dim CallbackItem As Variant
+        Dim BindingCallback As Binding
+        
+        On Error Resume Next
+        Call API.CopyVariable(GetValue, NewVal)
+        
+        For Each CallbackItem In m_Callbacks
+            Set Callback = CallbackItem
+            If Callback Is Nothing Then GoTo NextInheritedCallback
+            
+            If TypeOf Callback Is Binding Then
+                Set BindingCallback = Callback
+                If Not BindingCallback.IsListenerActive Then
+                    m_Callbacks.Remove CallbackItem
+                    GoTo NextInheritedCallback
+                End If
+            End If
+            
+            Callback.OnValueChanged Me, NewVal
+NextInheritedCallback:
+        Next
+    End Sub
+    
+    Private Sub TryCopyInheritedValue(ByRef OutValue As Variant)
+        Dim Deps As DependencyProperties
+        Dim Target As IDependencyObject
+        Dim Anc As IDependencyObject
+        Dim Src As DependencyProperty
+        Dim AncLocal
+        
+        Set Deps = Parent
+        If Deps Is Nothing Then Exit Sub
+        Set Target = Deps.Target
+        If Target Is Nothing Then Exit Sub
+        
+        Set Anc = Target.Parent
+        Do While Not Anc Is Nothing
+            If Anc.DependencyProperties.Exists(m_Name) Then
+                Set Src = Anc.DependencyProperties.GetProperty(m_Name)
+                If Not Src Is Nothing Then
+                    If PropertyType = Src.PropertyType Then
+                        If PropertyTypeName = Src.PropertyTypeName Then
+                            If ProgId = Src.ProgId Then
+                                Call API.CopyVariable(Src.GetLocalEffectiveValue, AncLocal)
+                                If Not Object.Equals(AncLocal, Src.UnsetValue) Then
+                                    Call API.CopyVariable(AncLocal, OutValue)
+                                    Exit Sub
+                                End If
+                            End If
+                        End If
+                    End If
+                End If
+            End If
+            Set Anc = Anc.Parent
+        Loop
+    End Sub
     
     Friend Sub ClearValue()
         Call API.CopyVariable(m_UnsetValue, m_Value)
@@ -248,7 +338,8 @@ NextCallback:
     End Sub
     
     Private Sub Class_Terminate()
-        m_PropertyChangedEvent.Unregister
+        On Error Resume Next
+        If Not m_PropertyChangedEvent Is Nothing Then m_PropertyChangedEvent.Unregister
     End Sub
 '#End Region
 

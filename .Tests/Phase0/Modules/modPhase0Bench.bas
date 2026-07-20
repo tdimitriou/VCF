@@ -41,6 +41,8 @@ Public Sub RunAll()
     If Not Phase6dBench_RenderCoalesce() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
     If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
+    If Not Phase7dBench_BorderDesignResize() Then Failed = Failed + 1
+    If Not Phase8Bench_InheritanceBatch() Then Failed = Failed + 1
 
     Debug.Print "=== Done: " & (31 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
@@ -1160,6 +1162,108 @@ Fail:
     LogResult "P7c-LAY", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P7c-LAY — " & Err.Description
     Phase7cBench_LegacyLayoutShim = False
+End Function
+
+Public Function Phase7dBench_BorderDesignResize() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As Border
+    Dim A As TextBlock
+    Dim B As TextBlock
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load(LoadTextFile(App.Path & "\Resources\BorderDesignChildren.xml"))
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "BorderDesignChildren returned Nothing"
+    If Root.Children.Count <> 2 Then Err.Raise vbObjectError, , "Expected 2 children, got " & Root.Children.Count
+
+    Set A = Root.Children(0)
+    Set B = Root.Children(1)
+
+    ' Border.Move requires Parent; Widget.Move raises W_Resize -> ArrangeBorderChild (Option B).
+    Root.Widget.Move 0, 0, 400, 300
+    If Abs(A.Widget.Left - 40!) > 2! Then Err.Raise vbObjectError, , "Full A.Left expected ~40, got " & A.Widget.Left
+    If Abs(A.Widget.Width - 200!) > 2! Then Err.Raise vbObjectError, , "Full A.Width expected ~200, got " & A.Widget.Width
+    If Abs(B.Widget.Left - 100!) > 2! Then Err.Raise vbObjectError, , "Full B.Left expected ~100, got " & B.Widget.Left
+
+    Root.Widget.Move 0, 0, 200, 150
+    If Abs(A.Widget.Left - 20!) > 2! Then Err.Raise vbObjectError, , "Half A.Left expected ~20, got " & A.Widget.Left
+    If Abs(A.Widget.Width - 100!) > 2! Then Err.Raise vbObjectError, , "Half A.Width expected ~100, got " & A.Widget.Width
+    If Abs(B.Widget.Left - 50!) > 2! Then Err.Raise vbObjectError, , "Half B.Left expected ~50, got " & B.Widget.Left
+    If Abs(B.Widget.Width - 40!) > 2! Then Err.Raise vbObjectError, , "Half B.Width expected ~40, got " & B.Widget.Width
+
+    LogResult "P7d-LAY-RESIZE", 0, "OK Design* scale 400x300 -> 200x150"
+    Debug.Print "PASS  P7d-LAY-RESIZE Border Design* children scale with host"
+    Phase7dBench_BorderDesignResize = True
+    Exit Function
+
+Fail:
+    LogResult "P7d-LAY-RESIZE", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P7d-LAY-RESIZE — " & Err.Description
+    Phase7dBench_BorderDesignResize = False
+End Function
+
+Public Function Phase8Bench_InheritanceBatch() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As Border
+    Dim Mid As Border
+    Dim Inner As Border
+    Dim Tb As TextBlock
+    Dim PassDuringLoad As Long
+    Dim Vm As Phase0ViewModel
+    Dim Vm2 As Phase0ViewModel
+    Dim Expr As BindingExpression
+    Dim DataContextProp As DependencyProperty
+
+    On Error GoTo Fail
+
+    VCF.ResetInheritanceCounters
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load(LoadTextFile(App.Path & "\Resources\InheritanceNestedBorder.xml"))
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "InheritanceNestedBorder returned Nothing"
+    If Root.Children.Count <> 1 Then Err.Raise vbObjectError, , "Expected 1 child on root"
+
+    PassDuringLoad = VCF.PassPropertyValueCalls
+    ' Phase 8b: PassPropertyValue is a no-op (lazy GetValue); keep a soft ceiling.
+    If PassDuringLoad > 0 Then Err.Raise vbObjectError, , "PassPropertyValueCalls during load expected 0, got " & PassDuringLoad
+
+    Set Mid = Root.Children(0)
+    Set Inner = Mid.Children(0)
+    Set Tb = Inner.Children(0)
+
+    Set Vm = New Phase0ViewModel
+    Vm.Title = "InheritedCtx"
+    Set Root.DataContext = Vm
+
+    If Not Mid.DataContext Is Vm Then Err.Raise vbObjectError, , "Mid DataContext not inherited"
+    If Not Inner.DataContext Is Vm Then Err.Raise vbObjectError, , "Inner DataContext not inherited"
+
+    Set DataContextProp = Tb.DependencyProperties.GetProperty("DataContext")
+    Set Expr = New BindingExpression
+    Expr.Attach Tb, "Text", DataContextProp, "Title", OneWay
+    If Tb.Text <> "InheritedCtx" Then Err.Raise vbObjectError, , "Expected InheritedCtx from pull DataContext, got " & Tb.Text
+
+    Set Vm2 = New Phase0ViewModel
+    Vm2.Title = "RebindCtx"
+    Set Root.DataContext = Vm2
+    If Tb.Text <> "RebindCtx" Then Err.Raise vbObjectError, , "Expected RebindCtx after ancestor DataContext change, got " & Tb.Text
+
+    LogResult "P8-INHERIT", 0, "OK PassDuringLoad=" & PassDuringLoad & " InheritCalls=" & VCF.InheritPropertyValuesCalls & " lazy"
+    Debug.Print "PASS  P8-INHERIT lazy GetValue inherit + DataContext"
+    Expr.Detach
+    Set Expr = Nothing
+    Phase8Bench_InheritanceBatch = True
+    Exit Function
+
+Fail:
+    On Error Resume Next
+    If Not Expr Is Nothing Then Expr.Detach
+    LogResult "P8-INHERIT", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P8-INHERIT — " & Err.Description
+    Phase8Bench_InheritanceBatch = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

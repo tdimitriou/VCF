@@ -29,6 +29,14 @@ Friend Sub Configure(ByVal XamlResourceKey As String, ByVal WireLoginOnActivate 
     m_WireLoginOnActivate = WireLoginOnActivate
 End Sub
 
+Public Property Get XamlResourceKey() As String
+    XamlResourceKey = m_XamlKey
+End Property
+
+Public Property Get IsViewLoaded() As Boolean
+    IsViewLoaded = m_ViewLoaded
+End Property
+
 Public Sub LoadView()
     If m_ViewLoaded Then Exit Sub
     If Len(m_XamlKey) = 0 Then Err.Raise vbObjectError, , "HarnessScreen not configured"
@@ -336,8 +344,19 @@ End Sub
 '#Region Private Members
     Public Sub OnActivated()
         On Error Resume Next
-        If Not m_WireLoginOnActivate Then Exit Sub
+        If m_WireLoginOnActivate Then
+            WireLoginActivate
+        ElseIf InStr(1, m_XamlKey, "MainMenu", vbTextCompare) > 0 Then
+            WireMainMenuActivate
+        End If
         
+        If m_Base.Widget.Width > 0 And m_Base.Widget.Height > 0 Then
+            Move 0, 0, m_Base.Widget.Width, m_Base.Widget.Height
+        End If
+        m_Base.Widget.Refresh
+    End Sub
+
+    Private Sub WireLoginActivate()
         With VCF.NamingManager.GetNamedChildren(m_Base)
             If .ContainsKey("MyList") Then
                 Dim LV As VCF.ListView
@@ -357,11 +376,22 @@ End Sub
                 Pwd.Widget.SetFocus
             End If
         End With
-        
-        If m_Base.Widget.Width > 0 And m_Base.Widget.Height > 0 Then
-            Move 0, 0, m_Base.Widget.Width, m_Base.Widget.Height
-        End If
-        m_Base.Widget.Refresh
+    End Sub
+
+    Private Sub WireMainMenuActivate()
+        ' Milestone 2 — named lookup after RebuildNamedItemsList (HarnessNavigation).
+        With VCF.NamingManager.GetNamedChildren(m_Base)
+            If .ContainsKey("MenuTitle") Then
+                Dim TitleTb As VCF.TextBlock
+                Set TitleTb = .Item("MenuTitle")
+                Debug.Print "[P7d-MAINMENU] named MenuTitle.Text=" & TitleTb.Text
+            End If
+            If .ContainsKey("WelcomeText") Then
+                Dim WelcomeTb As VCF.TextBlock
+                Set WelcomeTb = .Item("WelcomeText")
+                Debug.Print "[P7d-MAINMENU] named WelcomeText.Text=" & WelcomeTb.Text
+            End If
+        End With
     End Sub
 
     Private Sub InitializeComponent()
@@ -385,9 +415,9 @@ End Sub
         Result = Xml
         Result = Replace(Result, "x:Class=""SplashView""", "x:Class=""HarnessScreen""", , , vbTextCompare)
         Result = Replace(Result, "x:Class=""LoginView""", "x:Class=""HarnessScreen""", , , vbTextCompare)
+        Result = Replace(Result, "x:Class=""MainMenuView""", "x:Class=""HarnessScreen""", , , vbTextCompare)
         AdaptXamlSuperclass = Result
     End Function
 '#End Region
-
 
 

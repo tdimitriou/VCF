@@ -107,7 +107,19 @@ Existing **P7a-SMOKE** uses legacy `Design*` — add migrated-XAML variant.
 
 ---
 
-## 7. DeNovo fixes (out of scope for VCF DLL)
+## 7. Framework anti-patterns (Phase 7d — validated)
+
+See [WINDOW_LIFECYCLE.md](./WINDOW_LIFECYCLE.md) and handoff guide §3.2.
+
+| Do not | Why |
+|--------|-----|
+| `SyncFormBorderStyle` / `Form.BorderStyle` during `WRoot.Refresh` | Form teardown; click-to-hide; IDE hang |
+| Manual `DetachBindingsTree` before `RemoveAll` | `Window.Form_Unload` handles detach in current VCF |
+| Use B-GOLD ms as Login load SLA | Golden panel is minimal tree only |
+
+---
+
+## 8. DeNovo fixes (out of scope for VCF DLL)
 
 These remain in `denovo` repo — listed for context only:
 
@@ -118,7 +130,7 @@ These remain in `denovo` repo — listed for context only:
 
 ---
 
-## 8. Sign-off workflow
+## 9. Sign-off workflow
 
 | Step | Owner |
 |------|--------|

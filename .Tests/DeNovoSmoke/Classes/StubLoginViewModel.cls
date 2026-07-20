@@ -48,7 +48,9 @@ Public Property Get ClearInput() As ICommand
 End Property
 
 Public Sub LoginMethod()
+    On Error Resume Next
     Debug.Print "DeNovoSmoke Login (stub) PasswordText=" & m_PasswordText
+    If Not modApp.Shell Is Nothing Then modApp.Shell.ShowMainMenu
 End Sub
 
 Public Sub ClearInputMethod()
@@ -70,5 +72,5 @@ End Sub
 
 Private Sub Class_Terminate()
     On Error Resume Next
-    m_Event.Unregister
+    If Not m_Event Is Nothing Then m_Event.Unregister
 End Sub

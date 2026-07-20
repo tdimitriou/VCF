@@ -174,3 +174,23 @@ Public Sub ClearCustomConstructor()
     Set modConstructors.CustomConstructor = Nothing
 End Sub
 
+Public Sub ClearApplication()
+    Set modStaticClasses.Application.Current = Nothing
+End Sub
+
+Public Sub DetachBindingsTree(ByVal Root As Object)
+    modBindingExpressions.DetachBindingsTree Root
+End Sub
+
+Public Sub ResetInheritanceCounters()
+    DependencyPropertiesStatic.ResetInheritanceCounters
+End Sub
+
+Public Property Get PassPropertyValueCalls() As Long
+    PassPropertyValueCalls = DependencyPropertiesStatic.PassPropertyValueCalls
+End Property
+
+Public Property Get InheritPropertyValuesCalls() As Long
+    InheritPropertyValuesCalls = DependencyPropertiesStatic.InheritPropertyValuesCalls
+End Property
+

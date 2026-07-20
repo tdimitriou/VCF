@@ -187,8 +187,7 @@ Public Name As String
 
     Private Sub Class_Terminate()
         On Error Resume Next
-        
-        m_Children.Clear
+        If Not m_Children Is Nothing Then m_Children.Clear
     End Sub
 
 '#End Region

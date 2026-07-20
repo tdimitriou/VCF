@@ -162,12 +162,10 @@ End Property
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
         
-        'If Parent.Widgets.Exists(Widget.Key) Then Parent.Widgets.Remove Widget.Key
-        'Parent.Widgets.Add Me, "_" & ObjPtr(Me), Left, Top, Width, Height
-        
         W.Move Left, Top, Width, Height
         
         ApplyVisibility W, Visibility
+        ArrangePanel
     End Sub
 
     Public Property Set Parent(ByVal Value As IControl)
