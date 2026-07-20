@@ -2,7 +2,8 @@
 
 Minimal VB6 exe to load **DeNovo POS XAML screens** against a pinned **`Demac.VCF.dll`** — without KernelLib, Demac.Data, DB, or hardware.
 
-**Status:** VB6 project checked in — open `DeNovoSmoke.vbp` in IDE (build `Demac.VCF.dll` first). Borderless shell **1024×768** client (`BorderStyle=0`).
+**Status:** VB6 project checked in — open `DeNovoSmoke.vbp` in IDE (build `Demac.VCF.dll` first). Borderless shell **1024×768** client (`BorderStyle=0`).  
+**Phase 1 (UI/XAML):** **complete** on tag **`v2.23.0-wpf-alignment-phase1-complete`** — Splash → Login → MainMenu → Sales layout-only.  
 **VCF response:** [docs/DENOVO_HARNESS_PROPOSAL_RESPONSE.md](../../docs/DENOVO_HARNESS_PROPOSAL_RESPONSE.md)  
 **DeNovo proposal:** denovo monorepo → `docs/migration/VCF_TEAM_HANDOFF_HARNESS_PROPOSAL.md`  
 **Milestone 1 (fixtures + stub VMs):** denovo monorepo → `docs/migration/DENOVO_HARNESS_MILESTONE1.md` — **aligned 2026-06-22**
@@ -38,7 +39,7 @@ VCF does **not** duplicate the full POS XAML tree. DeNovo does **not** own the h
 
 **No references:** KernelLib, Demac.Data, UILib, ADODBUtils, POSWidgets (except types registered via minimal local `ObjectConstructor` stubs if required for `res:`).
 
-**Pin for harness work:** **`v2.22.0-wpf-alignment-p8b-denovo-m2`** (Phase 8b lazy inherit + DeNovoSmoke milestone 2; requires **2.18.0+** layout shim)
+**Pin for harness / Phase 1 complete:** **`v2.23.0-wpf-alignment-phase1-complete`** (Splash → Login → MainMenu → Sales layout-only; includes 8b + m2/m3)
 
 ---
 
@@ -96,7 +97,8 @@ Copy into `Resources/XAML/` (preserve `res:` paths):
 |---------|---------|
 | **SplashViewModel** | `Progress`, `InfoMessage` (strings) |
 | **LoginViewModel** | `UserList` (`ObservableCollection`), `PasswordText`, `LoginCommand`, `ClearInput` |
-| **MainMenuViewModel** | `Title`, `Subtitle`, `WelcomeMessage`, `SalesCommand` (m3 stub), `LogoutCommand` → Login |
+| **MainMenuViewModel** | `Title`, `Subtitle`, `WelcomeMessage`, `SalesCommand` → SalesOrder, `LogoutCommand` → Login |
+| **SalesOrderViewModel** | `Title`, `Subtitle`, `Lines` (`ObservableCollection`), `TotalText`, `AddSampleLineCommand`, `ClearLinesCommand`, `BackCommand` → MainMenu |
 | **AppCommands** (static) | `KeyClick`, `ClockInOutCommand`, `RestartCommand`, `ShutdownCommand` |
 | **LanguageManager** (static) | Keys: `Loading`, `Clear`, `Login`, `Restart`, `Exit` |
 | **AppProperties** (static) | `TerminalID`, `CurrentUser`, `CurrentTime` (StatusBar) |
@@ -120,7 +122,7 @@ Copy into `Resources/XAML/` (preserve `res:` paths):
 | `EAGER_MAINMENU_LOAD` | `False` | `True` = preload MainMenu at startup |
 | `ENABLE_LOAD_BENCH` | `True` | Log load ms to Immediate window |
 
-**MainMenu fixture:** harness-owned `Resources/XAML/Screens/MainMenu/MainMenuView.xml` + `StubMainMenuViewModel` (until denovo syncs production MainMenu). Sales button is a stub for milestone 3.
+**MainMenu fixture:** harness-owned `Resources/XAML/Screens/MainMenu/MainMenuView.xml` + `StubMainMenuViewModel` (until denovo syncs production MainMenu). **Sales** navigates to milestone 3.
 
 ### Keyboard shortcuts (harness)
 
@@ -128,6 +130,7 @@ Copy into `Resources/XAML/` (preserve `res:` paths):
 |-----|--------|
 | **Shift+L** | Skip splash → Login |
 | **Shift+M** | Show MainMenu (lazy-loads XAML; also reached via Login button) |
+| **Shift+S** | Show SalesOrder (lazy-loads; also via MainMenu **Sales**) |
 | **Shift+B** | Open bordered `BorderTestWindow`; check Immediate window for `[BORDER-DIAG]` |
 | **Shift+1** | Resize shell to **1024×768** (baseline) |
 | **Shift+2** | Resize shell to **800×600** |
@@ -140,15 +143,15 @@ See [WINDOW_LIFECYCLE.md](../../docs/WINDOW_LIFECYCLE.md).
 
 ### Milestone 3
 
-| Screen | Assert |
-|--------|--------|
-| **Sales order (layout-only)** | UniformGrid / columns render; stub line collection; no DB commit |
+| Screen / task | Assert |
+|---------------|--------|
+| **SalesOrderView.xml** | MainMenu **Sales** / **Shift+S** → left lines + right quick buttons (Design* columns); **Back to menu** (chrome + inline); stub `Lines`; no DB |
+| **Lazy Sales load** | Loads on first `ShowSalesOrder` (`EAGER_SALES_LOAD = False`) |
+| **P7d-LOAD-SALES** | Immediate load ms + `[P7d-SALES]` named LeftColumn/RightColumn/SalesTitle |
 
----
+**Sales fixture:** harness-owned `Resources/XAML/Screens/SalesOrder/SalesOrderView.xml` + `StubSalesOrderViewModel` (layout-only; no DB).
 
-| Screen | Assert |
-|--------|--------|
-| **Sales order (layout-only)** | UniformGrid / columns render; stub line collection; no DB commit |
+**m3 config:** `EAGER_SALES_LOAD` (default `False`).
 
 ---
 

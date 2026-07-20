@@ -10,7 +10,7 @@
 		<TextBlock DesignLeft="24" DesignTop="80" DesignWidth="520" DesignHeight="40" Text="{Binding CurrentUser, Source={StaticResource ResourceKey=AppProperties}}" ForeColor="&HFFFFFF" FontSize="14" FontBold="0" ScaleFont="0"/>
 
 		<Button Name="BtnSales" Style="{StaticResource ButtonSubmit}" Command="{Binding SalesCommand}" DesignLeft="24" DesignTop="160" DesignWidth="200" DesignHeight="72">
-			<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="200" DesignHeight="72" Text="Sales (m3)"/>
+			<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="200" DesignHeight="72" Text="Sales"/>
 		</Button>
 		<Button Name="BtnLogout" Style="{StaticResource ButtonCancel}" Command="{Binding LogoutCommand}" DesignLeft="248" DesignTop="160" DesignWidth="200" DesignHeight="72">
 			<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="200" DesignHeight="72" Text="Logout"/>

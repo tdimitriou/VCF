@@ -77,6 +77,8 @@ See [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md).
 | **Phase 1 (UI/XAML)** | **Phase0 31/31** + **DeNovoSmoke harness** green for agreed screens (Splash → Login → MainMenu → Sales **layout-only**) with stub VMs |
 | **Phase 2 (full POS)** | Re-attach KernelLib / Data / DB; full `DeNovo.exe` smoke per [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) §3 |
 
+**Status (2026-07-21):** **Phase 1 complete** — tag **`v2.23.0-wpf-alignment-phase1-complete`**. Do **not** change `DeNovo.vbp` until Phase 2 kickoff.
+
 Phase0 alone is necessary but not sufficient — we need your real XAML + binding contracts in the harness. Full exe startup is **explicitly out of scope** for Phase 1 sign-off.
 
 ### 2.5 Process going forward

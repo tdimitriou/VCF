@@ -1,0 +1,50 @@
+<UserControl x:Class="SalesOrderView" DataContext="SalesOrderViewModel" DesignLeft="0" DesignTop="0" DesignWidth="1024" DesignHeight="768" Width="1024" Height="768" Alpha="1">
+
+	<Border DesignLeft="16" DesignTop="12" DesignWidth="480" DesignHeight="48" CornerRadius="0" BorderColor="-1" BackColor="&HB1A200" Alpha="0">
+		<TextBlock Name="SalesTitle" HorizontalAlignment="0" VerticalAlignment="0" DesignLeft="0" DesignTop="0" DesignWidth="480" DesignHeight="28" Padding="0" Text="{Binding Title}" ForeColor="&HB1A200" FontSize="20" FontBold="1" ScaleFont="0"/>
+		<TextBlock Name="SalesSubtitle" HorizontalAlignment="0" VerticalAlignment="2" DesignLeft="0" DesignTop="28" DesignWidth="480" DesignHeight="20" Padding="0" Text="{Binding Subtitle}" ForeColor="&HFFFFFF" FontSize="14" FontBold="0" ScaleFont="0"/>
+	</Border>
+
+	<!-- Two columns via Design* (same pattern as Login/MainMenu — reliable in harness). -->
+	<Border Name="LeftColumn" Style="{StaticResource InnerBorder}" DesignLeft="16" DesignTop="72" DesignWidth="480" DesignHeight="560">
+		<TextBlock DesignLeft="16" DesignTop="12" DesignWidth="440" DesignHeight="24" Text="Order lines" ForeColor="&HFFFFFF" FontSize="14" FontBold="1" ScaleFont="0"/>
+		<Border Style="{StaticResource ListWrapper}" DesignLeft="16" DesignTop="44" DesignWidth="448" DesignHeight="460">
+			<ListView Name="LinesList" RowHeight="40" FontSize="13" FontBold="0" BorderColor="-1" DesignLeft="4" DesignTop="4" DesignWidth="440" DesignHeight="452"/>
+		</Border>
+		<TextBlock Name="TotalText" DesignLeft="16" DesignTop="516" DesignWidth="448" DesignHeight="28" Text="{Binding TotalText}" ForeColor="&HFFFFFF" FontSize="16" FontBold="1" ScaleFont="0"/>
+	</Border>
+
+	<Border Name="RightColumn" Style="{StaticResource InnerBorder}" DesignLeft="520" DesignTop="72" DesignWidth="480" DesignHeight="560">
+		<TextBlock DesignLeft="16" DesignTop="12" DesignWidth="440" DesignHeight="24" Text="Quick buttons (layout)" ForeColor="&HFFFFFF" FontSize="14" FontBold="1" ScaleFont="0"/>
+		<Button Name="BtnAddLine" Style="{StaticResource ButtonSubmit}" Command="{Binding AddSampleLineCommand}" DesignLeft="16" DesignTop="56" DesignWidth="210" DesignHeight="72">
+			<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="210" DesignHeight="72" Text="Add sample line"/>
+		</Button>
+		<Button Name="BtnDrink" Style="{StaticResource ButtonSubmit}" Command="{Binding AddSampleLineCommand}" CommandParameter="Drink" DesignLeft="246" DesignTop="56" DesignWidth="210" DesignHeight="72">
+			<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="210" DesignHeight="72" Text="Drink"/>
+		</Button>
+		<Button Name="BtnFood" Style="{StaticResource ButtonSubmit}" Command="{Binding AddSampleLineCommand}" CommandParameter="Food" DesignLeft="16" DesignTop="144" DesignWidth="210" DesignHeight="72">
+			<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="210" DesignHeight="72" Text="Food"/>
+		</Button>
+		<Button Name="BtnPay" Style="{StaticResource ButtonWarning}" Enabled="False" DesignLeft="246" DesignTop="144" DesignWidth="210" DesignHeight="72">
+			<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="210" DesignHeight="72" Text="Pay (stub)"/>
+		</Button>
+		<Button Name="BtnClear" Style="{StaticResource ButtonCancel}" Command="{Binding ClearLinesCommand}" DesignLeft="16" DesignTop="232" DesignWidth="210" DesignHeight="72">
+			<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="210" DesignHeight="72" Text="Clear lines"/>
+		</Button>
+		<Button Name="BtnBackInline" Style="{StaticResource ButtonCancel}" Command="{Binding BackCommand}" DesignLeft="246" DesignTop="232" DesignWidth="210" DesignHeight="72">
+			<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="210" DesignHeight="72" Text="Back to menu"/>
+		</Button>
+	</Border>
+
+	<!-- Chrome row — always visible (same band as Exit). -->
+	<Button Name="BtnBack" Style="{StaticResource ButtonSubmit}" Command="{Binding BackCommand}" DesignLeft="600" DesignTop="654" DesignWidth="200" DesignHeight="72">
+		<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="0" DesignTop="0" DesignWidth="200" DesignHeight="72" Text="Back to menu"/>
+	</Button>
+	<Button Style="{StaticResource ButtonCancel}" Command="{Binding ShutdownCommand, Source={StaticResource ResourceKey=AppCommands}}" DesignLeft="816" DesignTop="654" DesignWidth="200" DesignHeight="72">
+		<Image DesignLeft="4" DesignTop="4" DesignWidth="64" DesignHeight="64" ImageKey="Resources\Close.png"/>
+		<TextBlock Style="{StaticResource ButtonText12}" DesignLeft="68" DesignTop="4" DesignWidth="132" DesignHeight="64" Text="{Binding Text[Exit], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}"/>
+	</Button>
+
+	<res:Widgets\StatusBar DesignLeft="0" DesignTop="743" DesignWidth="1024" DesignHeight="25"/>
+
+</UserControl>

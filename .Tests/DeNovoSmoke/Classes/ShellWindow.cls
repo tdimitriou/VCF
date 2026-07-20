@@ -23,6 +23,7 @@ Attribute Form.VB_VarHelpID = -1
 Private m_Splash As HarnessScreen
 Private m_Login As HarnessScreen
 Private m_MainMenu As HarnessScreen
+Private m_Sales As HarnessScreen
 Private m_Nav As HarnessNavigation
 Private WithEvents m_SplashTimer As cTimer
 Attribute m_SplashTimer.VB_VarHelpID = -1
@@ -53,6 +54,12 @@ Public Sub InitializeViews()
     If modHarnessConfig.EAGER_MAINMENU_LOAD Then
         modHarnessLoadBench.TimedLoadView m_MainMenu, "P7d-LOAD-MAINMENU"
     End If
+    
+    Set m_Sales = New HarnessScreen
+    m_Sales.Configure "Screens\SalesOrder\SalesOrderView", False
+    If modHarnessConfig.EAGER_SALES_LOAD Then
+        modHarnessLoadBench.TimedLoadView m_Sales, "P7d-LOAD-SALES"
+    End If
 End Sub
 
 Public Sub ShowSplash()
@@ -80,6 +87,14 @@ Public Sub ShowMainMenu()
     m_Nav.SetActiveView Win, m_MainMenu
 End Sub
 
+Public Sub ShowSalesOrder()
+    On Error Resume Next
+    Set m_SplashTimer = Nothing
+    EnsureMainMenuLoaded
+    EnsureSalesLoaded
+    m_Nav.SetActiveView Win, m_Sales
+End Sub
+
 Private Sub EnsureLoginLoaded()
     If m_Login Is Nothing Then
         Set m_Login = New HarnessScreen
@@ -97,6 +112,16 @@ Private Sub EnsureMainMenuLoaded()
     End If
     If Not m_MainMenu.IsViewLoaded Then
         modHarnessLoadBench.TimedLoadView m_MainMenu, "P7d-LOAD-MAINMENU"
+    End If
+End Sub
+
+Private Sub EnsureSalesLoaded()
+    If m_Sales Is Nothing Then
+        Set m_Sales = New HarnessScreen
+        m_Sales.Configure "Screens\SalesOrder\SalesOrderView", False
+    End If
+    If Not m_Sales.IsViewLoaded Then
+        modHarnessLoadBench.TimedLoadView m_Sales, "P7d-LOAD-SALES"
     End If
 End Sub
 
@@ -171,6 +196,7 @@ Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
     Select Case KeyCode
         Case vbKeyL: ShowLogin
         Case vbKeyM: ShowMainMenu
+        Case vbKeyS: ShowSalesOrder
         Case vbKeyB: modBorderTest.ShowBorderTestWindow
         Case vbKey1: modHarnessResize.ApplyPreset1024 Win, Form
         Case vbKey2: modHarnessResize.ApplyPreset800 Win, Form

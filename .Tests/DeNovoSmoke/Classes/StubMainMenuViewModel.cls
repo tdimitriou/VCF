@@ -65,7 +65,9 @@ Public Property Get LogoutCommand() As ICommand
 End Property
 
 Public Sub SalesMethod()
-    Debug.Print "DeNovoSmoke MainMenu Sales (stub - milestone 3)"
+    On Error Resume Next
+    Debug.Print "DeNovoSmoke MainMenu -> SalesOrder"
+    If Not modApp.Shell Is Nothing Then modApp.Shell.ShowSalesOrder
 End Sub
 
 Public Sub LogoutMethod()

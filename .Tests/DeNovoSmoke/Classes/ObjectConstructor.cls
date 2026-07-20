@@ -38,6 +38,13 @@ Public Function CreateInstance(ByVal Classname As String) As Object
             Set CreateInstance = New StubLoginViewModel
         Case "MainMenuViewModel"
             Set CreateInstance = New StubMainMenuViewModel
+        Case "SalesOrderView"
+            Dim Sales As HarnessScreen
+            Set Sales = New HarnessScreen
+            Sales.Configure "Screens\SalesOrder\SalesOrderView", False
+            Set CreateInstance = Sales
+        Case "SalesOrderViewModel"
+            Set CreateInstance = New StubSalesOrderViewModel
         Case "CaseConverter"
             Set CreateInstance = New StubCaseConverter
         Case Else

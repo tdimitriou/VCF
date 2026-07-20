@@ -2,7 +2,8 @@
 
 Milestone 1 screens synced from denovo `pos-v1/UI/Resources/XAML/` per [DENOVO_HARNESS_MILESTONE1.md](https://github.com/tdimitriou/denovo/blob/main/docs/migration/DENOVO_HARNESS_MILESTONE1.md) §2.
 
-**Milestone 2:** `Screens/MainMenu/MainMenuView.xml` is **harness-owned** until denovo publishes a MainMenu sync target.
+**Milestone 2:** `Screens/MainMenu/MainMenuView.xml` is **harness-owned** until denovo publishes a MainMenu sync target.  
+**Milestone 3:** `Screens/SalesOrder/SalesOrderView.xml` is **harness-owned** (layout-only shell; not a full POS SalesOrder sync).
 
 ## Re-sync (preferred)
 
@@ -23,6 +24,7 @@ Add `-WhatIf` to preview. The script auto-detects the VCF path when possible; us
 | SplashView.xml | `Screens/Splash/` |
 | LoginView.xml, LoginPad.xml, LoginViewWpf.xml | `Screens/Login/` |
 | MainMenuView.xml | `Screens/MainMenu/` (harness m2) |
+| SalesOrderView.xml | `Screens/SalesOrder/` (harness m3) |
 | StatusBar.xml | `Widgets/` |
 | MyApp.xml | root |
 | ClockIn.png, Reboot.png, Close.png | `Resources/` |

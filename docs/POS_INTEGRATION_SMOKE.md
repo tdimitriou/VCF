@@ -29,20 +29,22 @@
 | Strict XAML | `VCF.StrictXamlLoad = True` in test bootstrap | B-STRICT-* pass |
 | DeNovoSmoke harness | `.Tests/DeNovoSmoke` (when scaffold lands) | Milestone screens per [README](../.Tests/DeNovoSmoke/README.md) |
 
-**Phase 1 sign-off (UI/XAML):** Phase0 + DeNovoSmoke harness with stub VMs — **not** full `DeNovo.exe`. See [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md).
+**Phase 1 sign-off (UI/XAML):** **Complete** on tag **`v2.23.0-wpf-alignment-phase1-complete`** — Phase0 + DeNovoSmoke Splash → Login → MainMenu → Sales layout-only. **Not** full `DeNovo.exe`. See [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md).
 
 ---
 
-## 2b. DeNovoSmoke harness — milestone 1 (Phase 1)
+## 2b. DeNovoSmoke harness — Phase 1 complete
 
-Minimal exe: **VCF + vbRichClient5 only** (no KernelLib / Data / DB). DeNovo contributes XAML + stub VMs; VCF owns the runner.
+Minimal exe: **VCF + vbRichClient5 only** (no KernelLib / Data / DB).
 
 | # | Screen | Pass criteria |
 |---|--------|---------------|
-| 1 | **SplashView.xml** | Loads; layout OK; theme resolves; no XAML error |
-| 2 | **LoginView.xml** | Loads; stub `DataContext`; bindings OK; focus OK |
+| 1 | **SplashView** | Loads; layout OK; theme resolves |
+| 2 | **LoginView** / **LoginViewWpf** | Stub `DataContext`; bindings; focus |
+| 3 | **MainMenuView** | Login → MainMenu; Logout; named lookup |
+| 4 | **SalesOrderView** | Layout-only columns; stub lines; Back → MainMenu |
 
-Run F5 in &lt; 30 s. Pin **`v2.18.0-wpf-alignment-p7c-layout-shim`** until harness tag ships.
+Pin: **`v2.23.0-wpf-alignment-phase1-complete`**.
 
 **Phase 2** (full POS): §3 below after harness green + documented breaking changes.
 

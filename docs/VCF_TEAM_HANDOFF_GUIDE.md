@@ -206,8 +206,10 @@ Phase 7 — POS migration support (denovo)
   7f Load performance — ~~XAML batching, P7d-LOAD benchmarks, lazy Login in harness~~
   8a Inheritance batch + DataContext coalesce — ~~done~~
   8b Lazy GetValue parent-walk (WPF pull model) — ~~done~~
-  m2 DeNovoSmoke MainMenu milestone — ~~done~~ (Login→MainMenu, Shift+M, lazy load + P7d-LOAD-MAINMENU)
-  m3 Sales order layout-only — pending
+  m2 DeNovoSmoke MainMenu milestone — ~~done~~
+  m3 Sales order layout-only — ~~done~~
+  **Phase 1 harness exit** — ~~complete~~ (`v2.23.0-wpf-alignment-phase1-complete`)
+  Phase 2 full POS / DeNovo.vbp — pending (not started)
      B-RESZ · B-NAV · Measure/Arrange · ListView bind hotspot
   later  WPF Margin/Padding defaults (phased) — see POS_LAYOUT_RESIZE.md §6 deferred
 ```
@@ -413,7 +415,8 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-07-20 | Phase 8a — inheritance batch + DataContext coalesce; **P8-INHERIT**; Button visuals not inheritable |
 | 2026-07-20 | Phase 8b — lazy `GetValue` inherit + batched notify; Pass no-op; **complete** (Phase0 + IDE DeNovoSmoke) |
 | 2026-07-20 | DeNovoSmoke **m2** — MainMenuView + StubMainMenuViewModel; Login→MainMenu / Logout; Shift+M; lazy + `[P7d-LOAD-MAINMENU]` |
-| 2026-07-20 | Tag **`v2.22.0-wpf-alignment-p8b-denovo-m2`** — Phase 8b + nested-batch fix + DeNovoSmoke m2 |
+| 2026-07-21 | DeNovoSmoke **m3** — SalesOrderView layout-only; MainMenu→Sales; Shift+S; stub Lines + `[P7d-LOAD-SALES]` |
+| 2026-07-21 | **Phase 1 complete** — tag **`v2.23.0-wpf-alignment-phase1-complete`**; DeNovo.vbp still deferred until Phase 2 |
 | 2026-07-20 | Deferred WPF Margin/Padding defaults (doc only) — after Phase 8 / Option C / m2 |
 | 2026-07-18 | Layout Option B — Border Design* → LegacyScaleLayout; Phase0 **P7d-LAY-RESIZE** |
 | 2026-07-18 | Phase 7f — XAML LoadSuperclassData batching; lazy Login; P7d-LOAD Immediate benches |

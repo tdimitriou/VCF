@@ -5,6 +5,33 @@
 
 ---
 
+## [2.23.0] — 2026-07-21 — Phase 1 harness exit (DeNovoSmoke m3)
+
+Tag: **`v2.23.0-wpf-alignment-phase1-complete`**
+
+### Phase 1 sign-off (UI/XAML)
+
+Agreed exit criteria met ([DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md) §2.4):
+
+| Gate | Status |
+|------|--------|
+| Phase0 **31/31** | Pass (includes P8-INHERIT) |
+| Splash → Login → MainMenu → Sales **layout-only** | Pass in DeNovoSmoke |
+
+**Still out of scope for Phase 1:** full `DeNovo.exe` / `DeNovo.vbp` pin (Phase 2).
+
+### Harness (m3)
+
+- **SalesOrderView** + **StubSalesOrderViewModel** — Design* two-column shell, stub `Lines` ListView, Add/Clear, **Back to menu**, **Shift+S**, lazy `[P7d-LOAD-SALES]`.
+- Builds on **2.22.0** (8b + m2).
+
+### Verification
+
+- [x] DeNovoSmoke — Login → MainMenu → Sales; Back; Add/Clear lines; named LeftColumn/RightColumn
+- [x] Phase0 still green on **2.22.0** DLL (no framework API change in m3)
+
+---
+
 ## [2.22.0] — 2026-07-20 — Phase 8b (lazy GetValue inheritance) + DeNovoSmoke m2
 
 Tag: **`v2.22.0-wpf-alignment-p8b-denovo-m2`**

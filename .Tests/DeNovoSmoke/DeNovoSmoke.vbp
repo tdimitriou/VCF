@@ -22,6 +22,7 @@ Class=HarnessActionCommand; Classes\HarnessActionCommand.cls
 Class=StubSplashViewModel; Classes\StubSplashViewModel.cls
 Class=StubLoginViewModel; Classes\StubLoginViewModel.cls
 Class=StubMainMenuViewModel; Classes\StubMainMenuViewModel.cls
+Class=StubSalesOrderViewModel; Classes\StubSalesOrderViewModel.cls
 Class=StubLanguageManager; Classes\StubLanguageManager.cls
 Class=StubAppCommands; Classes\StubAppCommands.cls
 Class=StubAppProperties; Classes\StubAppProperties.cls

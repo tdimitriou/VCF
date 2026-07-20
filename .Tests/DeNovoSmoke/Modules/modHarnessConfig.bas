@@ -16,7 +16,10 @@ Public Const EAGER_LOGIN_LOAD As Boolean = False
 ' False = MainMenu loads on first ShowMainMenu (milestone 2). True = eager preload.
 Public Const EAGER_MAINMENU_LOAD As Boolean = False
 
-' Log [P7d-LOAD-*] ms to Immediate window for Splash/Login/MainMenu/Bordered loads.
+' False = SalesOrder loads on first ShowSalesOrder (milestone 3). True = eager preload.
+Public Const EAGER_SALES_LOAD As Boolean = False
+
+' Log [P7d-LOAD-*] ms to Immediate window for Splash/Login/MainMenu/Sales/Bordered loads.
 Public Const ENABLE_LOAD_BENCH As Boolean = True
 
 Public Function LoginViewResourceKey() As String

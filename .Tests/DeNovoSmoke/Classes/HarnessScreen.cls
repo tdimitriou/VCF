@@ -348,6 +348,8 @@ End Sub
             WireLoginActivate
         ElseIf InStr(1, m_XamlKey, "MainMenu", vbTextCompare) > 0 Then
             WireMainMenuActivate
+        ElseIf InStr(1, m_XamlKey, "SalesOrder", vbTextCompare) > 0 Then
+            WireSalesOrderActivate
         End If
         
         If m_Base.Widget.Width > 0 And m_Base.Widget.Height > 0 Then
@@ -394,6 +396,39 @@ End Sub
         End With
     End Sub
 
+    Private Sub WireSalesOrderActivate()
+        Dim Vm As StubSalesOrderViewModel
+        Dim LV As VCF.ListView
+        
+        On Error Resume Next
+        Set Vm = DataContext
+        If Not Vm Is Nothing Then Vm.EnsureSeedLines
+        
+        With VCF.NamingManager.GetNamedChildren(m_Base)
+            If .ContainsKey("LinesList") Then
+                Set LV = .Item("LinesList")
+                If Not LV Is Nothing And Not Vm Is Nothing Then
+                    Set LV.ItemsSource = Vm.Lines
+                    LV.Refresh
+                End If
+            End If
+            If .ContainsKey("SalesTitle") Then
+                Dim TitleTb As VCF.TextBlock
+                Set TitleTb = .Item("SalesTitle")
+                Debug.Print "[P7d-SALES] named SalesTitle.Text=" & TitleTb.Text
+            End If
+            If .ContainsKey("LeftColumn") Then
+                Debug.Print "[P7d-SALES] named LeftColumn ok"
+            End If
+            If .ContainsKey("RightColumn") Then
+                Debug.Print "[P7d-SALES] named RightColumn ok"
+            End If
+            If .ContainsKey("LinesList") And Not Vm Is Nothing Then
+                Debug.Print "[P7d-SALES] Lines.Count=" & CStr(Vm.Lines.Count)
+            End If
+        End With
+    End Sub
+
     Private Sub InitializeComponent()
         Dim Xml As String
         
@@ -416,6 +451,7 @@ End Sub
         Result = Replace(Result, "x:Class=""SplashView""", "x:Class=""HarnessScreen""", , , vbTextCompare)
         Result = Replace(Result, "x:Class=""LoginView""", "x:Class=""HarnessScreen""", , , vbTextCompare)
         Result = Replace(Result, "x:Class=""MainMenuView""", "x:Class=""HarnessScreen""", , , vbTextCompare)
+        Result = Replace(Result, "x:Class=""SalesOrderView""", "x:Class=""HarnessScreen""", , , vbTextCompare)
         AdaptXamlSuperclass = Result
     End Function
 '#End Region
