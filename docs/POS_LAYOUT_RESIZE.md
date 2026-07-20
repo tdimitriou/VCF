@@ -115,7 +115,7 @@ LoginView (UserControl, legacy scale)
 
 ### Deferred — WPF Margin / Padding defaults (document now, implement later)
 
-**Status:** Agreed direction · **not scheduled** ahead of Phase 8 / Option C / harness milestone 2.
+**Status:** Agreed direction · **Phase 2a** — schedule **after** nav/layout (auto RelayoutChildren / Option C) and B-RESZ/B-NAV.
 
 **Goal:** Align framework `Margin`/`Padding` defaults with WPF (prefer Win10-era metrics where themes differ), so content controls share one model instead of one-off paint insets.
 
@@ -129,7 +129,7 @@ LoginView (UserControl, legacy scale)
 
 **Interim (already in tree):** `ListView` default item text inset **4,1,4,1**; single-child `Border` honors child Margin. Do not expand to other controls until this backlog item is scheduled.
 
-**Higher priority ahead of this:** Phase **8** (lazy DP inheritance / DataContext), layout Option **C** (if needed), DeNovoSmoke milestone **2** (MainMenu / lazy-load polish), consumer **pin/tag**.
+**Higher priority ahead of this (Phase 2a):** nav/layout gaps (manual `RelayoutChildren` → automatic), Option **C** if needed, **B-RESZ** / **B-NAV**, then Margin/Padding defaults.
 
 ---
 

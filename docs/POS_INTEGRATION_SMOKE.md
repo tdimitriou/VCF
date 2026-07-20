@@ -31,9 +31,11 @@
 
 **Phase 1 sign-off (UI/XAML):** **Complete** on tag **`v2.23.0-wpf-alignment-phase1-complete`** — Phase0 + DeNovoSmoke Splash → Login → MainMenu → Sales layout-only. **Not** full `DeNovo.exe`. See [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md).
 
+**Phase 2a (VCF parallel):** Framework tags validated here (§2b) + Phase0 only — Data/Kernel may still be unfinished.
+
 ---
 
-## 2b. DeNovoSmoke harness — Phase 1 complete
+## 2b. DeNovoSmoke harness — Phase 1 / Phase 2a gate
 
 Minimal exe: **VCF + vbRichClient5 only** (no KernelLib / Data / DB).
 
@@ -44,13 +46,13 @@ Minimal exe: **VCF + vbRichClient5 only** (no KernelLib / Data / DB).
 | 3 | **MainMenuView** | Login → MainMenu; Logout; named lookup |
 | 4 | **SalesOrderView** | Layout-only columns; stub lines; Back → MainMenu |
 
-Pin: **`v2.23.0-wpf-alignment-phase1-complete`**.
+Pin (Phase 1 exit): **`v2.23.0-wpf-alignment-phase1-complete`**. Later Phase 2a tags: same harness regression.
 
-**Phase 2** (full POS): §3 below after harness green + documented breaking changes.
+**Phase 2b** (full POS): §3 below when Data + Kernel + UI are ready together.
 
 ---
 
-## 3. POS manual smoke (Phase 2 — full DeNovo.exe)
+## 3. POS manual smoke (Phase 2b — full DeNovo.exe)
 
 Run on a **dev DB** with typical configuration. Record build tag and date.
 
@@ -84,7 +86,7 @@ Run on a **dev DB** with typical configuration. Record build tag and date.
 | Role | Name | Date | Tag | Result |
 |------|------|------|-----|--------|
 | VCF | | | | Phase0 + DeNovoSmoke milestone green |
-| DeNovo | | | | Harness §2b pass; then POS smoke §3 (Phase 2) |
+| DeNovo | | | | Harness §2b pass (2a); then POS smoke §3 when Phase 2b kicks off |
 
 ---
 

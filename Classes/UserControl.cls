@@ -339,9 +339,23 @@ Catch:
                         m_Layout.OnLayoutPropertyChanged Property.Name, m_Children, W
                     End If
                 End If
+                If Property.Name = "Visibility" Then NotifyWindowOfVisibilityChange
         End Select
         
         DependencyPropertiesStatic.PassPropertyValue m_Children, Property
+    End Sub
+    
+    Private Sub NotifyWindowOfVisibilityChange()
+        On Error Resume Next
+        If IsRootLayoutLocked() Then Exit Sub
+        Dim P As IControl
+        Set P = Parent
+        If P Is Nothing Then Exit Sub
+        If TypeOf P Is Window Then
+            Dim Win As Window
+            Set Win = P
+            Win.OnChildVisibilityChanged
+        End If
     End Sub
 '#End Region
 

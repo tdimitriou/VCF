@@ -18,7 +18,7 @@ Agreed exit criteria met ([DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS
 | Phase0 **31/31** | Pass (includes P8-INHERIT) |
 | Splash → Login → MainMenu → Sales **layout-only** | Pass in DeNovoSmoke |
 
-**Still out of scope for Phase 1:** full `DeNovo.exe` / `DeNovo.vbp` pin (Phase 2).
+**Still out of scope for Phase 1 / Phase 2a:** full `DeNovo.exe` / `DeNovo.vbp` pin (**Phase 2b** — deferred while Data/Kernel finish). VCF continues on Phase 2a with Phase0 + DeNovoSmoke only.
 
 ### Harness (m3)
 

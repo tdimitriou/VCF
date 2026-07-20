@@ -209,9 +209,16 @@ Phase 7 — POS migration support (denovo)
   m2 DeNovoSmoke MainMenu milestone — ~~done~~
   m3 Sales order layout-only — ~~done~~
   **Phase 1 harness exit** — ~~complete~~ (`v2.23.0-wpf-alignment-phase1-complete`)
-  Phase 2 full POS / DeNovo.vbp — pending (not started)
-     B-RESZ · B-NAV · Measure/Arrange · ListView bind hotspot
-  later  WPF Margin/Padding defaults (phased) — see POS_LAYOUT_RESIZE.md §6 deferred
+
+Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp)
+  **2a.1 IN PROGRESS:** auto RelayoutChildren after Visibility swap (Window direct child) — see WINDOW_LIFECYCLE.md §9
+  then   Option C if needed · B-RESZ · B-NAV · ListView bind hotspot
+
+  then   7c-dialog (`@` → DataTemplate) when UI contributes fixtures
+  later  WPF Margin/Padding defaults (phased) — after layout/nav; see POS_LAYOUT_RESIZE.md §6
+
+Phase 2b — POS integration (deferred)
+  Full DeNovo.vbp pin + KernelLib / Data / DB + smoke §3 — when all teams ready
 ```
 
 ### 4.1 Acceptance criteria (every phase)
@@ -235,7 +242,9 @@ Each **major** or **breaking minor** release MUST include:
 | **Semver tag** | e.g. `v3.0.0-wpf-alignment-p1` |
 | **Benchmark report** | vs previous tag; regressions explained |
 
-**DeNovo coordination:** After each tag, denovo pins `Demac.VCF.dll` in `DeNovo.vbp` and runs integration smoke (login → sales → grid → dialog).
+**DeNovo coordination (Phase 2a):** Validate each tag on **Phase0 + DeNovoSmoke** only. Do **not** require a `DeNovo.vbp` pin while Data/Kernel finish non-UI work.
+
+**DeNovo coordination (Phase 2b):** When all teams agree, pin latest `Demac.VCF.dll` in `DeNovo.vbp` and run full integration smoke (login → sales → grid → dialog) per [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) §3.
 
 ---
 
@@ -262,7 +271,7 @@ Each **major** or **breaking minor** release MUST include:
 - Two simultaneous `ListCollectionView` instances (B1)
 - POS SalesOrder shell smoke — **P7a-SMOKE** (correctness, no ms gate)
 
-**Deferred / Phase 8** (see [VCF_PERFORMANCE_BENCHMARKS.md](./VCF_PERFORMANCE_BENCHMARKS.md)):
+**Deferred / Phase 2a** (see [VCF_PERFORMANCE_BENCHMARKS.md](./VCF_PERFORMANCE_BENCHMARKS.md)):
 
 - ~~**P7d-LOAD-SPLASH** / **P7d-LOAD-LOGIN** / **P7d-LOAD-BORDERED**~~ — DeNovoSmoke Immediate logs (7f); baselines TBD
 - **P7d-SHUTDOWN** — `RemoveAll` after full harness session (no error 91) — validated in m1; keep as regression check
@@ -351,7 +360,7 @@ From [VCF_WPF_ALIGNMENT_NOTES.md §8](./VCF_WPF_ALIGNMENT_NOTES.md):
 | Remove `VCF_SHUTDOWN_DIAG` instrumentation | Before consumer pin vs keep | **DONE — removed** |
 | XAML load batching in `XAMLReader` | Phase 7f vs Phase 8 | **7f done:** `LockRefresh` + `BeginRenderUpdate` in `LoadSuperclassData` |
 | Border HWND always `Create(0)`? | vs create mode from final border | **Yes default**; XAML `BorderStyle=2` applied before `Form.Show` — [WINDOW_LIFECYCLE.md](./WINDOW_LIFECYCLE.md) |
-| WPF Margin/Padding defaults on all controls | Global sweep vs phased family-by-family | **Defer** — document in [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) §6; implement after Phase 8 / Option C / m2. Interim: ListView item pad 4,1,4,1 only |
+| WPF Margin/Padding defaults on all controls | Global sweep vs phased family-by-family | **Phase 2a later** — [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) §6; after nav/layout + B-RESZ/B-NAV. Interim: ListView item pad 4,1,4,1 only |
 
 ---
 
@@ -416,8 +425,10 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-07-20 | Phase 8b — lazy `GetValue` inherit + batched notify; Pass no-op; **complete** (Phase0 + IDE DeNovoSmoke) |
 | 2026-07-20 | DeNovoSmoke **m2** — MainMenuView + StubMainMenuViewModel; Login→MainMenu / Logout; Shift+M; lazy + `[P7d-LOAD-MAINMENU]` |
 | 2026-07-21 | DeNovoSmoke **m3** — SalesOrderView layout-only; MainMenu→Sales; Shift+S; stub Lines + `[P7d-LOAD-SALES]` |
-| 2026-07-21 | **Phase 1 complete** — tag **`v2.23.0-wpf-alignment-phase1-complete`**; DeNovo.vbp still deferred until Phase 2 |
-| 2026-07-20 | Deferred WPF Margin/Padding defaults (doc only) — after Phase 8 / Option C / m2 |
+| 2026-07-21 | **Phase 1 complete** — tag **`v2.23.0-wpf-alignment-phase1-complete`** |
+| 2026-07-21 | **Phase 2a / 2b split** — VCF continues locally (2a); full POS / `DeNovo.vbp` = **2b** when Data+Kernel+UI ready |
+| 2026-07-21 | **Phase 2a.1 start** — `Window.OnChildVisibilityChanged`; harness nav drops manual Relayout/Rebuild |
+| 2026-07-20 | Deferred WPF Margin/Padding defaults (doc only) — schedule under Phase 2a after layout/nav |
 | 2026-07-18 | Layout Option B — Border Design* → LegacyScaleLayout; Phase0 **P7d-LAY-RESIZE** |
 | 2026-07-18 | Phase 7f — XAML LoadSuperclassData batching; lazy Login; P7d-LOAD Immediate benches |
 | 2026-06-20 | Phase 7d lessons — WINDOW_LIFECYCLE.md; §3.1 L1–L5; Phase 7f/8 load perf plan; DeNovoSmoke smoke flows |

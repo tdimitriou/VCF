@@ -57,8 +57,8 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P6c-TMPL | ControlTemplate Border chrome | `Phase6cBench_ControlTemplate` | **pass** | Button CornerRadius |
 | P6d-COAL | Render refresh coalescing | `Phase6dBench_RenderCoalesce` | **pass** | dedupe + Style batch |
 | P7a-SMOKE | POS SalesOrder shell XAML | `Phase7aBench_PosSalesOrderShell` | **pass** | Scene + UniformGrid |
-| B-RESZ | Window resize nested UniformGrid 50× | *Phase 8* | — | deferred |
-| B-NAV | 50× view navigation binding leak | *Phase 8* | — | deferred |
+| B-RESZ | Window resize nested UniformGrid 50× | *Phase 2a* | — | deferred |
+| B-NAV | 50× view navigation binding leak | *Phase 2a* | — | deferred |
 
 ---
 

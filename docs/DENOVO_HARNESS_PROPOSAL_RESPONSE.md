@@ -46,8 +46,8 @@ Reviewed against **`v2.18.0-wpf-alignment-p7c-layout-shim`**:
 
 | API | Current status | VCF position |
 |-----|----------------|--------------|
-| **`Window.RelayoutChildren`** | **Public** on `Window` | **Document as supported** for host apps that swap views. Long-term we prefer **automatic** relayout when child **Visibility** changes — tracked as framework work, not a breaking removal in 2.18.x. |
-| **`Window.RebuildNamedItemsList`** | **Public** | **Document as supported** when named-element lookup must refresh after visibility-based navigation. Same long-term goal: invoke internally on visibility/collection changes where safe. |
+| **`Window.RelayoutChildren`** | **Public** on `Window` | Still supported for first show / resize. **Phase 2a.1:** direct-child **Visibility** swaps trigger `OnChildVisibilityChanged` (Relayout + named rebuild) automatically. |
+| **`Window.RebuildNamedItemsList`** | **Public** | Still supported; also invoked from **2a.1** on Visibility navigation. |
 | **`Window.ApplyDeferredChildLayout`** | **Public** | **Supported** companion to deferred layout during `LockRefresh`. Prefer **`RelayoutChildren`** from app code; treat this as “flush pending layout” after a batched load. |
 | **`UserControl.ApplyDeferredHostLayout`** | **`Friend`** | **Not part of the public contract.** Use **`Window.RelayoutChildren`**, which walks children and applies host layout. Do not call from DeNovo. |
 | **`MarginFromDesignWhenUnset`** (`modLayoutEngine`) | **Public** module function | **Internal arrange-time helper**, not a consumer API. Do not call from DeNovo. |
@@ -75,11 +75,12 @@ See [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md).
 | Phase | Acceptance |
 |-------|------------|
 | **Phase 1 (UI/XAML)** | **Phase0 31/31** + **DeNovoSmoke harness** green for agreed screens (Splash → Login → MainMenu → Sales **layout-only**) with stub VMs |
-| **Phase 2 (full POS)** | Re-attach KernelLib / Data / DB; full `DeNovo.exe` smoke per [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) §3 |
+| **Phase 2a (VCF parallel)** | Continue framework + harness work; every tag: Phase0 + DeNovoSmoke (stubs only — **no** KernelLib / Data / DB) |
+| **Phase 2b (POS integration)** | When Data + Kernel + UI are ready together: re-attach KernelLib / Data / DB; pin latest VCF tag in `DeNovo.vbp`; full `DeNovo.exe` smoke per [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) §3 |
 
-**Status (2026-07-21):** **Phase 1 complete** — tag **`v2.23.0-wpf-alignment-phase1-complete`**. Do **not** change `DeNovo.vbp` until Phase 2 kickoff.
+**Status (2026-07-21):** **Phase 1 complete** — tag **`v2.23.0-wpf-alignment-phase1-complete`**. **Phase 2a in progress** (VCF-local). **Phase 2b deferred** until Data/Kernel (and UI) finish — do **not** rebuild full `DeNovo.exe` for VCF validation.
 
-Phase0 alone is necessary but not sufficient — we need your real XAML + binding contracts in the harness. Full exe startup is **explicitly out of scope** for Phase 1 sign-off.
+Phase0 alone is necessary but not sufficient — we need your real XAML + binding contracts in the harness. Full exe startup remains **out of scope** until Phase 2b.
 
 ### 2.5 Process going forward
 
@@ -155,7 +156,7 @@ DeNovo confirmed split ownership, full-exe pause, and no new VCF typelib surface
 |-----|---------|
 | [MIGRATION.md](./MIGRATION.md) § Phase 7 | Pin matrix including harness slice |
 | [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md) | Layout shim write-up |
-| [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) | Phase 1 harness + Phase 2 full POS smoke |
+| [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) | Phase 1 / 2a harness gate + Phase 2b full POS smoke |
 | [tools/xaml-migrate/README.md](../tools/xaml-migrate/README.md) | Mechanical migration + legacy-type skip |
 
 ---

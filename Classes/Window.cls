@@ -447,6 +447,18 @@ Catch:
         BuildNamedItemsList
     End Sub
     
+    ' Phase 2a.1 — Visibility swap on a direct Window child (view host) should not require
+    ' the app to call RelayoutChildren / RebuildNamedItemsList manually.
+    Friend Sub OnChildVisibilityChanged()
+        On Error Resume Next
+        If Form Is Nothing Then Exit Sub
+        If Not WRoot Is Nothing Then
+            If WRoot.LockRefresh Then Exit Sub
+        End If
+        RelayoutChildren
+        RebuildNamedItemsList
+    End Sub
+    
     Public Sub ApplyDeferredChildLayout()
         If Not m_DeferredLayout Then Exit Sub
         m_DeferredLayout = False

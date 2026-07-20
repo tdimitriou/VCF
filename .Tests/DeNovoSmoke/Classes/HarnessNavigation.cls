@@ -36,8 +36,7 @@ Public Sub SetActiveView(ByVal Host As Window, ByVal View As Object)
     
     If TypeOf View Is IUserControl Then View.Visibility = VisibilityVisible
     
-    Host.RelayoutChildren
-    Host.RebuildNamedItemsList
+    ' Phase 2a.1: Window.OnChildVisibilityChanged handles RelayoutChildren + RebuildNamedItemsList
     
     If TypeOf View Is HarnessScreen Then View.OnActivated
     

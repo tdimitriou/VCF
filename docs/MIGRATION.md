@@ -62,7 +62,9 @@ See [VCF_TEAM_HANDOFF_GUIDE.md §8.1](./VCF_TEAM_HANDOFF_GUIDE.md) for No / Proj
 | 6 | 2.12–2.15 | **`Button.Text` → `Content`** (shim remains) | PropertyTrigger, ControlTemplate, RenderCoalescer batch |
 | 8a | 2.21 | Button `Selected`/`BackColor`/`BorderColor` no longer inherit to children | Inheritance batch during XAML load/style — see BREAKING_CHANGES |
 | 8b | 2.22 | None expected for POS (DataContext still inherits) | Lazy `GetValue` pull; no `PassPropertyValue` copies — see BREAKING_CHANGES |
-| Phase1 | 2.23 | None — harness-only Sales shell | Tag **`v2.23.0-wpf-alignment-phase1-complete`**; DeNovo.vbp still deferred |
+| Phase1 | 2.23 | None — harness-only Sales shell | Tag **`v2.23.0-wpf-alignment-phase1-complete`** |
+| Phase2a | 2.24+ | Per-tag notes | VCF-local: Phase0 + DeNovoSmoke; **no** `DeNovo.vbp` pin required |
+| Phase2b | TBD | Full POS pin | When Data+Kernel+UI ready — [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) §3 |
 
 Details per release: [BREAKING_CHANGES.md](./BREAKING_CHANGES.md).
 
@@ -216,8 +218,9 @@ Registered names are resolved in `CreateInstance` before `CreateObject` and befo
 | **7c-layout** | `v2.18.0-wpf-alignment-p7c-layout-shim` | POS layout shim + **P7c-LAY** + script legacy-type skip ([POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md)) |
 | **7d-harness** | `v2.19.0` … `v2.23.0-wpf-alignment-phase1-complete` | DeNovoSmoke: Splash → Login → MainMenu → Sales layout-only (**Phase 1 complete**) — [`.Tests/DeNovoSmoke/`](../.Tests/DeNovoSmoke/README.md) |
 | **7e-login-wpf** | (with 7d) | Login Grid layout — [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) |
-| 7c-dialog | TBD | DeNovo `@` template → DataTemplate migration |
-| **Phase 2** | TBD | Full `DeNovo.vbp` / KernelLib / Data — [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md) |
+| 7c-dialog | TBD (Phase 2a) | DeNovo `@` template → DataTemplate migration (harness fixtures) |
+| **Phase 2a** | ongoing | VCF parallel — Phase0 + DeNovoSmoke; nav/layout, B-RESZ/B-NAV, etc. — [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md) §2.4 |
+| **Phase 2b** | TBD | Full `DeNovo.vbp` / KernelLib / Data / DB smoke §3 — deferred until all teams ready |
 
 ---
 

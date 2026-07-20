@@ -4,6 +4,8 @@ Minimal VB6 exe to load **DeNovo POS XAML screens** against a pinned **`Demac.VC
 
 **Status:** VB6 project checked in — open `DeNovoSmoke.vbp` in IDE (build `Demac.VCF.dll` first). Borderless shell **1024×768** client (`BorderStyle=0`).  
 **Phase 1 (UI/XAML):** **complete** on tag **`v2.23.0-wpf-alignment-phase1-complete`** — Splash → Login → MainMenu → Sales layout-only.  
+**Phase 2a (VCF parallel):** continue here — Phase0 + this harness only (no KernelLib / Data). **2a.1 in progress:** auto RelayoutChildren on Visibility (see [WINDOW_LIFECYCLE.md](../../docs/WINDOW_LIFECYCLE.md) §9).  
+**Phase 2b (full POS):** deferred until Data + Kernel + UI are ready — [POS_INTEGRATION_SMOKE.md](../../docs/POS_INTEGRATION_SMOKE.md) §3.  
 **VCF response:** [docs/DENOVO_HARNESS_PROPOSAL_RESPONSE.md](../../docs/DENOVO_HARNESS_PROPOSAL_RESPONSE.md)  
 **DeNovo proposal:** denovo monorepo → `docs/migration/VCF_TEAM_HANDOFF_HARNESS_PROPOSAL.md`  
 **Milestone 1 (fixtures + stub VMs):** denovo monorepo → `docs/migration/DENOVO_HARNESS_MILESTONE1.md` — **aligned 2026-06-22**
@@ -15,7 +17,8 @@ Minimal VB6 exe to load **DeNovo POS XAML screens** against a pinned **`Demac.VC
 Full `DeNovo.exe` is a deep COM graph (KernelLib → Data → ADODBUtils → UILib → VCF). With Phase 1 binary/typelib churn, failures on Login XAML are indistinguishable from `Data.Dataset` or stale group `.vbg` references.
 
 **Phase 1 acceptance:** Phase0 **31/31** + this harness green for agreed screens with **stub view models**.  
-**Phase 2:** re-attach full POS stack; run [POS_INTEGRATION_SMOKE.md](../../docs/POS_INTEGRATION_SMOKE.md) §3.
+**Phase 2a:** same local gates while Data/Kernel finish.  
+**Phase 2b:** re-attach full POS stack; run [POS_INTEGRATION_SMOKE.md](../../docs/POS_INTEGRATION_SMOKE.md) §3.
 
 ---
 
@@ -161,8 +164,8 @@ Documented for visibility-based navigation — **do not add new public methods f
 
 | Method | Use |
 |--------|-----|
-| **`Window.RelayoutChildren`** | After showing/collapsing views |
-| **`Window.RebuildNamedItemsList`** | After navigation when named lookup breaks |
+| **`Window.RelayoutChildren`** | After first show / resize; **not** required after Visibility view swap (2a.1 auto) |
+| **`Window.RebuildNamedItemsList`** | Rare; Visibility navigation rebuilds named list via 2a.1 |
 | **`Window.ApplyDeferredChildLayout`** | Flush layout deferred during `LockRefresh` |
 
 **Do not call:** `UserControl.ApplyDeferredHostLayout` (Friend). **`RelayoutChildren`** invokes it internally.
