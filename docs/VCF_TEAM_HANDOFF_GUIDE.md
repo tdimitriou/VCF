@@ -211,8 +211,10 @@ Phase 7 — POS migration support (denovo)
   **Phase 1 harness exit** — ~~complete~~ (`v2.23.0-wpf-alignment-phase1-complete`)
 
 Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp)
-  **2a.1 IN PROGRESS:** auto RelayoutChildren after Visibility swap (Window direct child) — see WINDOW_LIFECYCLE.md §9
-  then   Option C if needed · B-RESZ · B-NAV · ListView bind hotspot
+  **2a.1** auto RelayoutChildren after Visibility swap — ~~done~~ (WINDOW_LIFECYCLE.md §9)
+  Option C — deferred (B + LoginViewWpf sufficient; revisit if Design* edge cases appear)
+  **B-RESZ** / **B-NAV** — Phase0 benches added (`Phase2aBench_*`)
+  then   ListView bind hotspot
 
   then   7c-dialog (`@` → DataTemplate) when UI contributes fixtures
   later  WPF Margin/Padding defaults (phased) — after layout/nav; see POS_LAYOUT_RESIZE.md §6
@@ -275,8 +277,8 @@ Each **major** or **breaking minor** release MUST include:
 
 - ~~**P7d-LOAD-SPLASH** / **P7d-LOAD-LOGIN** / **P7d-LOAD-BORDERED**~~ — DeNovoSmoke Immediate logs (7f); baselines TBD
 - **P7d-SHUTDOWN** — `RemoveAll` after full harness session (no error 91) — validated in m1; keep as regression check
-- **B-RESZ** — window resize nested UniformGrid 50×
-- **B-NAV** — 50× view navigation binding leak + `Windows` registry
+- ~~**B-RESZ**~~ — nested UniformGrid 50× (`Phase2aBench_NestedUniformGridResize`)
+- ~~**B-NAV**~~ — 50× Visibility nav + Windows registry (`Phase2aBench_ViewNavLeak`)
 - **B-CHROME** — first-frame borderless shell + bordered dialog (manual or screenshot)
 
 **Profiling split (7f):** time separately — `InitializeApplication` (MyApp/resources), per-screen `LoadView`, first `Show`/`Refresh`.
@@ -427,6 +429,8 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-07-21 | DeNovoSmoke **m3** — SalesOrderView layout-only; MainMenu→Sales; Shift+S; stub Lines + `[P7d-LOAD-SALES]` |
 | 2026-07-21 | **Phase 1 complete** — tag **`v2.23.0-wpf-alignment-phase1-complete`** |
 | 2026-07-21 | **Phase 2a / 2b split** — VCF continues locally (2a); full POS / `DeNovo.vbp` = **2b** when Data+Kernel+UI ready |
+| 2026-07-21 | **Phase 2a.1 done** — Visibility auto Relayout validated in DeNovoSmoke; Option C deferred |
+| 2026-07-21 | **B-RESZ** + **B-NAV** — Phase0 nested UniformGrid ×50 + Visibility nav / Windows registry (33 tests) |
 | 2026-07-21 | **Phase 2a.1 start** — `Window.OnChildVisibilityChanged`; harness nav drops manual Relayout/Rebuild |
 | 2026-07-20 | Deferred WPF Margin/Padding defaults (doc only) — schedule under Phase 2a after layout/nav |
 | 2026-07-18 | Layout Option B — Border Design* → LegacyScaleLayout; Phase0 **P7d-LAY-RESIZE** |

@@ -75,7 +75,7 @@ See [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md).
 | Phase | Acceptance |
 |-------|------------|
 | **Phase 1 (UI/XAML)** | **Phase0 31/31** + **DeNovoSmoke harness** green for agreed screens (Splash → Login → MainMenu → Sales **layout-only**) with stub VMs |
-| **Phase 2a (VCF parallel)** | Continue framework + harness work; every tag: Phase0 + DeNovoSmoke (stubs only — **no** KernelLib / Data / DB) |
+| **Phase 2a (VCF parallel)** | Continue framework + harness work; every tag: Phase0 (**33/33** incl. B-RESZ/B-NAV) + DeNovoSmoke (stubs only — **no** KernelLib / Data / DB) |
 | **Phase 2b (POS integration)** | When Data + Kernel + UI are ready together: re-attach KernelLib / Data / DB; pin latest VCF tag in `DeNovo.vbp`; full `DeNovo.exe` smoke per [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) §3 |
 
 **Status (2026-07-21):** **Phase 1 complete** — tag **`v2.23.0-wpf-alignment-phase1-complete`**. **Phase 2a in progress** (VCF-local). **Phase 2b deferred** until Data/Kernel (and UI) finish — do **not** rebuild full `DeNovo.exe` for VCF validation.
@@ -99,7 +99,7 @@ Phase0 alone is necessary but not sufficient — we need your real XAML + bindin
 | DeNovo change | VCF view |
 |---------------|----------|
 | Visibility-based view swap (no `RemoveAt`) | **Reasonable.** Document in harness as supported navigation until we ship a dedicated content-host API. |
-| Manual `RelayoutChildren` / `RebuildNamedItemsList` after navigation | **Valid workaround** for 2.18.x. Missing automatic refresh is a **framework gap**, not permanent app responsibility. |
+| Manual `RelayoutChildren` / `RebuildNamedItemsList` after navigation | **Superseded for Visibility swaps (2a.1).** Still valid for first show / resize. |
 | Login / Splash / Main menu VM + XAML tweaks | **Expected** during migration. Capture **minimum stub VM shape** in harness docs. |
 | MessageBox deferred close / sizing | **Consumer scope** for Phase 1; `@` → `DataTemplate` remains Phase 7c-dialog backlog. |
 

@@ -4,7 +4,7 @@ Minimal VB6 exe to load **DeNovo POS XAML screens** against a pinned **`Demac.VC
 
 **Status:** VB6 project checked in — open `DeNovoSmoke.vbp` in IDE (build `Demac.VCF.dll` first). Borderless shell **1024×768** client (`BorderStyle=0`).  
 **Phase 1 (UI/XAML):** **complete** on tag **`v2.23.0-wpf-alignment-phase1-complete`** — Splash → Login → MainMenu → Sales layout-only.  
-**Phase 2a (VCF parallel):** continue here — Phase0 + this harness only (no KernelLib / Data). **2a.1 in progress:** auto RelayoutChildren on Visibility (see [WINDOW_LIFECYCLE.md](../../docs/WINDOW_LIFECYCLE.md) §9).  
+**Phase 2a (VCF parallel):** continue here — Phase0 + this harness only (no KernelLib / Data). **2a.1 done** (validated): auto RelayoutChildren on Visibility ([WINDOW_LIFECYCLE.md](../../docs/WINDOW_LIFECYCLE.md) §9).  
 **Phase 2b (full POS):** deferred until Data + Kernel + UI are ready — [POS_INTEGRATION_SMOKE.md](../../docs/POS_INTEGRATION_SMOKE.md) §3.  
 **VCF response:** [docs/DENOVO_HARNESS_PROPOSAL_RESPONSE.md](../../docs/DENOVO_HARNESS_PROPOSAL_RESPONSE.md)  
 **DeNovo proposal:** denovo monorepo → `docs/migration/VCF_TEAM_HANDOFF_HARNESS_PROPOSAL.md`  
@@ -106,13 +106,13 @@ Copy into `Resources/XAML/` (preserve `res:` paths):
 | **LanguageManager** (static) | Keys: `Loading`, `Clear`, `Login`, `Restart`, `Exit` |
 | **AppProperties** (static) | `TerminalID`, `CurrentUser`, `CurrentTime` (StatusBar) |
 
-**Harness-only:** assign `MyList.ItemsSource = UserList` after Login parse (production does this in code-behind). Navigation: visibility swap + `RelayoutChildren` + `RebuildNamedItemsList` — no Friend APIs.
+**Harness-only:** assign `MyList.ItemsSource = UserList` after Login parse (production does this in code-behind). Navigation: visibility swap only — framework auto Relayout/RebuildNamedItems (2a.1); no Friend APIs.
 
 ### Milestone 2
 
 | Screen / task | Assert |
 |---------------|--------|
-| **MainMenuView.xml** | Login → MainMenu (Login button / **Shift+M**); Logout → Login; named `MenuTitle` / `WelcomeText` after `RebuildNamedItemsList` |
+| **MainMenuView.xml** | Login → MainMenu (Login button / **Shift+M**); Logout → Login; named `MenuTitle` / `WelcomeText` after nav (2a.1) |
 | **Lazy Login load** (7f) | Login loads on first `ShowLogin` only (`EAGER_LOGIN_LOAD = False`) — production-like startup |
 | **Lazy MainMenu load** | MainMenu loads on first `ShowMainMenu` (`EAGER_MAINMENU_LOAD = False`) |
 | **P7d-LOAD-*** gates | Immediate: `[P7d-LOAD-SPLASH]`, `[P7d-LOAD-LOGIN]`, `[P7d-LOAD-MAINMENU]`, `[P7d-LOAD-BORDERED]` |

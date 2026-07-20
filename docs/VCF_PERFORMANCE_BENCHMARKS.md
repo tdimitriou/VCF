@@ -57,8 +57,8 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P6c-TMPL | ControlTemplate Border chrome | `Phase6cBench_ControlTemplate` | **pass** | Button CornerRadius |
 | P6d-COAL | Render refresh coalescing | `Phase6dBench_RenderCoalesce` | **pass** | dedupe + Style batch |
 | P7a-SMOKE | POS SalesOrder shell XAML | `Phase7aBench_PosSalesOrderShell` | **pass** | Scene + UniformGrid |
-| B-RESZ | Window resize nested UniformGrid 50× | *Phase 2a* | — | deferred |
-| B-NAV | 50× view navigation binding leak | *Phase 2a* | — | deferred |
+| B-RESZ | Window resize nested UniformGrid 50× | `Phase2aBench_NestedUniformGridResize` | *record* | Phase 2a — Widget.Move ×50 |
+| B-NAV | 50× view navigation binding leak | `Phase2aBench_ViewNavLeak` | *record* | Phase 2a — Visibility nav + Windows=0 |
 
 ---
 
@@ -119,6 +119,7 @@ Normal POS process **< 100 MB** without secondary customer-display video. Framew
 
 | Date | Change |
 |------|--------|
+| 2026-07-21 | **B-RESZ** / **B-NAV** Phase0 benches (33 tests); Option C deferred; 2a.1 Visibility auto Relayout done |
 | 2026-07-18 | First 7f baselines — Splash **35 ms**, Login **448 ms**; shutdown pass |
 | 2026-07-20 | Phase 8a measured — Splash **24 ms**, Login **403 ms** (vs prior Login ~448–670 ms) |
 | 2026-07-20 | Phase 8a — inheritance batch; **P8-INHERIT**; soft Login ms compare after rebuild |

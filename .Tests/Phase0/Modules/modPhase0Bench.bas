@@ -43,12 +43,14 @@ Public Sub RunAll()
     If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
     If Not Phase7dBench_BorderDesignResize() Then Failed = Failed + 1
     If Not Phase8Bench_InheritanceBatch() Then Failed = Failed + 1
+    If Not Phase2aBench_NestedUniformGridResize() Then Failed = Failed + 1
+    If Not Phase2aBench_ViewNavLeak() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (31 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (33 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
-        MsgBox Failed & " Phase 0/1/2/3/4/5/6/7 test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
+        MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
-        MsgBox "All Phase 0/1/2/3/4/5/6/7 tests passed.", vbInformation, "Phase0"
+        MsgBox "All Phase 0/1/2/3/4/5/6/7/2a tests passed.", vbInformation, "Phase0"
     End If
 End Sub
 
@@ -1264,6 +1266,168 @@ Fail:
     LogResult "P8-INHERIT", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P8-INHERIT — " & Err.Description
     Phase8Bench_InheritanceBatch = False
+End Function
+
+Public Function Phase2aBench_NestedUniformGridResize() As Boolean
+    Dim Reader As XAMLReader
+    Dim Outer As UniformGrid
+    Dim Inner As UniformGrid
+    Dim i As Long
+    Dim Started As Single
+    Dim ElapsedMs As Long
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Set Outer = Reader.Load(LoadTextFile(App.Path & "\Resources\NestedUniformGridResize.xml"))
+    If Outer Is Nothing Then Err.Raise vbObjectError, , "NestedUniformGridResize returned Nothing"
+    If Outer.Children.Count <> 4 Then Err.Raise vbObjectError, , "Expected 4 nested grids, got " & Outer.Children.Count
+
+    Set Inner = Outer.Children(0)
+
+    Outer.Widget.Move 0, 0, 400, 300
+    If Abs(Inner.Widget.Width - 200!) > 3! Then Err.Raise vbObjectError, , "Full Inner.Width expected ~200, got " & Inner.Widget.Width
+
+    Started = Timer
+    For i = 1 To 50
+        If (i Mod 2) = 0 Then
+            Outer.Widget.Move 0, 0, 400, 300
+        Else
+            Outer.Widget.Move 0, 0, 200, 150
+        End If
+    Next
+    ElapsedMs = CLng((Timer - Started) * 1000#)
+
+    ' Loop ends on odd i=49 → half size; i=50 even → full. Assert full cell size.
+    If Abs(Inner.Widget.Width - 200!) > 3! Then Err.Raise vbObjectError, , "After 50× resize Inner.Width expected ~200, got " & Inner.Widget.Width
+    If Abs(Inner.Widget.Height - 150!) > 3! Then Err.Raise vbObjectError, , "After 50× resize Inner.Height expected ~150, got " & Inner.Widget.Height
+
+    LogResult "B-RESZ", ElapsedMs, "OK nested UniformGrid 50x resize"
+    Debug.Print "PASS  B-RESZ nested UniformGrid resize x50 (" & ElapsedMs & " ms)"
+    Phase2aBench_NestedUniformGridResize = True
+    Exit Function
+
+Fail:
+    LogResult "B-RESZ", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  B-RESZ — " & Err.Description
+    Phase2aBench_NestedUniformGridResize = False
+End Function
+
+Public Function Phase2aBench_ViewNavLeak() As Boolean
+    Dim AppHost As Phase0App
+    Dim Shell As Phase0Shell
+    Dim Win As Window
+    Dim ViewA As Panel
+    Dim ViewB As Panel
+    Dim TbA As TextBlock
+    Dim TbB As TextBlock
+    Dim VmA As Phase0ViewModel
+    Dim VmB As Phase0ViewModel
+    Dim ExprA As BindingExpression
+    Dim ExprB As BindingExpression
+    Dim i As Long
+    Dim Started As Single
+    Dim ElapsedMs As Long
+    Dim WinCount As Long
+
+    On Error GoTo Fail
+
+    VCF.ClearApplication
+
+    Set AppHost = New Phase0App
+    Set Shell = New Phase0Shell
+    Set Win = Shell.Base
+    If Win Is Nothing Then Err.Raise vbObjectError, , "Phase0Shell.Base is Nothing"
+
+    WinCount = AppHost.Base.Windows.Count
+    If WinCount < 1 Then Err.Raise vbObjectError, , "Expected Windows.Count >= 1, got " & WinCount
+
+    Set VmA = New Phase0ViewModel
+    Set VmB = New Phase0ViewModel
+    VmA.Title = "ViewA"
+    VmB.Title = "ViewB"
+
+    ' UserControl is VB_Creatable=False; Panel is the creatable host for Phase0 nav benches.
+    Set ViewA = New Panel
+    Set ViewB = New Panel
+    Set TbA = New TextBlock
+    Set TbB = New TextBlock
+    ViewA.Children.Add TbA
+    ViewB.Children.Add TbB
+
+    Set ExprA = New BindingExpression
+    Set ExprB = New BindingExpression
+    ExprA.Attach TbA, "Text", VmA, "Title", OneWay
+    ExprB.Attach TbB, "Text", VmB, "Title", OneWay
+
+    If TbA.Text <> "ViewA" Then Err.Raise vbObjectError, , "Expected ViewA bind, got " & TbA.Text
+    If TbB.Text <> "ViewB" Then Err.Raise vbObjectError, , "Expected ViewB bind, got " & TbB.Text
+
+    Win.Children.Add ViewA
+    Win.Children.Add ViewB
+    ViewA.Visibility = VisibilityVisible
+    ViewB.Visibility = VisibilityCollapsed
+    Win.RelayoutChildren
+    Win.RebuildNamedItemsList
+
+    Started = Timer
+    For i = 1 To 50
+        If (i Mod 2) = 0 Then
+            ViewA.Visibility = VisibilityVisible
+            ViewB.Visibility = VisibilityCollapsed
+        Else
+            ViewB.Visibility = VisibilityVisible
+            ViewA.Visibility = VisibilityCollapsed
+        End If
+        Win.RelayoutChildren
+        Win.RebuildNamedItemsList
+    Next
+    ElapsedMs = CLng((Timer - Started) * 1000#)
+
+    ' Active is ViewA (i=50 even). Detach trees and prove INPC no longer updates targets.
+    VCF.DetachBindingsTree ViewA
+    VCF.DetachBindingsTree ViewB
+    Set ExprA = Nothing
+    Set ExprB = Nothing
+
+    VmA.Title = "LeakedA"
+    VmB.Title = "LeakedB"
+    If TbA.Text = "LeakedA" Then Err.Raise vbObjectError, , "ViewA binding leaked after DetachBindingsTree"
+    If TbB.Text = "LeakedB" Then Err.Raise vbObjectError, , "ViewB binding leaked after DetachBindingsTree"
+
+    Win.Dispose
+    On Error Resume Next
+    Cairo.WidgetForms.RemoveAll
+    On Error GoTo Fail
+    Err.Clear
+
+    WinCount = 0
+    If Not AppHost.Base Is Nothing Then WinCount = AppHost.Base.Windows.Count
+    If WinCount <> 0 Then Err.Raise vbObjectError, , "Expected Windows.Count=0 after dispose, got " & WinCount
+
+    Set Shell = Nothing
+    Set AppHost = Nothing
+    VCF.ClearApplication
+
+    LogResult "B-NAV", ElapsedMs, "OK 50x Visibility nav; Windows=0; no bind leak"
+    Debug.Print "PASS  B-NAV view nav x50 + Windows registry (" & ElapsedMs & " ms)"
+    Phase2aBench_ViewNavLeak = True
+    Exit Function
+
+Fail:
+    Dim FailDesc As String
+    FailDesc = Err.Description
+    On Error Resume Next
+    If Not ExprA Is Nothing Then ExprA.Detach
+    If Not ExprB Is Nothing Then ExprB.Detach
+    If Not Win Is Nothing Then Win.Dispose
+    Cairo.WidgetForms.RemoveAll
+    Set Shell = Nothing
+    Set AppHost = Nothing
+    VCF.ClearApplication
+    LogResult "B-NAV", 0, "FAIL: " & FailDesc
+    Debug.Print "FAIL  B-NAV — " & FailDesc
+    Phase2aBench_ViewNavLeak = False
 End Function
 
 Private Function LoadTextFile(ByVal Path As String) As String

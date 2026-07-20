@@ -128,16 +128,18 @@ Slow first paint / XAML load is **separate** from chrome lifecycle:
 
 ---
 
-## 9. Phase 2a.1 — auto layout after Visibility navigation (in progress)
+## 9. Phase 2a.1 — auto layout after Visibility navigation
+
+**Status:** **Done** (2026-07-21) — DeNovoSmoke Splash → Login → MainMenu → Sales; repeated nav + named lookup OK.
 
 **Goal:** Visibility-based view swap on a **direct** `Window` child must not require the host to call `RelayoutChildren` / `RebuildNamedItemsList`.
 
 | Piece | Status |
 |-------|--------|
-| `UserControl` Visibility → `Window.OnChildVisibilityChanged` (direct child only; skip when `LockRefresh`) | **Started** |
-| DeNovoSmoke `HarnessNavigation` no longer calls Relayout/Rebuild after swap | **Started** |
-| Option C (Border scale propagate) | Later if still needed |
-| B-RESZ / B-NAV | After this slice |
+| `UserControl` Visibility → `Window.OnChildVisibilityChanged` (direct child only; skip when `LockRefresh`) | **Done** |
+| DeNovoSmoke `HarnessNavigation` no longer calls Relayout/Rebuild after swap | **Done** |
+| Option C (Border scale propagate) | **Deferred** — Option B + LoginViewWpf cover Login; no open edge-case reports |
+| B-RESZ / B-NAV | **Done** — Phase0 `Phase2aBench_NestedUniformGridResize` / `Phase2aBench_ViewNavLeak` |
 
 **Still call Relayout manually:** first show / resize presets (`ShellWindow`, `modHarnessResize`) — not Visibility-driven.
 
