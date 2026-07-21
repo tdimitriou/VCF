@@ -244,6 +244,7 @@ NextInheritedCallback:
         ' No need to notify if the effective value has not changed
         If Object.Equals(GetValue, OldEffectiveValue) Then Exit Sub
         
+        Err.Clear
         OnDependencyPropertyChanged OldEffectiveValue
         
         If Err Then Debug.Print Err.Description, Erl

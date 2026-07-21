@@ -221,6 +221,7 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **7c-dialog** — ~~ItemsControl Button DataTemplate (no `@`)~~ (**P7c-DLG**)
   **ItemsPanelTemplate** — ~~UniformGrid ItemsHost~~ (**P7c-PANEL**)
   **§2.11 ContentPresenter** — ~~paint-only + Button caption~~ (**P6e-PRES**)
+  **ContentAlignment** — ~~H/V on presenter + Button~~ (**P6e-ALIGN**)
   later  System/OS theme · lookless ControlTemplate visual tree · Button : ContentControl
   deferred RelativeSource / ElementName for window-level Command (item-level Command works)
   deferred UniformGrid ItemsHost with generated items (IDE hang)
@@ -443,6 +444,7 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-07-21 | **P7c-DLG** — ItemsControl Button DataTemplate (no `@`); Phase0 **38** tests |
 | 2026-07-21 | **P7c-PANEL** — ItemsPanelTemplate UniformGrid host; Phase0 **39** tests |
 | 2026-07-21 | **P6e-PRES** — ContentPresenter paint-only + Button caption; Phase0 **40** tests |
+| 2026-07-21 | **P6e-ALIGN** — ContentAlignment H/V on ContentPresenter/Button; Phase0 **41** tests |
 | 2026-07-21 | **B-BIND-DENSE** — ItemTemplate TextBlock binding fidelity + Phase0 21×6 gate (34 tests) |
 | 2026-07-21 | **B-RESZ** + **B-NAV** — Phase0 nested UniformGrid ×50 + Visibility nav / Windows registry (33 tests) |
 | 2026-07-21 | **Phase 2a.1 start** — `Window.OnChildVisibilityChanged`; harness nav drops manual Relayout/Rebuild |

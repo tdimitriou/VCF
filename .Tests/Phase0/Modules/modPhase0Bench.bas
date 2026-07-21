@@ -51,6 +51,7 @@ Public Sub RunAll()
     If Not Phase6cBench_ControlTemplate() Then Failed = Failed + 1
     If Not Phase6dBench_RenderCoalesce() Then Failed = Failed + 1
     If Not Phase6eBench_ContentPresenter() Then Failed = Failed + 1
+    If Not Phase6eBench_ContentAlignment() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
     If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
     If Not Phase7dBench_BorderDesignResize() Then Failed = Failed + 1
@@ -66,7 +67,7 @@ Public Sub RunAll()
 
     ' Report only — do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (40 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (41 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1176,6 +1177,85 @@ Fail:
     Phase6eBench_ContentPresenter = False
     On Error Resume Next
     KeepAlive Btn
+    Err.Clear
+End Function
+
+' §2.11 ContentPresenter / Button HorizontalContentAlignment + VerticalContentAlignment.
+Public Function Phase6eBench_ContentAlignment() As Boolean
+    Dim CP As ContentPresenter
+    Dim Btn As Button
+    Dim Reader As XAMLReader
+    Dim Root As Button
+
+    On Error GoTo Fail
+
+    Set CP = New ContentPresenter
+    If CP.HorizontalContentAlignment <> AlignmentConstants.vbCenter Then
+        Err.Raise vbObjectError, , "Presenter HAlign default expected Center"
+    End If
+    If CP.VerticalContentAlignment <> 2 Then
+        Err.Raise vbObjectError, , "Presenter VAlign default expected Center(2)"
+    End If
+    CP.HorizontalContentAlignment = AlignmentConstants.vbLeftJustify
+    CP.VerticalContentAlignment = 0
+    If CP.HorizontalContentAlignment <> AlignmentConstants.vbLeftJustify Then
+        Err.Raise vbObjectError, , "Presenter HAlign expected Left"
+    End If
+    If CP.VerticalContentAlignment <> 0 Then
+        Err.Raise vbObjectError, , "Presenter VAlign expected Top(0)"
+    End If
+
+    Set Btn = New Button
+    If Btn.HorizontalContentAlignment <> AlignmentConstants.vbCenter Then
+        Err.Raise vbObjectError, , "Button HAlign default expected Center"
+    End If
+    If Btn.VerticalContentAlignment <> 2 Then
+        Err.Raise vbObjectError, , "Button VAlign default expected Center(2)"
+    End If
+    Btn.Content = "Go"
+    Btn.HorizontalContentAlignment = AlignmentConstants.vbRightJustify
+    Btn.VerticalContentAlignment = 1
+    Btn.SyncContentPresenter
+    If Btn.ContentPresenter.HorizontalContentAlignment <> AlignmentConstants.vbRightJustify Then
+        Err.Raise vbObjectError, , "Presenter HAlign expected Right after sync"
+    End If
+    If Btn.ContentPresenter.VerticalContentAlignment <> 1 Then
+        Err.Raise vbObjectError, , "Presenter VAlign expected Bottom(1) after sync"
+    End If
+    If Not Btn.ContentPresenter.WouldDrawCaption Then
+        Err.Raise vbObjectError, , "WouldDrawCaption expected True"
+    End If
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load( _
+        "<Button Content=""X"" HorizontalContentAlignment=""0"" VerticalContentAlignment=""0""/>")
+    If Root Is Nothing Then Err.Raise vbObjectError, , "XAML Button returned Nothing"
+    If Root.HorizontalContentAlignment <> AlignmentConstants.vbLeftJustify Then
+        Err.Raise vbObjectError, , "XAML HAlign expected Left(0) got " & Root.HorizontalContentAlignment
+    End If
+    If Root.VerticalContentAlignment <> 0 Then
+        Err.Raise vbObjectError, , "XAML VAlign expected 0 got " & Root.VerticalContentAlignment
+    End If
+
+    KeepAlive Btn
+    KeepAlive Root
+    Set CP = Nothing
+    Set Btn = Nothing
+    Set Root = Nothing
+    Set Reader = Nothing
+
+    LogResult "P6e-ALIGN", 0, "OK ContentAlignment H/V on presenter + Button + XAML"
+    Debug.Print "PASS  P6e-ALIGN ContentAlignment H/V"
+    Phase6eBench_ContentAlignment = True
+    Exit Function
+
+Fail:
+    LogResult "P6e-ALIGN", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6e-ALIGN — " & Err.Description
+    Phase6eBench_ContentAlignment = False
+    On Error Resume Next
+    KeepAlive Btn
+    KeepAlive Root
     Err.Clear
 End Function
 

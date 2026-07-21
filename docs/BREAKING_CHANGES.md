@@ -5,6 +5,16 @@
 
 ---
 
+## [2.27.0] — 2026-07-21 — Phase 2a (ContentAlignment on ContentPresenter / Button)
+
+### Added
+
+- **`ContentPresenter.HorizontalContentAlignment`** / **`VerticalContentAlignment`** — paint-path caption alignment (H: `AlignmentConstants`; V: 0 Top / 1 Bottom / 2 Center).
+- **`Button`** matching DPs (defaults Center/Center); synced into presenter before draw.
+- Phase0 **P6e-ALIGN** — gate **41/41**.
+
+---
+
 ## [2.26.0] — 2026-07-21 — Phase 2a (§2.11 ContentPresenter paint-only)
 
 ### Added

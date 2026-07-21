@@ -124,6 +124,34 @@ Attribute TmrRelease.VB_VarHelpID = -1
     Public Property Set Content(ByVal Value As Object)
         Call m_DependencyProperties.SetValue("Content", Value)
     End Property
+
+    Public Property Get HorizontalContentAlignment() As Long
+        Dim V As Variant
+        Call API.CopyVariable(m_DependencyProperties.GetValue("HorizontalContentAlignment"), V)
+        If IsNull(V) Or IsEmpty(V) Then
+            HorizontalContentAlignment = AlignmentConstants.vbCenter
+        Else
+            HorizontalContentAlignment = CLng(V)
+        End If
+    End Property
+
+    Public Property Let HorizontalContentAlignment(ByVal Value As Long)
+        Call m_DependencyProperties.SetValue("HorizontalContentAlignment", Value)
+    End Property
+
+    Public Property Get VerticalContentAlignment() As Long
+        Dim V As Variant
+        Call API.CopyVariable(m_DependencyProperties.GetValue("VerticalContentAlignment"), V)
+        If IsNull(V) Or IsEmpty(V) Then
+            VerticalContentAlignment = 2
+        Else
+            VerticalContentAlignment = CLng(V)
+        End If
+    End Property
+
+    Public Property Let VerticalContentAlignment(ByVal Value As Long)
+        Call m_DependencyProperties.SetValue("VerticalContentAlignment", Value)
+    End Property
     
     Public Property Get ClickMode() As ClickMode
         ClickMode = m_ClickMode
@@ -301,6 +329,8 @@ Attribute TmrRelease.VB_VarHelpID = -1
             Call .Register("ToolTip", vbString, , , , NewDependencyPropertyMetadata(False, True, False))
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
             Call .Register("Content", vbVariant, , , , NewDependencyPropertyMetadata(False, True, False, OneWay))
+            Call .Register("HorizontalContentAlignment", vbLong, , , , NewDependencyPropertyMetadata(False, True, False))
+            Call .Register("VerticalContentAlignment", vbLong, , , , NewDependencyPropertyMetadata(False, True, False))
 
             .SetValue "Style", Nothing
             
@@ -315,6 +345,9 @@ Attribute TmrRelease.VB_VarHelpID = -1
             .SetCurrentValue "BackColor", W.BackColor
             .SetCurrentValue "BorderColor", W.BorderColor
             .SetCurrentValue "ToolTip", W.ToolTip
+            ' Vertical first so H-change sync never reads a Null VAlign Long.
+            .SetCurrentValue "VerticalContentAlignment", 2
+            .SetCurrentValue "HorizontalContentAlignment", AlignmentConstants.vbCenter
 
         
         End With
@@ -553,6 +586,8 @@ Catch:
             Case "ToolTip":         W.ToolTip = Property.GetValue
             Case "Style":           ApplyStyle
             Case "Content":         SyncContentPresenterContent: modRenderCoalescer.RequestWidgetRefresh W
+            Case "HorizontalContentAlignment", "VerticalContentAlignment": _
+                                    SyncContentPresenterAlignment: modRenderCoalescer.RequestWidgetRefresh W
             Case "Padding":         Call W_Resize: modRenderCoalescer.RequestWidgetRefresh W
         End Select
         
@@ -702,10 +737,17 @@ End Sub
         m_ContentPresenter.SuppressContent = (m_Children.Count > 0)
     End Sub
 
+    Private Sub SyncContentPresenterAlignment()
+        If m_ContentPresenter Is Nothing Then Exit Sub
+        m_ContentPresenter.HorizontalContentAlignment = HorizontalContentAlignment
+        m_ContentPresenter.VerticalContentAlignment = VerticalContentAlignment
+    End Sub
+
     ' Keep presenter flags current for Phase0 / diagnostics without painting.
     Public Sub SyncContentPresenter()
         SyncContentPresenterContent
         SyncContentPresenterSuppress
+        SyncContentPresenterAlignment
     End Sub
 
     Private Sub DrawContent(CC As cCairoContext, dx As Double, dy As Double)
@@ -719,6 +761,7 @@ End Sub
 
         SyncContentPresenterContent
         SyncContentPresenterSuppress
+        SyncContentPresenterAlignment
         If m_ContentPresenter Is Nothing Then Exit Sub
         If Not m_ContentPresenter.WouldDrawCaption Then Exit Sub
 
