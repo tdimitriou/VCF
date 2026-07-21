@@ -693,7 +693,7 @@ One **layout/render pipeline** walks the tree. **Styles** set properties; **Cont
 | **Panels** | UniformGrid, Panel, Border — host children (layout via Design* / MoveChild — §2.7) |
 | **DataTemplate** | **Exists** — `DataTemplate.Children` + XAML; **ListView** builds item UI from template trees — **best existing compositional pattern** |
 | **Style** | **Property setters only** — not a visual tree (no ControlTemplate) |
-| **Button** | **Monolithic** Cairo in `W_Paint` + **`OverlayWidget`** hack + manual child `MoveChild`; caption = nested TextBlock (§2.10) |
+| **Button** | **Monolithic** Cairo chrome + **`OverlayWidget`**; string **`Content`** paints via paint-only **`ContentPresenter`** (**P6e-PRES**); children suppress caption |
 | **Border** | **Monolithic** multi-clip `W_Paint` — not a Border wrapping a child Border element |
 | **TextBlock / Image** | Can be **standalone widgets** or **`IVisualChild.DrawOn`** — two render paths |
 | **Element base** | **`UIElementBase`** = resources/attached props only; **no** shared `FrameworkElement` with layout DPs, Measure/Arrange |

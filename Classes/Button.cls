@@ -41,6 +41,7 @@ Private m_Bindings                              As VCF.List
 Private m_BaseUIElement                         As UIElementBase
 Private m_OverlayWidget                         As OverlayWidget
 Private m_Layout                                As FrameworkElement
+Private m_ContentPresenter                      As ContentPresenter
 
 Private Const OVERLAY_ALPHA                     As Single = 0.25
 Private Const OVERLAY_COLOR                     As Long = vbBlack
@@ -53,6 +54,11 @@ Attribute TmrRelease.VB_VarHelpID = -1
 '#Region Public Properties
     Public Property Get Bindings() As VCF.List
         Set Bindings = m_Bindings
+    End Property
+
+    ' §2.11 paint-only presenter used for string Content (Phase0 P6e-PRES).
+    Public Property Get ContentPresenter() As ContentPresenter
+        Set ContentPresenter = m_ContentPresenter
     End Property
     
     Public Property Get Selected() As Boolean
@@ -265,6 +271,7 @@ Attribute TmrRelease.VB_VarHelpID = -1
         Set m_Bindings = New List
         Set m_Children = NewUIElementCollection(Me)
         Set m_DependencyProperties = NewDependencyProperties(Me)
+        Set m_ContentPresenter = New ContentPresenter
                 
         ' Initialize the WidgetBase (W) just in case we want to use it as
         ' the source or target for the dependency properties
@@ -466,7 +473,8 @@ Try:
                 MoveChild Child
             Next
         End If
-                
+
+        SyncContentPresenterSuppress
         W.Refresh
         
         Exit Sub
@@ -544,7 +552,7 @@ Catch:
             Case "BorderColor":     W.BorderColor = Property.GetValue
             Case "ToolTip":         W.ToolTip = Property.GetValue
             Case "Style":           ApplyStyle
-            Case "Content":         modRenderCoalescer.RequestWidgetRefresh W
+            Case "Content":         SyncContentPresenterContent: modRenderCoalescer.RequestWidgetRefresh W
             Case "Padding":         Call W_Resize: modRenderCoalescer.RequestWidgetRefresh W
         End Select
         
@@ -677,17 +685,30 @@ End Sub
 '#End Region
 
 '#Region Drawing Functions
-    Private Function ContentCaption() As String
+    Private Sub SyncContentPresenterContent()
         Dim V As Variant
 
+        If m_ContentPresenter Is Nothing Then Exit Sub
         Call API.CopyVariable(m_DependencyProperties.GetValue("Content"), V)
-        If IsObject(V) Then Exit Function
-        If IsNull(V) Or IsEmpty(V) Then Exit Function
-        ContentCaption = CStr(V)
-    End Function
+        If IsObject(V) Then
+            Set m_ContentPresenter.Content = V
+        Else
+            m_ContentPresenter.Content = V
+        End If
+    End Sub
+
+    Private Sub SyncContentPresenterSuppress()
+        If m_ContentPresenter Is Nothing Then Exit Sub
+        m_ContentPresenter.SuppressContent = (m_Children.Count > 0)
+    End Sub
+
+    ' Keep presenter flags current for Phase0 / diagnostics without painting.
+    Public Sub SyncContentPresenter()
+        SyncContentPresenterContent
+        SyncContentPresenterSuppress
+    End Sub
 
     Private Sub DrawContent(CC As cCairoContext, dx As Double, dy As Double)
-        Dim Cap As String
         Dim Offs As Single
         Dim L As Double
         Dim T As Double
@@ -696,10 +717,10 @@ End Sub
         Dim Pad As Thickness
         Dim PadL As Single, PadT As Single, PadR As Single, PadB As Single
 
-        If m_Children.Count > 0 Then Exit Sub
-
-        Cap = ContentCaption()
-        If Len(Cap) = 0 Then Exit Sub
+        SyncContentPresenterContent
+        SyncContentPresenterSuppress
+        If m_ContentPresenter Is Nothing Then Exit Sub
+        If Not m_ContentPresenter.WouldDrawCaption Then Exit Sub
 
         Offs = CSng(m_BorderWidth)
         If IsMouseDown Then Offs = CSng(BorderWidth + 1)
@@ -721,8 +742,9 @@ End Sub
         If Wd < 0# Then Wd = 0#
         If Ht < 0# Then Ht = 0#
 
-        CC.SelectFont W.FontName, W.FontSize, W.ForeColor, W.FontBold, W.FontItalic, W.FontUnderline, W.FontStrikeThrough
-        CC.DrawText L, T, L + Wd, T + Ht, Cap, False, AlignmentConstants.vbCenter, , 1, dtHasAccelerators
+        m_ContentPresenter.Draw CC, L, T, L + Wd, T + Ht, _
+            W.FontName, W.FontSize, W.ForeColor, _
+            W.FontBold, W.FontItalic, W.FontUnderline, W.FontStrikeThrough
     End Sub
 
     Private Sub DrawBackground(CC As cCairoContext, dx As Double, dy As Double, ByVal Selected As Boolean)

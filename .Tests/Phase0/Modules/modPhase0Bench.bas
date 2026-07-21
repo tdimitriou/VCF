@@ -50,6 +50,7 @@ Public Sub RunAll()
     If Not Phase6bBench_PropertyTrigger() Then Failed = Failed + 1
     If Not Phase6cBench_ControlTemplate() Then Failed = Failed + 1
     If Not Phase6dBench_RenderCoalesce() Then Failed = Failed + 1
+    If Not Phase6eBench_ContentPresenter() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
     If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
     If Not Phase7dBench_BorderDesignResize() Then Failed = Failed + 1
@@ -65,7 +66,7 @@ Public Sub RunAll()
 
     ' Report only — do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (39 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (40 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1124,6 +1125,58 @@ Fail:
     LogResult "P6d-COAL", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P6d-COAL — " & Err.Description
     Phase6dBench_RenderCoalesce = False
+End Function
+
+' §2.11 ContentPresenter paint-only path (Button caption delegates here).
+Public Function Phase6eBench_ContentPresenter() As Boolean
+    Dim CP As ContentPresenter
+    Dim Btn As Button
+    Dim Tb As TextBlock
+
+    On Error GoTo Fail
+
+    Set CP = New ContentPresenter
+    If CP Is Nothing Then Err.Raise vbObjectError, , "ContentPresenter New returned Nothing"
+    CP.Content = "OK"
+    If CStr(CP.Content) <> "OK" Then Err.Raise vbObjectError, , "Content round-trip expected OK"
+    If CP.ContentCaption <> "OK" Then Err.Raise vbObjectError, , "ContentCaption expected OK"
+    If CP.SuppressContent Then Err.Raise vbObjectError, , "SuppressContent default expected False"
+    If Not CP.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected True for OK"
+    CP.SuppressContent = True
+    If CP.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected False when suppressed"
+
+    Set Btn = New Button
+    If Btn.ContentPresenter Is Nothing Then Err.Raise vbObjectError, , "Button.ContentPresenter is Nothing"
+    Btn.Content = "Save"
+    Btn.SyncContentPresenter
+    If CStr(Btn.ContentPresenter.Content) <> "Save" Then Err.Raise vbObjectError, , "Presenter Content expected Save"
+    If Btn.ContentPresenter.SuppressContent Then Err.Raise vbObjectError, , "Suppress expected False with no children"
+    If Not Btn.ContentPresenter.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected True for Save"
+
+    Set Tb = New TextBlock
+    Tb.Text = "child"
+    Btn.Children.Add Tb
+    Btn.SyncContentPresenter
+    If Not Btn.ContentPresenter.SuppressContent Then Err.Raise vbObjectError, , "Suppress expected True with child"
+    If Btn.ContentPresenter.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected False with child"
+
+    KeepAlive Btn
+    Set Tb = Nothing
+    Set Btn = Nothing
+    Set CP = Nothing
+
+    LogResult "P6e-PRES", 0, "OK ContentPresenter paint-only + Button suppress"
+    Debug.Print "PASS  P6e-PRES ContentPresenter paint path"
+    Phase6eBench_ContentPresenter = True
+    Exit Function
+
+Fail:
+    LogResult "P6e-PRES", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6e-PRES — " & Err.Description
+    Phase6eBench_ContentPresenter = False
+    On Error Resume Next
+    KeepAlive Btn
+    Err.Clear
 End Function
 
 Public Function Phase7aBench_PosSalesOrderShell() As Boolean

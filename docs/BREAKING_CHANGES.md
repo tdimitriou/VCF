@@ -5,6 +5,21 @@
 
 ---
 
+## [2.26.0] — 2026-07-21 — Phase 2a (§2.11 ContentPresenter paint-only)
+
+### Added
+
+- **`ContentPresenter`** — paint-only string `Content` path (`ContentCaption` / `WouldDrawCaption` / `Draw`); no Cairo widget tree in this slice.
+- **`Button.ContentPresenter`** + **`SyncContentPresenter`** — caption paint delegates to presenter; `SuppressContent` when `Children.Count > 0`.
+- Phase0 **P6e-PRES** — gate **40/40**.
+
+### Notes
+
+- ControlTemplate visual-tree expansion (Border + live presenter widgets) remains deferred.
+- UniformGrid ItemsHost item inflate still deferred (IDE hang).
+
+---
+
 ## [2.24.0] — 2026-07-21 — Phase 2a (B-RESZ / B-NAV / bind fidelity / Margin-Padding families)
 
 ### Fixed

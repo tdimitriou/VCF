@@ -218,7 +218,8 @@ Registered names are resolved in `CreateInstance` before `CreateObject` and befo
 | **7c-layout** | `v2.18.0-wpf-alignment-p7c-layout-shim` | POS layout shim + **P7c-LAY** + script legacy-type skip ([POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md)) |
 | **7d-harness** | `v2.19.0` … `v2.23.0-wpf-alignment-phase1-complete` | DeNovoSmoke: Splash → Login → MainMenu → Sales layout-only (**Phase 1 complete**) — [`.Tests/DeNovoSmoke/`](../.Tests/DeNovoSmoke/README.md) |
 | **7e-login-wpf** | (with 7d) | Login Grid layout — [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) |
-| 7c-dialog | Phase 2a (**P7c-DLG**, **P7c-PANEL**) | ItemsControl Button DataTemplate + **ItemsPanelTemplate** (UniformGrid); no `@` in framework. |
+| 7c-dialog | Phase 2a (**P7c-DLG**, **P7c-PANEL**) | ItemsControl Button DataTemplate + **ItemsPanelTemplate** (UniformGrid shell); no `@` in framework. |
+| ContentPresenter | Phase 2a (**P6e-PRES**) | Paint-only presenter; Button caption delegates here; lookless template tree deferred. |
 | **Phase 2a** | ongoing | VCF parallel — Phase0 + DeNovoSmoke; nav/layout, B-RESZ/B-NAV, etc. — [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md) §2.4 |
 | **Phase 2b** | TBD | Full `DeNovo.vbp` / KernelLib / Data / DB smoke §3 — deferred until all teams ready |
 
