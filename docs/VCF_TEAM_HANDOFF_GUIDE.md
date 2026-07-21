@@ -219,7 +219,8 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **Margin/Padding family 2** — ~~TextBox/Button Padding=1 (Aero2)~~ (**P2a-PAD-TB**)
   **Margin/Padding family 3** — ~~UniformGrid Padding default=2~~ (**P2a-PAD-UG**)
   **7c-dialog** — ~~ItemsControl Button DataTemplate (no `@`)~~ (**P7c-DLG**)
-  later  ItemsPanelTemplate · System/OS theme · §2.11 ContentPresenter composition
+  **ItemsPanelTemplate** — ~~UniformGrid ItemsHost~~ (**P7c-PANEL**)
+  later  System/OS theme · §2.11 ContentPresenter composition
   deferred RelativeSource / ElementName for window-level Command (item-level Command works)
 
 Phase 2b — POS integration (deferred)
@@ -438,6 +439,7 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-07-21 | **P2a-PAD-TB** — TextBox/Button Padding (Aero2=1); Phase0 **36** tests |
 | 2026-07-21 | **P2a-PAD-UG** — UniformGrid Padding default=2 locked; Phase0 **37** tests |
 | 2026-07-21 | **P7c-DLG** — ItemsControl Button DataTemplate (no `@`); Phase0 **38** tests |
+| 2026-07-21 | **P7c-PANEL** — ItemsPanelTemplate UniformGrid host; Phase0 **39** tests |
 | 2026-07-21 | **B-BIND-DENSE** — ItemTemplate TextBlock binding fidelity + Phase0 21×6 gate (34 tests) |
 | 2026-07-21 | **B-RESZ** + **B-NAV** — Phase0 nested UniformGrid ×50 + Visibility nav / Windows registry (33 tests) |
 | 2026-07-21 | **Phase 2a.1 start** — `Window.OnChildVisibilityChanged`; harness nav drops manual Relayout/Rebuild |

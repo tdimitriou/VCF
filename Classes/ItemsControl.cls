@@ -29,7 +29,8 @@ Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private WithEvents m_ItemsSource As ObservableCollection
 Attribute m_ItemsSource.VB_VarHelpID = -1
 
-Private m_ItemsHost As StackPanel
+Private m_ItemsHost As Object
+Private m_ItemsPanel As ItemsPanelTemplate
 
 Private m_DesignLeft As Single
 Private m_DesignTop As Single
@@ -75,7 +76,18 @@ Public Property Set ItemTemplate(ByVal Value As DataTemplate)
     If Not m_ItemsSource Is Nothing Then RebuildAllItems
 End Property
 
-Public Property Get ItemsHost() As StackPanel
+' Panel that lays out generated item visuals. Default: vertical StackPanel.
+Public Property Get ItemsPanel() As ItemsPanelTemplate
+    Set ItemsPanel = m_ItemsPanel
+End Property
+
+Public Property Set ItemsPanel(ByVal Value As ItemsPanelTemplate)
+    Set m_ItemsPanel = Value
+    InstallItemsHost CreateItemsHostInstance()
+End Property
+
+' Live panel instance (StackPanel by default, or clone of ItemsPanel root).
+Public Property Get ItemsHost() As Object
     Set ItemsHost = m_ItemsHost
 End Property
 
@@ -206,9 +218,7 @@ Private Sub Class_Initialize()
 
     NewUIElementBase Me, m_BaseUIElement
 
-    Set m_ItemsHost = New StackPanel
-    m_ItemsHost.Orientation = OrientationVertical
-    m_Children.Add m_ItemsHost
+    InstallItemsHost CreateItemsHostInstance()
 
     Set Style = GetBaseStyle
     Set m_ItemsSource = Nothing
@@ -327,7 +337,37 @@ End Property
 Private Sub SetItemsSource(ByVal Value As ObservableCollection)
     Set m_ItemsSource = Nothing
     Set m_ItemsSource = Value
-    RebuildAllItems
+    If Value Is Nothing Then
+        ClearGeneratedItems
+    Else
+        RebuildAllItems
+    End If
+End Sub
+
+' Drop generated visuals when ItemsSource is cleared (RebuildAllItems no-ops if source is Nothing).
+Private Sub ClearGeneratedItems()
+    Dim HostChildren As UIElementCollection
+    Dim WasLocked As Boolean
+    Dim HostWasLocked As Boolean
+
+    m_ItemVisuals.Clear
+    If m_ItemsHost Is Nothing Then Exit Sub
+    If W Is Nothing Then Exit Sub
+
+    HostWasLocked = m_ItemsHost.Widget.LockRefresh
+    WasLocked = W.LockRefresh
+    W.LockRefresh = True
+    m_ItemsHost.Widget.LockRefresh = True
+
+    On Error Resume Next
+    Set HostChildren = HostChildrenCollection
+    ' Non-silent Clear so the host panel detaches child widgets (ClearSilent leaves them).
+    HostChildren.Clear
+    On Error GoTo 0
+
+    W.LockRefresh = WasLocked
+    If Not m_ItemsHost Is Nothing Then m_ItemsHost.Widget.LockRefresh = HostWasLocked
+    If Not W.LockRefresh Then W.Refresh
 End Sub
 
 Private Sub RebuildAllItems()
@@ -338,6 +378,7 @@ Private Sub RebuildAllItems()
     Dim ErrNum As Long
     Dim ErrDesc As String
     Dim ErrSource As String
+    Dim HostChildren As UIElementCollection
 
     If m_ItemsHost Is Nothing Then Exit Sub
     If m_ItemsSource Is Nothing Then Exit Sub
@@ -352,7 +393,9 @@ Private Sub RebuildAllItems()
 
     On Error GoTo CleanUp
 
-    m_ItemsHost.Children.ClearSilent
+    ' Early-bind Children — Friend ClearSilent/AddSilent are not visible via Object late-bind (438).
+    Set HostChildren = HostChildrenCollection
+    HostChildren.ClearSilent
     m_ItemVisuals.Clear
 
     For i = 0 To m_ItemsSource.Count - 1
@@ -361,8 +404,7 @@ Private Sub RebuildAllItems()
     Next
 
     ArrangeItemsHost
-    Call modLayoutEngine.ArrangeStackPanelChildren( _
-        m_ItemsHost.Children, m_ItemsHost.Widget, m_ItemsHost.Orientation, W.Width, W.Height)
+    ArrangeGeneratedItems
     GoTo Done
 
 CleanUp:
@@ -372,52 +414,62 @@ CleanUp:
 
 Done:
     W.LockRefresh = WasLocked
-    m_ItemsHost.Widget.LockRefresh = HostWasLocked
+    If Not m_ItemsHost Is Nothing Then m_ItemsHost.Widget.LockRefresh = HostWasLocked
     If Not W.LockRefresh Then W.Refresh
     If ErrNum <> 0 Then Err.Raise ErrNum, ErrSource, ErrDesc
 End Sub
 
 Private Sub AddItemAt(ByVal Index As Long, ByVal Item As Variant, Optional ByVal Silent As Boolean = False)
     Dim Root As Object
+    Dim HostChildren As UIElementCollection
+    Dim UseSilent As Boolean
 
     Set Root = modItemTemplateEngine.CloneItemVisualForItem(m_ItemTemplate, Item, m_BaseUIElement)
     If Root Is Nothing Then
         Err.Raise vbObjectError + 10, TypeName(Me), "ItemTemplate produced no visual for index " & Index
     End If
 
+    Set HostChildren = HostChildrenCollection
+
+    ' UniformGrid relies on CollectionChanged → MoveChildren to attach widgets; AddSilent skips that.
+    UseSilent = Silent And Not (TypeOf m_ItemsHost Is UniformGrid)
+
     If Index >= m_ItemVisuals.Count Then
         m_ItemVisuals.Add Root
-        If Silent Then
-            m_ItemsHost.Children.AddSilent Root
+        If UseSilent Then
+            HostChildren.AddSilent Root
         Else
-            m_ItemsHost.Children.Add Root
+            HostChildren.Add Root
         End If
     Else
         m_ItemVisuals.Insert Index, Root
-        m_ItemsHost.Children.Insert Index, Root
+        HostChildren.Insert Index, Root
     End If
 End Sub
 
 Private Sub RemoveItemAt(ByVal Index As Long)
     If Index < 0 Or Index >= m_ItemVisuals.Count Then Exit Sub
     m_ItemVisuals.RemoveAt Index
-    m_ItemsHost.Children.RemoveAt Index
+    HostChildrenCollection.RemoveAt Index
 End Sub
 
 Private Sub ReplaceItemAt(ByVal Index As Long, ByVal Item As Variant)
     If Index < 0 Or Index >= m_ItemVisuals.Count Then Exit Sub
-    m_ItemsHost.Children.RemoveAt Index
+    HostChildrenCollection.RemoveAt Index
     m_ItemVisuals.RemoveAt Index
     AddItemAt Index, Item
 End Sub
 
 Private Sub MoveItemVisual(ByVal OldIndex As Long, ByVal NewIndex As Long)
     Dim Visual As Object
+    Dim HostChildren As UIElementCollection
+
     Set Visual = m_ItemVisuals(OldIndex)
     m_ItemVisuals.RemoveAt OldIndex
     m_ItemVisuals.Insert NewIndex, Visual
-    m_ItemsHost.Children.RemoveAt OldIndex
-    m_ItemsHost.Children.Insert NewIndex, Visual
+    Set HostChildren = HostChildrenCollection
+    HostChildren.RemoveAt OldIndex
+    HostChildren.Insert NewIndex, Visual
 End Sub
 '#End Region
 
@@ -519,14 +571,87 @@ End Sub
 
 Private Sub W_Resize()
     ArrangeItemsHost
+    ArrangeGeneratedItems
 End Sub
 '#End Region
 
 '#Region Private Methods
+Private Function CreateItemsHostInstance() As Object
+    Dim Root As Object
+
+    If m_ItemsPanel Is Nothing Then
+        Set CreateItemsHostInstance = CreateDefaultStackHost()
+        Exit Function
+    End If
+    If m_ItemsPanel.Children Is Nothing Then
+        Set CreateItemsHostInstance = CreateDefaultStackHost()
+        Exit Function
+    End If
+    If m_ItemsPanel.Children.Count = 0 Then
+        Set CreateItemsHostInstance = CreateDefaultStackHost()
+        Exit Function
+    End If
+
+    Set Root = m_ItemsPanel.Children(0)
+    Set CreateItemsHostInstance = modItemTemplateEngine.CloneItemsPanelRoot(Root)
+    If CreateItemsHostInstance Is Nothing Then
+        Err.Raise vbObjectError + 11, TypeName(Me), _
+            "ItemsPanel root must be StackPanel or UniformGrid (got " & TypeName(Root) & ")"
+    End If
+End Function
+
+Private Function CreateDefaultStackHost() As StackPanel
+    Dim Sp As StackPanel
+    Set Sp = New StackPanel
+    Sp.Orientation = OrientationVertical
+    Set CreateDefaultStackHost = Sp
+End Function
+
+Private Sub InstallItemsHost(ByVal NewHost As Object)
+    Dim HadItems As Boolean
+
+    If NewHost Is Nothing Then Exit Sub
+
+    HadItems = (Not m_ItemsSource Is Nothing) And (Not m_ItemTemplate Is Nothing)
+
+    If Not m_ItemsHost Is Nothing Then
+        If m_Children.Contains(m_ItemsHost) Then m_Children.Remove m_ItemsHost
+    End If
+
+    Set m_ItemsHost = NewHost
+    m_Children.Add m_ItemsHost
+    ArrangeItemsHost
+
+    If HadItems Then RebuildAllItems
+End Sub
+
 Private Sub ArrangeItemsHost()
     If m_ItemsHost Is Nothing Then Exit Sub
-    m_ItemsHost.Move 0, 0, W.Width, W.Height
+    ' Use Widget.Move — UniformGrid/StackPanel.Move no-op when Parent is Nothing.
+    If W.Width <= 0! Or W.Height <= 0! Then Exit Sub
+    m_ItemsHost.Widget.Move 0, 0, W.Width, W.Height
 End Sub
+
+' StackPanel needs explicit arrange; UniformGrid lays out on Move/W_Resize after children attach.
+Private Sub ArrangeGeneratedItems()
+    Dim Sp As StackPanel
+
+    If m_ItemsHost Is Nothing Then Exit Sub
+    If W.Width <= 0! Or W.Height <= 0! Then Exit Sub
+
+    If TypeOf m_ItemsHost Is StackPanel Then
+        Set Sp = m_ItemsHost
+        Call modLayoutEngine.ArrangeStackPanelChildren( _
+            Sp.Children, Sp.Widget, Sp.Orientation, W.Width, W.Height)
+    End If
+End Sub
+
+' Resolve Children through a typed variable so Friend AddSilent/ClearSilent work (not via Object).
+Private Function HostChildrenCollection() As UIElementCollection
+    Dim HostChildren As UIElementCollection
+    Set HostChildren = m_ItemsHost.Children
+    Set HostChildrenCollection = HostChildren
+End Function
 
 Private Function GetBaseStyle() As Style
     Dim StyleObj As Variant

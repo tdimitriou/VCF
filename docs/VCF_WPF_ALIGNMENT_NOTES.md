@@ -870,7 +870,7 @@ Control (Button, …)
 |-----|-----------|------------|
 | `DataTemplate` | `DataTemplate` class; ListView only; owner-draw | Same class; **shared engine** for ListView + ItemsControl; typed lookup via `DataType` / `x:Key` |
 | `ItemsControl` | `IItemsControl` interface; **only ListView implements** | **`ItemsControl` control** — generates **visual/logical children** (or panel slots), not `@` loops |
-| `ItemsPanelTemplate` | Manual `UniformGrid.Children.AddRange` | `<ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid …/></ItemsPanelTemplate>` |
+| `ItemsPanelTemplate` | Manual `UniformGrid.Children.AddRange` | **`ItemsControl.ItemsPanel`** — StackPanel default or UniformGrid (**P7c-PANEL**) |
 | `ControlTemplate` | None | Phase 6; `TargetType="Button"` etc. |
 | `ContentTemplate` | None | Phase 2b on `ContentControl` |
 | Implicit template (`DataType`) | `DataTemplate_<TypeName>` resource key hack | Keep key convention **or** document as WPF-compatible implicit lookup in `ResourceDictionary` |

@@ -64,6 +64,7 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P2a-PAD-TB | TextBox/Button Margin/Padding defaults | `Phase2aBench_TextBoxButtonPaddingDefaults` | pass | TextBox 0/1; Button Padding=1 |
 | P2a-PAD-UG | UniformGrid Padding default | `Phase2aBench_UniformGridPaddingDefault` | pass | Padding=2 locked |
 | P7c-DLG | Dialog Button DataTemplate | `Phase7cBench_DialogDataTemplate` | pass | ItemsControl+Button Content/Command |
+| P7c-PANEL | ItemsPanelTemplate | `Phase7cBench_ItemsPanelUniformGrid` | pass | Code+XAML UniformGrid ItemsPanel shell (no item inflate; Button covered by P7c-DLG) |
 
 ---
 

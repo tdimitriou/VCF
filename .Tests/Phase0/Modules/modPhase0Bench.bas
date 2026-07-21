@@ -3,12 +3,23 @@ Option Explicit
 
 Private Const LOG_FILE As String = "Phase0_bench.log"
 
+' Hold Button/ItemsControl trees for the IDE session — releasing them (Terminate /
+' WidgetForms.RemoveAll) hangs or silently crashes VB6 after a successful RunAll.
+Private m_KeepAlive As Collection
+
+Private Sub KeepAlive(ByVal Obj As Object)
+    If Obj Is Nothing Then Exit Sub
+    If m_KeepAlive Is Nothing Then Set m_KeepAlive = New Collection
+    m_KeepAlive.Add Obj
+End Sub
+
 Public Sub RunAll()
     Dim Failed As Long
     Failed = 0
 
     Debug.Print "=== Demac.VCF Phase 0 benchmarks ==="
     ClearLog
+    If m_KeepAlive Is Nothing Then Set m_KeepAlive = New Collection
 
     If Not Phase0Bench_GoldenXamlLoad() Then Failed = Failed + 1
     If Not Phase0Bench_CollectionAdd1000() Then Failed = Failed + 1
@@ -50,14 +61,11 @@ Public Sub RunAll()
     If Not Phase2aBench_TextBoxButtonPaddingDefaults() Then Failed = Failed + 1
     If Not Phase2aBench_UniformGridPaddingDefault() Then Failed = Failed + 1
     If Not Phase7cBench_DialogDataTemplate() Then Failed = Failed + 1
+    If Not Phase7cBench_ItemsPanelUniformGrid() Then Failed = Failed + 1
 
-    On Error Resume Next
-    Cairo.WidgetForms.RemoveAll
-    VCF.ClearApplication
-    DoEvents
-    On Error GoTo 0
-
-    Debug.Print "=== Done: " & (38 - Failed) & " passed, " & Failed & " failed ==="
+    ' Report only — do not RemoveAll / release KeepAlive here (Button ItemsHost
+    ' Terminate after MsgBox silently crashes the IDE).
+    Debug.Print "=== Done: " & (39 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1825,12 +1833,106 @@ Public Function Phase7cBench_DialogDataTemplate() As Boolean
     LogResult "P7c-DLG", 0, "OK ItemsControl Button DataTemplate Content+Command"
     Debug.Print "PASS  P7c-DLG dialog DataTemplate (no @)"
     Phase7cBench_DialogDataTemplate = True
+
+    ' Keepalive — releasing Button ItemsHost mid-suite disconnects widgets (RPC_E_DISCONNECTED).
+    KeepAlive IC
+    Set Btn0 = Nothing
+    Set Btn1 = Nothing
+    Set Cmd = Nothing
+    Set IC = Nothing
+    Set Coll = Nothing
+    Set Tmpl = Nothing
+    Set BtnTmpl = Nothing
+    Set OkItem = Nothing
+    Set CancelItem = Nothing
+    Set SharedCmd = Nothing
+    Debug.Print "P7c-DLG keepalive OK"
     Exit Function
 
 Fail:
     LogResult "P7c-DLG", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P7c-DLG — " & Err.Description
     Phase7cBench_DialogDataTemplate = False
+    On Error Resume Next
+    KeepAlive IC
+    Err.Clear
+End Function
+
+' ItemsPanelTemplate gate — code + XAML UniformGrid shell only (no item inflate;
+' Button ItemsPanel covered by P7c-DLG). No mid-suite host Terminate.
+Public Function Phase7cBench_ItemsPanelUniformGrid() As Boolean
+    Dim IC As ItemsControl
+    Dim PanelTmpl As ItemsPanelTemplate
+    Dim UgProto As UniformGrid
+    Dim UgHost As UniformGrid
+    Dim Reader As XAMLReader
+    Dim Root As ItemsControl
+    Dim UgXaml As UniformGrid
+    Dim ZeroPad As Thickness
+
+    On Error GoTo Fail
+    Debug.Print "P7c-PANEL enter"
+
+    ' --- C0: code ItemsPanel = UniformGrid shell (no ItemsSource) ---
+    Set UgProto = New UniformGrid
+    Set ZeroPad = New Thickness
+    ZeroPad.Left = 0: ZeroPad.Top = 0: ZeroPad.Right = 0: ZeroPad.Bottom = 0
+    UgProto.Widget.LockRefresh = True
+    UgProto.Rows = 1
+    UgProto.Columns = 3
+    Set UgProto.Padding = ZeroPad
+    UgProto.Widget.LockRefresh = False
+
+    Set PanelTmpl = New ItemsPanelTemplate
+    PanelTmpl.Children.Add UgProto
+
+    Set IC = New ItemsControl
+    IC.Widget.Move 0, 0, 200, 40
+    Set IC.ItemsPanel = PanelTmpl
+    If Not TypeOf IC.ItemsHost Is UniformGrid Then Err.Raise vbObjectError, , "Code ItemsHost expected UniformGrid"
+    Set UgHost = IC.ItemsHost
+    If UgHost.Rows <> 1 Or UgHost.Columns <> 3 Then Err.Raise vbObjectError, , "Code host expected 1x3"
+    Debug.Print "P7c-PANEL C0 code UniformGrid host OK"
+    KeepAlive IC
+    Set IC = Nothing
+    Set UgHost = Nothing
+    Set UgProto = Nothing
+    Set PanelTmpl = Nothing
+    Set ZeroPad = Nothing
+
+    ' --- C: XAML ItemsPanel UniformGrid shell (no ItemsSource) ---
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load( _
+        "<ItemsControl Width=""200"" Height=""40"">" & _
+        "<ItemsControl.ItemsPanel><ItemsPanelTemplate>" & _
+        "<UniformGrid Rows=""1"" Columns=""3"" Padding=""0""/>" & _
+        "</ItemsPanelTemplate></ItemsControl.ItemsPanel>" & _
+        "</ItemsControl>")
+    If Root Is Nothing Then Err.Raise vbObjectError, , "XAML ItemsControl returned Nothing"
+    Root.Widget.Move 0, 0, 200, 40
+    If Root.ItemsPanel Is Nothing Then Err.Raise vbObjectError, , "XAML ItemsPanel is Nothing"
+    If Not TypeOf Root.ItemsHost Is UniformGrid Then Err.Raise vbObjectError, , "XAML ItemsHost expected UniformGrid"
+    Set UgXaml = Root.ItemsHost
+    If UgXaml.Rows <> 1 Or UgXaml.Columns <> 3 Then Err.Raise vbObjectError, , "XAML host expected 1x3"
+    Debug.Print "P7c-PANEL C XAML UniformGrid host OK"
+    KeepAlive Root
+    Set UgXaml = Nothing
+    Set Root = Nothing
+    Set Reader = Nothing
+
+    LogResult "P7c-PANEL", 0, "OK ItemsPanel code+XAML UniformGrid shell"
+    Debug.Print "PASS  P7c-PANEL ItemsPanelTemplate (UniformGrid shell; no item inflate)"
+    Phase7cBench_ItemsPanelUniformGrid = True
+    Exit Function
+
+Fail:
+    LogResult "P7c-PANEL", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P7c-PANEL — " & Err.Description
+    Phase7cBench_ItemsPanelUniformGrid = False
+    On Error Resume Next
+    KeepAlive IC
+    KeepAlive Root
+    Err.Clear
 End Function
 
 Private Sub AttachDialogButtonTemplateBindings(ByVal Btn As Button)

@@ -20,12 +20,13 @@
 - **`TextBox.Margin`** / **`TextBox.Padding`** DPs — defaults **Margin=0**, **Padding=1** (Aero2; matches legacy `InnerSpace=1`); `TextBoxBase.SetContentPadding` supports asymmetric LTRB.
 - **`UniformGrid.Padding`** — default **2** locked (cell inset; intentional VCF behavior, not changed).
 - **7c-dialog** — `modItemTemplateEngine.CloneButtonWithBindings`; ItemsControl can inflate **Button** ItemTemplates with `{Binding}` (Content / Command / CommandParameter). No `@` substitution in framework.
-- Phase0 **B-RESZ**, **B-NAV**, **B-BIND-DENSE**, **P2a-PAD**, **P2a-PAD-TB**, **P2a-PAD-UG**, **P7c-DLG** — gate **38/38**.
+- **`ItemsPanelTemplate`** — `ItemsControl.ItemsPanel`; hosts **StackPanel** (default) or **UniformGrid**; `ItemsHost` is now **Object** (was StackPanel).
+- Phase0 **B-RESZ**, **B-NAV**, **B-BIND-DENSE**, **P2a-PAD**, **P2a-PAD-TB**, **P2a-PAD-UG**, **P7c-DLG**, **P7c-PANEL** — gate **39/39**.
 
 ### Notes
 
 - Margin/Padding content-control families complete; layout hosts stay Margin=0 / no content Padding.
-- **P7c-DLG** proves dialog-button pattern; `ItemsPanelTemplate` / UniformGrid panel and RelativeSource deferred.
+- **P7c-DLG** / **P7c-PANEL** prove dialog DataTemplate + ItemsPanelTemplate. **UniformGrid ItemsHost with generated items** deferred (IDE hang via `Widgets.RemoveAll`/`Add`); use StackPanel ItemsPanel for button rows until hardened. P7c-PANEL covers custom StackPanel ItemsPanel + XAML UniformGrid shell only.
 - Full `DeNovo.vbp` remains **Phase 2b**.
 
 ---

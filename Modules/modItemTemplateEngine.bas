@@ -262,3 +262,39 @@ Public Sub ValidateItemsSourceValue(Value, ByVal SourceName As String)
         Err.Raise vbObjectError + 4, SourceName, "ItemsSource must be an ObservableCollection"
     End If
 End Sub
+
+' Clone ItemsPanelTemplate root for ItemsControl.ItemsHost (empty panel shell).
+Public Function CloneItemsPanelRoot(ByVal Source As Object) As Object
+    Dim UgSrc As UniformGrid
+    Dim Ug As UniformGrid
+    Dim SpSrc As StackPanel
+    Dim Sp As StackPanel
+
+    If Source Is Nothing Then Exit Function
+
+    If TypeOf Source Is UniformGrid Then
+        Set UgSrc = Source
+        Set Ug = New UniformGrid
+        ' Avoid Rows/Columns/Padding setters here — they call MoveChildren on an unhosted grid.
+        Ug.Widget.LockRefresh = True
+        Call Ug.ApplyItemsPanelMetrics(UgSrc.Rows, UgSrc.Columns, UgSrc.Padding)
+        Ug.DesignWidth = UgSrc.DesignWidth
+        Ug.DesignHeight = UgSrc.DesignHeight
+        On Error Resume Next
+        Ug.DependencyProperties.SetCurrentValue "ShowGridLines", UgSrc.DependencyProperties.GetValue("ShowGridLines")
+        On Error GoTo 0
+        Ug.Widget.LockRefresh = False
+        Set CloneItemsPanelRoot = Ug
+        Exit Function
+    End If
+
+    If TypeOf Source Is StackPanel Then
+        Set SpSrc = Source
+        Set Sp = New StackPanel
+        Sp.Orientation = SpSrc.Orientation
+        Sp.DesignWidth = SpSrc.DesignWidth
+        Sp.DesignHeight = SpSrc.DesignHeight
+        Set CloneItemsPanelRoot = Sp
+        Exit Function
+    End If
+End Function

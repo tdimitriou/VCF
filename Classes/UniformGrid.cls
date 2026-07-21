@@ -93,6 +93,24 @@ Public Name As String
         
         Call MoveChildren
     End Property
+
+    ' ItemsPanelTemplate clone — set metrics without MoveChildren (grid not hosted yet).
+    Friend Sub ApplyItemsPanelMetrics(ByVal NewRows As Long, ByVal NewColumns As Long, ByVal Pad As Thickness)
+        Dim PadCopy As Thickness
+
+        If NewRows < 1 Then NewRows = 1
+        If NewColumns < 1 Then NewColumns = 1
+        m_Rows = NewRows
+        m_Columns = NewColumns
+        If Not Pad Is Nothing Then
+            Set PadCopy = New Thickness
+            PadCopy.Left = Pad.Left
+            PadCopy.Top = Pad.Top
+            PadCopy.Right = Pad.Right
+            PadCopy.Bottom = Pad.Bottom
+            m_DependencyProperties.SetCurrentValue "Padding", PadCopy
+        End If
+    End Sub
 '#End Region
 
 '#Region IUIElement Inheritance

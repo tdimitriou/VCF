@@ -78,6 +78,7 @@ Class=StringConversion; Classes\StringConversion.cls
 Class=NestedProperty; Classes\NestedProperty.cls
 Class=ListViewPropertyChangedHandler; Classes\ListViewPropertyChangedHandler.cls
 Class=DataTemplate; Classes\DataTemplate.cls
+Class=ItemsPanelTemplate; Classes\ItemsPanelTemplate.cls
 Class=IItemsControl; Classes\IItemsControl.cls
 Class=ISelector; Classes\ISelector.cls
 Class=ICloneable; Classes\ICloneable.cls
