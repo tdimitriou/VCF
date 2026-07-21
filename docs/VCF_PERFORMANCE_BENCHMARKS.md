@@ -60,6 +60,7 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | B-RESZ | Window resize nested UniformGrid 50× | `Phase2aBench_NestedUniformGridResize` | *record* | Phase 2a — Widget.Move ×50 |
 | B-NAV | 50× view navigation binding leak | `Phase2aBench_ViewNavLeak` | *record* | Phase 2a — Visibility nav + Windows=0 |
 | B-BIND-DENSE | 21×6 ItemTemplate clone + bindings | `Phase2aBench_ListViewBindHotspot` | *record* | Phase 2a — clone bind fidelity + INPC + detach |
+| P2a-PAD | ListView Margin/Padding defaults | `Phase2aBench_ListViewPaddingDefaults` | pass | Margin=0; Padding=4,1,4,1 |
 
 ---
 

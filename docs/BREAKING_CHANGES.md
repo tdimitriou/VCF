@@ -5,7 +5,7 @@
 
 ---
 
-## [2.24.0] — 2026-07-21 — Phase 2a (B-RESZ / B-NAV / ListView bind fidelity)
+## [2.24.0] — 2026-07-21 — Phase 2a (B-RESZ / B-NAV / bind fidelity / ListView Padding)
 
 ### Fixed
 
@@ -13,13 +13,15 @@
 - **`VCF.CloneDataTemplateForItem`** — public wrapper for Phase0 / tests (module not in typelib).
 - **`DetachBindingsTree`** — skip `For Each` when `IControl.Children` is **Nothing** (TextBlock/Image); previously Access Violation in vbRichClient5.
 
-### Added (Phase0)
+### Added
 
-- **B-RESZ**, **B-NAV**, **B-BIND-DENSE** — Phase0 gate **34/34**.
+- **`ListView.Margin`** / **`ListView.Padding`** DPs — defaults **Margin=0**, **Padding=4,1,4,1** (Win10 ListBoxItem); default item text draw reads **Padding** (no longer hard-coded).
+- Phase0 **B-RESZ**, **B-NAV**, **B-BIND-DENSE**, **P2a-PAD** — gate **35/35**.
 
 ### Notes
 
 - POS menu grid XAML / VM dual-path still deferred (framework-first only).
+- Next Margin/Padding families: TextBox/Button; UniformGrid default stays **2**.
 - Full `DeNovo.vbp` remains **Phase 2b**.
 
 ---

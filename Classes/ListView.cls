@@ -144,6 +144,23 @@ Private m_Ready                                   As Boolean
         Set m_ItemTemplate = Value
     End Property
     
+    Public Property Get Margin() As Thickness
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Margin"), Margin)
+    End Property
+    
+    Public Property Set Margin(ByVal Value As Thickness)
+        Call m_DependencyProperties.SetValue("Margin", Value)
+    End Property
+    
+    Public Property Get Padding() As Thickness
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Padding"), Padding)
+    End Property
+    
+    Public Property Set Padding(ByVal Value As Thickness)
+        Call m_DependencyProperties.SetValue("Padding", Value)
+        If Not W Is Nothing Then W.Refresh
+    End Property
+    
     Public Property Get SelectedItem() As Object
         Dim Value As Variant
         Call API.CopyVariable(m_DependencyProperties.GetValue("SelectedItem"), Value)
@@ -305,7 +322,12 @@ Private m_Ready                                   As Boolean
             Call .Register("SelectedValue", vbVariant, , , , NewDependencyPropertyMetadata(False, True, False, TwoWay))
             Call .Register("SelectedValuePath", vbString, , , , NewDependencyPropertyMetadata(False, True, False, OneWay))
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
+            Call .Register("Margin", vbObject, "Thickness")
+            Call .Register("Padding", vbObject, "Thickness")
             .SetValue "Style", Nothing
+            .SetCurrentValue "Margin", NewThickness(0)
+            ' Win10 WPF ListBoxItem-style content inset for default item text draw.
+            .SetCurrentValue "Padding", NewThickness(4, 1, 4, 1)
         End With
         
         Set m_Base = New ListViewBase
@@ -722,6 +744,7 @@ Private m_Ready                                   As Boolean
         
         Dim Data
         Dim Text As String
+        Dim Pad As Thickness
         Dim PadL As Single
         Dim PadT As Single
         Dim PadR As Single
@@ -740,11 +763,15 @@ Private m_Ready                                   As Boolean
         Text = Data
         If Err Then Text = "{" & Typename(Data) & "}"
         
-        ' Win10 WPF ListBoxItem default Padding="4,1,4,1" (classic was 2,0,0,0).
-        PadL = 4!
-        PadT = 1!
-        PadR = 4!
-        PadB = 1!
+        Set Pad = Padding
+        If Pad Is Nothing Then
+            PadL = 4!: PadT = 1!: PadR = 4!: PadB = 1!
+        Else
+            PadL = CSng(Pad.Left)
+            PadT = CSng(Pad.Top)
+            PadR = CSng(Pad.Right)
+            PadB = CSng(Pad.Bottom)
+        End If
         TextW = CDbl(dx) - PadL - PadR
         TextH = CDbl(dy) - PadT - PadB
         If TextW < 0# Then TextW = 0#

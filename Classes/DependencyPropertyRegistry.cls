@@ -119,7 +119,9 @@ Private Sub RegisterFrameworkElementType()
         Array("SelectedValue", vbVariant, vbNullString, vbNullString, False, True, False, TwoWay), _
         Array("SelectedValuePath", vbString, vbNullString, vbNullString, False, True, False, OneWay)
 
-    RegisterType "ListView", "Selector"
+    RegisterType "ListView", "Selector", _
+        Array("Margin", vbObject, "Thickness", vbNullString, True, False, False, OneWay), _
+        Array("Padding", vbObject, "Thickness", vbNullString, True, False, False, OneWay)
 
     RegisterType "Border", "FrameworkElement", _
         Array("Child", vbObject, vbNullString, vbNullString, False, True, False, OneWay)

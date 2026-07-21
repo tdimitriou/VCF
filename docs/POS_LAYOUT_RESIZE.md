@@ -113,23 +113,18 @@ LoginView (UserControl, legacy scale)
 
 **Test:** **P7d-LAY-RESIZE** (Phase0) — Border with Design* children at 400×300 → 200×150; assert scaled positions.
 
-### Deferred — WPF Margin / Padding defaults (document now, implement later)
+### Deferred — WPF Margin / Padding defaults
 
-**Status:** Agreed direction · **Phase 2a** — schedule **after** nav/layout (auto RelayoutChildren / Option C) and B-RESZ/B-NAV.
+**Status:** **Phase 2a in progress** — family 1 shipped (**ListView**).
+
+| Family | Status |
+|--------|--------|
+| **ListView** | **Done** — `Margin` default 0; `Padding` default **4,1,4,1**; draw uses DP; **P2a-PAD** |
+| TextBox / Button | Pending |
+| UniformGrid | Keep default **Padding=2**; POS often sets `Padding="4"` explicitly |
+| Layout hosts (Grid/Border/Panel) | Stay **Margin=0**; no content Padding unless WPF requires |
 
 **Goal:** Align framework `Margin`/`Padding` defaults with WPF (prefer Win10-era metrics where themes differ), so content controls share one model instead of one-off paint insets.
-
-**Agreed approach (when picked up):**
-
-1. Target **Win10-ish** content padding (e.g. ListBoxItem-style **4,1,4,1**); layout hosts (`Grid`, `Border`, `UserControl`) stay **0** unless WPF itself is non-zero.
-2. Register real **`Margin`/`Padding` DPs** on interactive controls (`ListView`, `TextBox`, `Button`, …) — do not rely only on hard-coded draw offsets or Design* shims.
-3. Ship **per control family** with Phase0/visual checks + `BREAKING_CHANGES` — start ItemsControl/Selector, then TextBox/Button.
-4. Keep **UniformGrid** default explicit (today **2**; decide 0 vs 2 vs 4 when implementing — POS XAML often sets `Padding="4"`).
-5. Prefer **explicit XAML** for large chrome gaps; defaults only for content insets.
-
-**Interim (already in tree):** `ListView` default item text inset **4,1,4,1**; single-child `Border` honors child Margin. Do not expand to other controls until this backlog item is scheduled.
-
-**Higher priority ahead of this (Phase 2a):** nav/layout gaps (manual `RelayoutChildren` → automatic), Option **C** if needed, **B-RESZ** / **B-NAV**, then Margin/Padding defaults.
 
 ---
 

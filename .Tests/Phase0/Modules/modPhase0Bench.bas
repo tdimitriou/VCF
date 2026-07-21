@@ -46,6 +46,7 @@ Public Sub RunAll()
     If Not Phase2aBench_NestedUniformGridResize() Then Failed = Failed + 1
     If Not Phase2aBench_ViewNavLeak() Then Failed = Failed + 1
     If Not Phase2aBench_ListViewBindHotspot() Then Failed = Failed + 1
+    If Not Phase2aBench_ListViewPaddingDefaults() Then Failed = Failed + 1
 
     On Error Resume Next
     Cairo.WidgetForms.RemoveAll
@@ -53,7 +54,7 @@ Public Sub RunAll()
     DoEvents
     On Error GoTo 0
 
-    Debug.Print "=== Done: " & (34 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (35 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1579,6 +1580,65 @@ Private Sub CleanupBindDenseArtifacts( _
 
     Cairo.WidgetForms.RemoveAll
 End Sub
+
+' Phase 2a Margin/Padding family 1: ListView DPs (Margin=0, Padding=4,1,4,1 Win10 ListBoxItem).
+Public Function Phase2aBench_ListViewPaddingDefaults() As Boolean
+    Dim LV As ListView
+    Dim Marg As Thickness
+    Dim Pad As Thickness
+    Dim Custom As Thickness
+
+    On Error GoTo Fail
+
+    Set LV = New ListView
+    If Not LV.DependencyProperties.Exists("Margin") Then Err.Raise vbObjectError, , "ListView missing Margin DP"
+    If Not LV.DependencyProperties.Exists("Padding") Then Err.Raise vbObjectError, , "ListView missing Padding DP"
+
+    Set Marg = LV.Margin
+    If Marg Is Nothing Then Err.Raise vbObjectError, , "ListView.Margin is Nothing"
+    If Marg.Left <> 0 Or Marg.Top <> 0 Or Marg.Right <> 0 Or Marg.Bottom <> 0 Then
+        Err.Raise vbObjectError, , "ListView.Margin default expected 0,0,0,0"
+    End If
+
+    Set Pad = LV.Padding
+    If Pad Is Nothing Then Err.Raise vbObjectError, , "ListView.Padding is Nothing"
+    If Pad.Left <> 4 Or Pad.Top <> 1 Or Pad.Right <> 4 Or Pad.Bottom <> 1 Then
+        Err.Raise vbObjectError, , "ListView.Padding default expected 4,1,4,1 got " & _
+            Pad.Left & "," & Pad.Top & "," & Pad.Right & "," & Pad.Bottom
+    End If
+
+    Set Custom = New Thickness
+    Custom.Left = 8
+    Custom.Top = 2
+    Custom.Right = 8
+    Custom.Bottom = 2
+    Set LV.Padding = Custom
+    Set Pad = LV.Padding
+    If Pad.Left <> 8 Or Pad.Top <> 2 Or Pad.Right <> 8 Or Pad.Bottom <> 2 Then
+        Err.Raise vbObjectError, , "ListView.Padding set expected 8,2,8,2"
+    End If
+
+    Set Custom = New Thickness
+    Custom.Left = 4
+    Custom.Top = 4
+    Custom.Right = 4
+    Custom.Bottom = 4
+    Set LV.Margin = Custom
+    Set Marg = LV.Margin
+    If Marg.Left <> 4 Or Marg.Top <> 4 Or Marg.Right <> 4 Or Marg.Bottom <> 4 Then
+        Err.Raise vbObjectError, , "ListView.Margin set expected 4,4,4,4"
+    End If
+
+    LogResult "P2a-PAD", 0, "OK ListView Margin=0 Padding=4,1,4,1 + setters"
+    Debug.Print "PASS  P2a-PAD ListView Margin/Padding defaults"
+    Phase2aBench_ListViewPaddingDefaults = True
+    Exit Function
+
+Fail:
+    LogResult "P2a-PAD", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2a-PAD — " & Err.Description
+    Phase2aBench_ListViewPaddingDefaults = False
+End Function
 
 ' Markup-equivalent: Source = DataContext DP, Path = Title (same as BindingsManager default).
 Private Sub AttachDataContextTitleBinding(ByVal Tb As TextBlock)
