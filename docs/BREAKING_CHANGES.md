@@ -5,7 +5,7 @@
 
 ---
 
-## [2.24.0] — 2026-07-21 — Phase 2a (B-RESZ / B-NAV / bind fidelity / ListView Padding)
+## [2.24.0] — 2026-07-21 — Phase 2a (B-RESZ / B-NAV / bind fidelity / Margin-Padding families)
 
 ### Fixed
 
@@ -16,12 +16,16 @@
 ### Added
 
 - **`ListView.Margin`** / **`ListView.Padding`** DPs — defaults **Margin=0**, **Padding=4,1,4,1** (Win10 ListBoxItem); default item text draw reads **Padding** (no longer hard-coded).
-- Phase0 **B-RESZ**, **B-NAV**, **B-BIND-DENSE**, **P2a-PAD** — gate **35/35**.
+- **`Button.Padding`** DP — default **1** (Aero2); caption/`MoveChild` insets use **BorderWidth + Padding**.
+- **`TextBox.Margin`** / **`TextBox.Padding`** DPs — defaults **Margin=0**, **Padding=1** (Aero2; matches legacy `InnerSpace=1`); `TextBoxBase.SetContentPadding` supports asymmetric LTRB.
+- **`UniformGrid.Padding`** — default **2** locked (cell inset; intentional VCF behavior, not changed).
+- **7c-dialog** — `modItemTemplateEngine.CloneButtonWithBindings`; ItemsControl can inflate **Button** ItemTemplates with `{Binding}` (Content / Command / CommandParameter). No `@` substitution in framework.
+- Phase0 **B-RESZ**, **B-NAV**, **B-BIND-DENSE**, **P2a-PAD**, **P2a-PAD-TB**, **P2a-PAD-UG**, **P7c-DLG** — gate **38/38**.
 
 ### Notes
 
-- POS menu grid XAML / VM dual-path still deferred (framework-first only).
-- Next Margin/Padding families: TextBox/Button; UniformGrid default stays **2**.
+- Margin/Padding content-control families complete; layout hosts stay Margin=0 / no content Padding.
+- **P7c-DLG** proves dialog-button pattern; `ItemsPanelTemplate` / UniformGrid panel and RelativeSource deferred.
 - Full `DeNovo.vbp` remains **Phase 2b**.
 
 ---

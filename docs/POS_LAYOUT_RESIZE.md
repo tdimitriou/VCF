@@ -115,13 +115,13 @@ LoginView (UserControl, legacy scale)
 
 ### Deferred — WPF Margin / Padding defaults
 
-**Status:** **Phase 2a in progress** — family 1 shipped (**ListView**).
+**Status:** **Phase 2a** — content-control families + UniformGrid decision shipped.
 
 | Family | Status |
 |--------|--------|
 | **ListView** | **Done** — `Margin` default 0; `Padding` default **4,1,4,1**; draw uses DP; **P2a-PAD** |
-| TextBox / Button | Pending |
-| UniformGrid | Keep default **Padding=2**; POS often sets `Padding="4"` explicitly |
+| **TextBox / Button** | **Done** — TextBox Margin=0 Padding=**1**; Button Padding=**1** (Aero2); draw/`InnerSpace` wired; **P2a-PAD-TB** |
+| **UniformGrid** | **Done** — keep default **Padding=2** (cell inset); gated **P2a-PAD-UG**; apps may set `Padding="4"` |
 | Layout hosts (Grid/Border/Panel) | Stay **Margin=0**; no content Padding unless WPF requires |
 
 **Goal:** Align framework `Margin`/`Padding` defaults with WPF (prefer Win10-era metrics where themes differ), so content controls share one model instead of one-off paint insets.

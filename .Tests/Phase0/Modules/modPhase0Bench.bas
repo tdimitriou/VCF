@@ -47,6 +47,9 @@ Public Sub RunAll()
     If Not Phase2aBench_ViewNavLeak() Then Failed = Failed + 1
     If Not Phase2aBench_ListViewBindHotspot() Then Failed = Failed + 1
     If Not Phase2aBench_ListViewPaddingDefaults() Then Failed = Failed + 1
+    If Not Phase2aBench_TextBoxButtonPaddingDefaults() Then Failed = Failed + 1
+    If Not Phase2aBench_UniformGridPaddingDefault() Then Failed = Failed + 1
+    If Not Phase7cBench_DialogDataTemplate() Then Failed = Failed + 1
 
     On Error Resume Next
     Cairo.WidgetForms.RemoveAll
@@ -54,7 +57,7 @@ Public Sub RunAll()
     DoEvents
     On Error GoTo 0
 
-    Debug.Print "=== Done: " & (35 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (38 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1639,6 +1642,224 @@ Fail:
     Debug.Print "FAIL  P2a-PAD — " & Err.Description
     Phase2aBench_ListViewPaddingDefaults = False
 End Function
+
+' Phase 2a Margin/Padding family 2: TextBox (Margin=0, Padding=1) + Button (Padding=1 Aero2).
+' Qualify VCF.TextBox — bare TextBox resolves to VB.TextBox (higher in project refs).
+Public Function Phase2aBench_TextBoxButtonPaddingDefaults() As Boolean
+    Dim Tb As VCF.TextBox
+    Dim Btn As Button
+    Dim Marg As Thickness
+    Dim Pad As Thickness
+    Dim Custom As Thickness
+
+    On Error GoTo Fail
+
+    Set Tb = New VCF.TextBox
+    If Not Tb.DependencyProperties.Exists("Margin") Then Err.Raise vbObjectError, , "TextBox missing Margin DP"
+    If Not Tb.DependencyProperties.Exists("Padding") Then Err.Raise vbObjectError, , "TextBox missing Padding DP"
+
+    Set Marg = Tb.Margin
+    If Marg Is Nothing Then Err.Raise vbObjectError, , "TextBox.Margin is Nothing"
+    If Marg.Left <> 0 Or Marg.Top <> 0 Or Marg.Right <> 0 Or Marg.Bottom <> 0 Then
+        Err.Raise vbObjectError, , "TextBox.Margin default expected 0,0,0,0"
+    End If
+
+    Set Pad = Tb.Padding
+    If Pad Is Nothing Then Err.Raise vbObjectError, , "TextBox.Padding is Nothing"
+    If Pad.Left <> 1 Or Pad.Top <> 1 Or Pad.Right <> 1 Or Pad.Bottom <> 1 Then
+        Err.Raise vbObjectError, , "TextBox.Padding default expected 1,1,1,1 got " & _
+            Pad.Left & "," & Pad.Top & "," & Pad.Right & "," & Pad.Bottom
+    End If
+    If Tb.InnerSpace <> 1 Then Err.Raise vbObjectError, , "TextBox.InnerSpace expected 1 after default Padding"
+
+    Set Custom = New Thickness
+    Custom.Left = 4
+    Custom.Top = 2
+    Custom.Right = 6
+    Custom.Bottom = 3
+    Set Tb.Padding = Custom
+    Set Pad = Tb.Padding
+    If Pad.Left <> 4 Or Pad.Top <> 2 Or Pad.Right <> 6 Or Pad.Bottom <> 3 Then
+        Err.Raise vbObjectError, , "TextBox.Padding set expected 4,2,6,3"
+    End If
+    If Tb.InnerSpace <> 4 Then Err.Raise vbObjectError, , "TextBox.InnerSpace expected 4 (Left) after asymmetric Padding"
+
+    Set Btn = New Button
+    If Not Btn.DependencyProperties.Exists("Padding") Then Err.Raise vbObjectError, , "Button missing Padding DP"
+    Set Pad = Btn.Padding
+    If Pad Is Nothing Then Err.Raise vbObjectError, , "Button.Padding is Nothing"
+    If Pad.Left <> 1 Or Pad.Top <> 1 Or Pad.Right <> 1 Or Pad.Bottom <> 1 Then
+        Err.Raise vbObjectError, , "Button.Padding default expected 1,1,1,1 got " & _
+            Pad.Left & "," & Pad.Top & "," & Pad.Right & "," & Pad.Bottom
+    End If
+
+    Set Custom = New Thickness
+    Custom.Left = 8
+    Custom.Top = 2
+    Custom.Right = 8
+    Custom.Bottom = 2
+    Set Btn.Padding = Custom
+    Set Pad = Btn.Padding
+    If Pad.Left <> 8 Or Pad.Top <> 2 Or Pad.Right <> 8 Or Pad.Bottom <> 2 Then
+        Err.Raise vbObjectError, , "Button.Padding set expected 8,2,8,2"
+    End If
+
+    LogResult "P2a-PAD-TB", 0, "OK TextBox Margin=0 Padding=1 + Button Padding=1 Aero2"
+    Debug.Print "PASS  P2a-PAD-TB TextBox/Button Margin/Padding defaults"
+    Phase2aBench_TextBoxButtonPaddingDefaults = True
+    Exit Function
+
+Fail:
+    LogResult "P2a-PAD-TB", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2a-PAD-TB — " & Err.Description
+    Phase2aBench_TextBoxButtonPaddingDefaults = False
+End Function
+
+' Phase 2a Margin/Padding family 3: UniformGrid cell Padding default stays 2 (intentional; not WPF Panel).
+Public Function Phase2aBench_UniformGridPaddingDefault() As Boolean
+    Dim Ug As UniformGrid
+    Dim Pad As Thickness
+    Dim Custom As Thickness
+
+    On Error GoTo Fail
+
+    Set Ug = New UniformGrid
+    If Not Ug.DependencyProperties.Exists("Padding") Then Err.Raise vbObjectError, , "UniformGrid missing Padding DP"
+
+    Set Pad = Ug.Padding
+    If Pad Is Nothing Then Err.Raise vbObjectError, , "UniformGrid.Padding is Nothing"
+    If Pad.Left <> 2 Or Pad.Top <> 2 Or Pad.Right <> 2 Or Pad.Bottom <> 2 Then
+        Err.Raise vbObjectError, , "UniformGrid.Padding default expected 2,2,2,2 got " & _
+            Pad.Left & "," & Pad.Top & "," & Pad.Right & "," & Pad.Bottom
+    End If
+
+    Set Custom = New Thickness
+    Custom.Left = 4
+    Custom.Top = 4
+    Custom.Right = 4
+    Custom.Bottom = 4
+    Set Ug.Padding = Custom
+    Set Pad = Ug.Padding
+    If Pad.Left <> 4 Or Pad.Top <> 4 Or Pad.Right <> 4 Or Pad.Bottom <> 4 Then
+        Err.Raise vbObjectError, , "UniformGrid.Padding set expected 4,4,4,4"
+    End If
+
+    LogResult "P2a-PAD-UG", 0, "OK UniformGrid Padding default=2 + setter"
+    Debug.Print "PASS  P2a-PAD-UG UniformGrid Padding default"
+    Phase2aBench_UniformGridPaddingDefault = True
+    Exit Function
+
+Fail:
+    LogResult "P2a-PAD-UG", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2a-PAD-UG — " & Err.Description
+    Phase2aBench_UniformGridPaddingDefault = False
+End Function
+
+' Phase 7c-dialog: ItemsControl + DataTemplate root=Button (binding-only; no @ substitution).
+Public Function Phase7cBench_DialogDataTemplate() As Boolean
+    Dim IC As ItemsControl
+    Dim Coll As ObservableCollection
+    Dim Tmpl As DataTemplate
+    Dim BtnTmpl As Button
+    Dim OkItem As Phase0DialogButtonItem
+    Dim CancelItem As Phase0DialogButtonItem
+    Dim SharedCmd As Phase0DialogCommand
+    Dim Btn0 As Button
+    Dim Btn1 As Button
+    Dim Cmd As ICommand
+
+    On Error GoTo Fail
+
+    Set SharedCmd = New Phase0DialogCommand
+
+    Set OkItem = New Phase0DialogButtonItem
+    OkItem.Text = "OK"
+    OkItem.Value = "ok"
+    Set OkItem.Command = SharedCmd
+
+    Set CancelItem = New Phase0DialogButtonItem
+    CancelItem.Text = "Cancel"
+    CancelItem.Value = "cancel"
+    Set CancelItem.Command = SharedCmd
+
+    Set Coll = New ObservableCollection
+    Coll.Add OkItem
+    Coll.Add CancelItem
+
+    Set BtnTmpl = New Button
+    BtnTmpl.DesignWidth = 80
+    BtnTmpl.DesignHeight = 28
+    AttachDialogButtonTemplateBindings BtnTmpl
+
+    Set Tmpl = New DataTemplate
+    Tmpl.Children.Add BtnTmpl
+
+    Set IC = New ItemsControl
+    IC.ItemsHost.Orientation = OrientationHorizontal
+    Set IC.ItemTemplate = Tmpl
+    Set IC.ItemsSource = Coll
+
+    If IC.ItemCount <> 2 Then Err.Raise vbObjectError, , "Expected ItemCount=2"
+    If IC.ItemsHost.Children.Count <> 2 Then Err.Raise vbObjectError, , "Expected 2 host children"
+
+    Set Btn0 = IC.ItemsHost.Children(0)
+    Set Btn1 = IC.ItemsHost.Children(1)
+    If Not TypeOf Btn0 Is Button Then Err.Raise vbObjectError, , "Child 0 is not Button"
+    If Not TypeOf Btn1 Is Button Then Err.Raise vbObjectError, , "Child 1 is not Button"
+
+    If CStr(Btn0.Content) <> "OK" Then Err.Raise vbObjectError, , "Btn0 Content expected OK got " & CStr(Btn0.Content)
+    If CStr(Btn1.Content) <> "Cancel" Then Err.Raise vbObjectError, , "Btn1 Content expected Cancel got " & CStr(Btn1.Content)
+
+    OkItem.Text = "Accept"
+    If CStr(Btn0.Content) <> "Accept" Then Err.Raise vbObjectError, , "Btn0 Content expected Accept after INPC"
+
+    Set Cmd = Btn0.Command
+    If Cmd Is Nothing Then Err.Raise vbObjectError, , "Btn0.Command not bound"
+    If CStr(Btn0.CommandParameter) <> "ok" Then Err.Raise vbObjectError, , "Btn0.CommandParameter expected ok"
+
+    SharedCmd.Reset
+    Cmd.Execute Btn0.CommandParameter
+    If SharedCmd.ExecuteCount <> 1 Then Err.Raise vbObjectError, , "Command ExecuteCount expected 1"
+    If CStr(SharedCmd.LastParameter) <> "ok" Then Err.Raise vbObjectError, , "Command LastParameter expected ok"
+
+    LogResult "P7c-DLG", 0, "OK ItemsControl Button DataTemplate Content+Command"
+    Debug.Print "PASS  P7c-DLG dialog DataTemplate (no @)"
+    Phase7cBench_DialogDataTemplate = True
+    Exit Function
+
+Fail:
+    LogResult "P7c-DLG", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P7c-DLG — " & Err.Description
+    Phase7cBench_DialogDataTemplate = False
+End Function
+
+Private Sub AttachDialogButtonTemplateBindings(ByVal Btn As Button)
+    Dim B As Binding
+
+    Set B = New Binding
+    Set B.TargetProperty = Btn.DependencyProperties.GetProperty("Content")
+    Set B.Source = Btn.DependencyProperties.GetProperty("DataContext")
+    B.Path = "Text"
+    B.Mode = OneWay
+    Set B.Target = Btn
+    Btn.Bindings.Add B
+
+    Set B = New Binding
+    Set B.TargetProperty = Btn.DependencyProperties.GetProperty("Command")
+    Set B.Source = Btn.DependencyProperties.GetProperty("DataContext")
+    B.Path = "Command"
+    B.Mode = OneWay
+    Set B.Target = Btn
+    Btn.Bindings.Add B
+
+    Set B = New Binding
+    Set B.TargetProperty = Btn.DependencyProperties.GetProperty("CommandParameter")
+    Set B.Source = Btn.DependencyProperties.GetProperty("DataContext")
+    B.Path = "Value"
+    B.Mode = OneWay
+    Set B.Target = Btn
+    Btn.Bindings.Add B
+End Sub
 
 ' Markup-equivalent: Source = DataContext DP, Path = Title (same as BindingsManager default).
 Private Sub AttachDataContextTitleBinding(ByVal Tb As TextBlock)

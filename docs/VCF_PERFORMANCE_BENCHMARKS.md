@@ -61,6 +61,9 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | B-NAV | 50× view navigation binding leak | `Phase2aBench_ViewNavLeak` | *record* | Phase 2a — Visibility nav + Windows=0 |
 | B-BIND-DENSE | 21×6 ItemTemplate clone + bindings | `Phase2aBench_ListViewBindHotspot` | *record* | Phase 2a — clone bind fidelity + INPC + detach |
 | P2a-PAD | ListView Margin/Padding defaults | `Phase2aBench_ListViewPaddingDefaults` | pass | Margin=0; Padding=4,1,4,1 |
+| P2a-PAD-TB | TextBox/Button Margin/Padding defaults | `Phase2aBench_TextBoxButtonPaddingDefaults` | pass | TextBox 0/1; Button Padding=1 |
+| P2a-PAD-UG | UniformGrid Padding default | `Phase2aBench_UniformGridPaddingDefault` | pass | Padding=2 locked |
+| P7c-DLG | Dialog Button DataTemplate | `Phase7cBench_DialogDataTemplate` | pass | ItemsControl+Button Content/Command |
 
 ---
 

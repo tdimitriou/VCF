@@ -32,6 +32,7 @@ End Function
 Private Function CloneTemplateChild(ByVal Child As Object) As Object
     Dim Cloner As ICloneable
     Dim TbSrc As TextBlock
+    Dim BtnSrc As Button
 
     If Child Is Nothing Then Exit Function
 
@@ -40,6 +41,10 @@ Private Function CloneTemplateChild(ByVal Child As Object) As Object
         ' Never use TextBlock.Clone here — cProperties.BindTo copies the full COM surface and
         ' destabilizes the IDE under dense ItemTemplate clones. Copy paint props + Bindings only.
         Set CloneTemplateChild = CloneTextBlockWithBindings(TbSrc)
+    ElseIf TypeOf Child Is Button Then
+        Set BtnSrc = Child
+        ' Same rule as TextBlock — no full COM Clone; paint + Bindings only (7c-dialog).
+        Set CloneTemplateChild = CloneButtonWithBindings(BtnSrc)
     ElseIf TypeOf Child Is ICloneable Then
         Set Cloner = Child
         Set CloneTemplateChild = Cloner.Clone
@@ -177,6 +182,74 @@ NextBinding:
 
 Fail:
     Err.Raise Err.Number, "modItemTemplateEngine.CloneTextBlockWithBindings", Err.Description
+End Function
+
+Private Function CloneButtonQuick(ByVal Source As Button) As Button
+    Dim Target As Button
+    Dim Cap As Variant
+
+    Set Target = New Button
+    Call API.CopyVariable(Source.Content, Cap)
+    If IsObject(Cap) Then
+        Set Target.Content = Cap
+    ElseIf Not IsEmpty(Cap) And Not IsNull(Cap) Then
+        Target.Content = Cap
+    End If
+    Target.BorderWidth = Source.BorderWidth
+    Target.CornerRadius = Source.CornerRadius
+    Target.DesignWidth = Source.DesignWidth
+    Target.DesignHeight = Source.DesignHeight
+
+    Set CloneButtonQuick = Target
+End Function
+
+' Chrome props + Binding graph for dialog/button ItemTemplates. Avoids full COM Clone.
+Private Function CloneButtonWithBindings(ByVal Source As Button) As Button
+    Dim Target As Button
+    Dim Item As Variant
+    Dim SrcB As Binding
+    Dim DstB As Binding
+
+    Set Target = CloneButtonQuick(Source)
+    If Source.Bindings Is Nothing Then
+        Set CloneButtonWithBindings = Target
+        Exit Function
+    End If
+    If Source.Bindings.Count = 0 Then
+        Set CloneButtonWithBindings = Target
+        Exit Function
+    End If
+
+    On Error GoTo Fail
+
+    For Each Item In Source.Bindings
+        If Not TypeOf Item Is Binding Then GoTo NextBinding
+        Set SrcB = Item
+        If SrcB.TargetProperty Is Nothing Then GoTo NextBinding
+
+        Set DstB = New Binding
+        Set DstB.TargetProperty = Target.DependencyProperties.GetProperty(SrcB.TargetProperty.Name)
+
+        If Not SrcB.SrcDepObj Is Nothing Then
+            Set DstB.Source = Target.DependencyProperties.GetProperty(SrcB.SrcDepObj.Name)
+        ElseIf Not SrcB.Source Is Nothing Then
+            Set DstB.Source = SrcB.Source
+        End If
+
+        DstB.Path = SrcB.Path
+        DstB.Mode = SrcB.Mode
+        If Not SrcB.Converter Is Nothing Then Set DstB.Converter = SrcB.Converter
+        DstB.StringFormat = SrcB.StringFormat
+        Set DstB.Target = Target
+        Target.Bindings.Add DstB
+NextBinding:
+    Next
+
+    Set CloneButtonWithBindings = Target
+    Exit Function
+
+Fail:
+    Err.Raise Err.Number, "modItemTemplateEngine.CloneButtonWithBindings", Err.Description
 End Function
 
 Public Sub ValidateItemsSourceValue(Value, ByVal SourceName As String)

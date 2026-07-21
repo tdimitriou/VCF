@@ -796,7 +796,7 @@ Align with phased roadmap (§4); **breaking changes OK** (§9).
 | **Per row** | `ICloneable.Clone` each child; `DataContext = Item`; cache in `ItemTemplates` |
 | **Render** | Owner-draw: `IVisualChild.DrawOn` — **not** full widget subtree per row |
 
-**Scope today:** **ListView items only.** No `ControlTemplate`, no general `ItemsControl`, no framework `@`-fragment support.
+**Scope today:** **ListView** (owner-draw) **and ItemsControl** (widget children) share `modItemTemplateEngine`. Clone supports **TextBlock** and **Button** (binding-safe). No framework `@`-fragment support — **P7c-DLG** gates the dialog-button DataTemplate path.
 
 ### 2.12.3 Comparison
 

@@ -104,6 +104,22 @@ Public Name As String
     Public Property Let CueBanner(ByVal Value As String)
         Call m_DependencyProperties.SetValue("CueBanner", Value)
     End Property
+
+    Public Property Get Margin() As Thickness
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Margin"), Margin)
+    End Property
+
+    Public Property Set Margin(ByVal Value As Thickness)
+        Call m_DependencyProperties.SetValue("Margin", Value)
+    End Property
+
+    Public Property Get Padding() As Thickness
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Padding"), Padding)
+    End Property
+
+    Public Property Set Padding(ByVal Value As Thickness)
+        Call m_DependencyProperties.SetValue("Padding", Value)
+    End Property
 '#End Region
 
 '#Region IDependencyObject Inheritance
@@ -222,11 +238,15 @@ Public Name As String
             Call .Register("VCenter", vbBoolean, , , , NewDependencyPropertyMetadata(, True))
             Call .Register("PasswordChar", vbString, , , , NewDependencyPropertyMetadata(, True))
             Call .Register("CueBanner", vbString, , , , NewDependencyPropertyMetadata(, True))
+            Call .Register("Margin", vbObject, "Thickness")
+            Call .Register("Padding", vbObject, "Thickness")
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
             .SetValue "Style", Nothing
         
             .SetCurrentValue "Alignment", m_Base.Alignment
             .SetCurrentValue "VCenter", m_Base.VCenter
+            .SetCurrentValue "Margin", NewThickness(0)
+            .SetCurrentValue "Padding", NewThickness(1) ' Aero2 TextBox; matches legacy InnerSpace=1
             
         End With
         
@@ -241,6 +261,7 @@ Public Name As String
         'EnumerateProperties Me
         
         Set Style = GetBaseStyle
+        ApplyContentPadding
     End Sub
 '#End Region
 
@@ -342,6 +363,15 @@ Public Property Let Border(ByVal Value As Boolean)
     m_Base.Border = Value
 End Property
 
+' Legacy TextBoxBase inset — Left of Padding after ApplyContentPadding.
+Public Property Get InnerSpace() As Long
+    InnerSpace = m_Base.InnerSpace
+End Property
+
+Public Property Let InnerSpace(ByVal Value As Long)
+    m_Base.InnerSpace = Value
+End Property
+
 Public Property Get Focused() As Boolean
     Focused = m_Focused
 End Property
@@ -415,9 +445,22 @@ Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As D
         Case "VCenter": m_Base.VCenter = Property.GetValue
         Case "CueBanner": m_Base.CueBannerText = Property.GetValue
         Case "PasswordChar": m_Base.PasswordChar = Property.GetValue
+        Case "Padding": ApplyContentPadding
         Case "Style": ApplyStyle
 
     End Select
+End Sub
+
+Private Sub ApplyContentPadding()
+    Dim Pad As Thickness
+
+    On Error Resume Next
+    Set Pad = Padding
+    If Pad Is Nothing Then
+        m_Base.SetContentPadding 1, 1, 1, 1
+    Else
+        m_Base.SetContentPadding CLng(Pad.Left), CLng(Pad.Top), CLng(Pad.Right), CLng(Pad.Bottom)
+    End If
 End Sub
 
 Private Function GetBaseStyle() As Style

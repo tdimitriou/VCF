@@ -78,6 +78,14 @@ Attribute TmrRelease.VB_VarHelpID = -1
     Public Property Set Margin(ByVal Value As Thickness)
         Call m_DependencyProperties.SetValue("Margin", Value)
     End Property
+
+    Public Property Get Padding() As Thickness
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Padding"), Padding)
+    End Property
+
+    Public Property Set Padding(ByVal Value As Thickness)
+        Call m_DependencyProperties.SetValue("Padding", Value)
+    End Property
     
     Public Property Get Command() As ICommand
         Call API.CopyVariable(m_DependencyProperties.GetValue("Command"), Command)
@@ -277,6 +285,7 @@ Attribute TmrRelease.VB_VarHelpID = -1
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
             Call .Register("Visible", vbBoolean)
             Call .Register("Margin", vbObject, "Thickness")
+            Call .Register("Padding", vbObject, "Thickness")
             Call .Register("Command", vbObject, "ICommand")
             Call .Register("CommandParameter", vbVariant)
             Call .Register("Selected", vbBoolean, , , , NewDependencyPropertyMetadata(False, True, False))
@@ -294,6 +303,7 @@ Attribute TmrRelease.VB_VarHelpID = -1
             ' inside the framework, which can be overwritten by the consumer application
             .SetCurrentValue "Visible", True
             .SetCurrentValue "Margin", NewThickness(0)
+            .SetCurrentValue "Padding", NewThickness(1) ' Aero2 Button
             .SetCurrentValue "Selected", False
             .SetCurrentValue "BackColor", W.BackColor
             .SetCurrentValue "BorderColor", W.BorderColor
@@ -474,10 +484,22 @@ Catch:
         
         Dim xFactor As Double, yFactor As Double
         Dim Offs As Single
+        Dim Pad As Thickness
+        Dim PadL As Single, PadT As Single, PadR As Single, PadB As Single
         
         
         Offs = m_BorderWidth
         If IsMouseDown Then Offs = BorderWidth + 1
+        
+        Set Pad = Padding
+        If Pad Is Nothing Then
+            PadL = 1!: PadT = 1!: PadR = 1!: PadB = 1!
+        Else
+            PadL = CSng(Pad.Left)
+            PadT = CSng(Pad.Top)
+            PadR = CSng(Pad.Right)
+            PadB = CSng(Pad.Bottom)
+        End If
         
         xFactor = W.Width / m_Layout.Width
         yFactor = W.Height / m_Layout.Height
@@ -489,10 +511,10 @@ Catch:
         
         With Child
             
-            LL = (.DesignLeft + Offs) * xFactor
-            TT = (.DesignTop + Offs) * yFactor
-            WW = (.DesignWidth - 2 * Offs) * xFactor
-            HH = (.DesignHeight - 2 * Offs) * yFactor
+            LL = (.DesignLeft + Offs + PadL) * xFactor
+            TT = (.DesignTop + Offs + PadT) * yFactor
+            WW = (.DesignWidth - 2 * Offs - PadL - PadR) * xFactor
+            HH = (.DesignHeight - 2 * Offs - PadT - PadB) * yFactor
             
             If Not W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Add Child, "_" & ObjPtr(Child), CDbl(LL), CDbl(TT), CDbl(WW), CDbl(HH)
             
@@ -523,6 +545,7 @@ Catch:
             Case "ToolTip":         W.ToolTip = Property.GetValue
             Case "Style":           ApplyStyle
             Case "Content":         modRenderCoalescer.RequestWidgetRefresh W
+            Case "Padding":         Call W_Resize: modRenderCoalescer.RequestWidgetRefresh W
         End Select
         
         ' Pass the new property value to the contained widgets
@@ -670,6 +693,8 @@ End Sub
         Dim T As Double
         Dim Wd As Double
         Dim Ht As Double
+        Dim Pad As Thickness
+        Dim PadL As Single, PadT As Single, PadR As Single, PadB As Single
 
         If m_Children.Count > 0 Then Exit Sub
 
@@ -679,10 +704,22 @@ End Sub
         Offs = CSng(m_BorderWidth)
         If IsMouseDown Then Offs = CSng(BorderWidth + 1)
 
-        L = Offs
-        T = Offs
-        Wd = dx - 2# * Offs
-        Ht = dy - 2# * Offs
+        Set Pad = Padding
+        If Pad Is Nothing Then
+            PadL = 1!: PadT = 1!: PadR = 1!: PadB = 1!
+        Else
+            PadL = CSng(Pad.Left)
+            PadT = CSng(Pad.Top)
+            PadR = CSng(Pad.Right)
+            PadB = CSng(Pad.Bottom)
+        End If
+
+        L = Offs + PadL
+        T = Offs + PadT
+        Wd = dx - 2# * Offs - PadL - PadR
+        Ht = dy - 2# * Offs - PadT - PadB
+        If Wd < 0# Then Wd = 0#
+        If Ht < 0# Then Ht = 0#
 
         CC.SelectFont W.FontName, W.FontSize, W.ForeColor, W.FontBold, W.FontItalic, W.FontUnderline, W.FontStrikeThrough
         CC.DrawText L, T, L + Wd, T + Ht, Cap, False, AlignmentConstants.vbCenter, , 1, dtHasAccelerators

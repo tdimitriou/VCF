@@ -179,6 +179,7 @@ Public Name As String
         m_Columns = 3
         m_Rows = 3
         
+        ' Cell inset default — VCF UniformGrid (not WPF Panel). Keep 2; apps may set Padding="4".
         Set Me.Padding = NewThickness(2)
         
         NewUIElementBase Me, m_BaseUIElement

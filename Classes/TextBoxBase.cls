@@ -50,7 +50,8 @@ Private CaretPos&, CurRow&, CurPos&, CaretInvertCounter&
 Private ShiftDown As Boolean, BDown As Boolean
 Private mBorder As Boolean, mScrollBars As ScrollBarConstants
 Private mRowHeight As Long, mLastTextHeight As Long
-Private mInnerSpace As Long, mAlignment As AlignmentConstants, mVCenter As Boolean
+Private mPadL As Long, mPadT As Long, mPadR As Long, mPadB As Long
+Private mAlignment As AlignmentConstants, mVCenter As Boolean
 Private mScrollerSize As Single, VSValue As Long, VSLargeChange As Long, VSMax As Long
 Private mMaxLength As Long, HScrollX As Long, HScrollMax As Long
 
@@ -74,7 +75,7 @@ Private Sub Class_Initialize()
     ReDim RowsCharOffset(0)
     ReDim RowsCharCount(0)
   
-    mInnerSpace = 1
+    mPadL = 1: mPadT = 1: mPadR = 1: mPadB = 1
     mBorder = True
     Zoom = 1
     mTextShadowColor = -1 '-1 Color-Values are (as always) treated as "no color"
@@ -139,15 +140,32 @@ Public Property Let UndoDepth(ByVal NewValue As Byte)
 End Property
 
 Public Property Get InnerSpace() As Long
-    InnerSpace = mInnerSpace
+    ' Legacy uniform inset — returns Left padding.
+    InnerSpace = mPadL
 End Property
 
 Public Property Let InnerSpace(ByVal NewValue As Long)
     If NewValue < 0 Then NewValue = 0
-    If NewValue > dx \ 3 Then NewValue = dx \ 3
-    mInnerSpace = NewValue
-    AdjustDimensions
+    If dx > 0 And NewValue > dx \ 3 Then NewValue = dx \ 3
+    Call SetContentPadding(NewValue, NewValue, NewValue, NewValue)
 End Property
+
+' WPF-style content padding (inside border). Used by TextBox.Padding DP.
+Public Sub SetContentPadding(ByVal L As Long, ByVal T As Long, ByVal R As Long, ByVal B As Long)
+    If L < 0 Then L = 0
+    If T < 0 Then T = 0
+    If R < 0 Then R = 0
+    If B < 0 Then B = 0
+    If dx > 0 Then
+        If L + R > dx \ 2 Then
+            L = dx \ 4: R = dx \ 4
+        End If
+    End If
+    If mPadL = L And mPadT = T And mPadR = R And mPadB = B Then Exit Sub
+    mPadL = L: mPadT = T: mPadR = R: mPadB = B
+    AdjustDimensions
+    If Not W Is Nothing Then W.Refresh
+End Sub
 
 Public Property Get Alignment() As AlignmentConstants
     Alignment = mAlignment
@@ -981,7 +999,7 @@ End Sub
 
 Private Sub CalcCaretPosFromMouseCoords(ByVal x As Single, ByVal y As Single)
     Dim pS&, Ext As Single, Ext2 As Single, MCC As cCairoContext
-    Dim BorderOffs&, TWidth As Single, AlgnOffs As Single, VOffs As Single
+    Dim BorderOffsX&, BorderOffsY&, TWidth As Single, AlgnOffs As Single, VOffs As Single
     Dim NewRow As Long
     Dim NewRowPos As Long
     Dim NewCaretPos As Long
@@ -990,13 +1008,17 @@ Private Sub CalcCaretPosFromMouseCoords(ByVal x As Single, ByVal y As Single)
     NewRowPos = CurPos
     NewCaretPos = CaretPos
 
-    BorderOffs = mInnerSpace
-    If mBorder Then BorderOffs = BorderOffs + 1
+    BorderOffsX = mPadL
+    BorderOffsY = mPadT
+    If mBorder Then
+        BorderOffsX = BorderOffsX + 1
+        BorderOffsY = BorderOffsY + 1
+    End If
   
     If mRowCount = 0 Then mRowCount = 1
     
     If mVCenter Then
-        VOffs = (dy - mInnerSpace - BorderOffs - mRowCount * RowHeight - IIf(HScrollBar Is Nothing, 0, mScrollerSize)) / 2
+        VOffs = (dy - mPadB - BorderOffsY - mRowCount * RowHeight - IIf(HScrollBar Is Nothing, 0, mScrollerSize)) / 2
         If mBorder Then
             If VOffs < -1 Then VOffs = -1
         Else
@@ -1004,19 +1026,19 @@ Private Sub CalcCaretPosFromMouseCoords(ByVal x As Single, ByVal y As Single)
         End If
     End If
     
-    y = y - VOffs - mInnerSpace
+    y = y - VOffs - mPadT
   
     If y > 0 Then
-        NewRow = (y - BorderOffs) \ RowHeight + VSValue
+        NewRow = (y - BorderOffsY) \ RowHeight + VSValue
     Else
-        NewRow = (y - BorderOffs - RowHeight) \ RowHeight + VSValue
+        NewRow = (y - BorderOffsY - RowHeight) \ RowHeight + VSValue
     End If
     If NewRow < 0 Then NewRow = 0 Else If NewRow > mRowCount - 1 Then NewRow = mRowCount - 1
     If (mScrollBars And vbHorizontal) <> 0 Or mMultiLine = False Then
         x = x + HScrollX
     End If
  
-    If x < BorderOffs Then x = BorderOffs
+    If x < BorderOffsX Then x = BorderOffsX
   
     pS = StrPtr(mText) + RowsCharOffset(NewRow)
   
@@ -1028,7 +1050,7 @@ Private Sub CalcCaretPosFromMouseCoords(ByVal x As Single, ByVal y As Single)
         AlgnOffs = GetAlignOffset(TWidth)
     End If
     
-    x = x - AlgnOffs - BorderOffs
+    x = x - AlgnOffs - BorderOffsX
     
     NewRowPos = MCC.GetCharsFittingExtentPtr(pS, Abs(RowsCharCount(NewRow)), x)
 
@@ -1130,8 +1152,8 @@ Private Sub AdjustDimensions()
         dxx = dxx - 1
     End If
   
-    dxx = dxx - 2 * mInnerSpace
-    dyy = dyy - 2 * mInnerSpace
+    dxx = dxx - mPadL - mPadR
+    dyy = dyy - mPadT - mPadB
     If dxx < 2 Then dxx = 2
     If dyy < 2 Then dyy = 2
   
@@ -1199,7 +1221,7 @@ End Sub
 
 Private Sub Draw(CC As cCairoContext)
     Dim i&, j&, CharOffs&, Color&, MaxIdx&, X1 As Single, Y1 As Single, X2 As Single, Y2 As Single, pS&, Ext As Single, EndExt As Single, TWidth As Single
-    Dim SelStartRow&, SelStartPos&, SelEndRow&, SelEndPos&, BorderOffs&, VStart&
+    Dim SelStartRow&, SelStartPos&, SelEndRow&, SelEndPos&, BorderOffsX&, BorderOffsY&, VStart&
     Dim VOffs&, AlgnOffs As Single, CancelBuiltIn As Boolean
     Dim Pat As cCairoPattern
     Static LastTextHeight&
@@ -1222,8 +1244,12 @@ Private Sub Draw(CC As cCairoContext)
   
     If mRowCount <= 0 Then mRowCount = 1
   
-    BorderOffs = mInnerSpace
-    If mBorder Then BorderOffs = BorderOffs + 1
+    BorderOffsX = mPadL
+    BorderOffsY = mPadT
+    If mBorder Then
+        BorderOffsX = BorderOffsX + 1
+        BorderOffsY = BorderOffsY + 1
+    End If
  
     If W.BackColor <> -1 Then
         CancelBuiltIn = False: RaiseEvent OwnerDrawBackGround(CC, 0, 0, dx, dy, CancelBuiltIn)
@@ -1245,7 +1271,7 @@ Private Sub Draw(CC As cCairoContext)
     pS = StrPtr(mText)
     
     If mVCenter Then
-        VOffs = (dy - BorderOffs - 1 - mInnerSpace - mRowCount * RowHeight - IIf(HScrollBar Is Nothing, 0, mScrollerSize)) \ 2
+        VOffs = (dy - BorderOffsY - 1 - mPadB - mRowCount * RowHeight - IIf(HScrollBar Is Nothing, 0, mScrollerSize)) \ 2
 
         If mBorder Then
             If VOffs < -1 Then VOffs = -1
@@ -1258,12 +1284,12 @@ Private Sub Draw(CC As cCairoContext)
     If VSValue > MaxIdx Then VStart = MaxIdx Else VStart = VSValue
     If VStart < 0 Then VStart = 0
     'current x-coords
-    X1 = BorderOffs + 1
+    X1 = BorderOffsX + 1
   
     For i = VStart To MaxIdx
 
-        Y1 = j * RowHeight + BorderOffs + 1 + VOffs
-        Y2 = (j + 1) * RowHeight + BorderOffs + VOffs   'current y-Coords
+        Y1 = j * RowHeight + BorderOffsY + 1 + VOffs
+        Y2 = (j + 1) * RowHeight + BorderOffsY + VOffs   'current y-Coords
         CharOffs = 0
    
         'Full Row-length
@@ -1379,9 +1405,9 @@ Private Function GetAlignOffset(TWidth As Single) As Single
         Case vbCenter: GetAlignOffset = (dxx - TWidth - 1 + HScrollMax) / 2
         Case vbRightJustify
             If mBorder Then
-                GetAlignOffset = (dxx - TWidth - 1) + HScrollMax + mInnerSpace - 2
+                GetAlignOffset = (dxx - TWidth - 1) + HScrollMax + mPadR - 2
             Else
-                GetAlignOffset = (dxx - TWidth - 1) + HScrollMax + mInnerSpace - 1
+                GetAlignOffset = (dxx - TWidth - 1) + HScrollMax + mPadR - 1
             End If
     End Select
 End Function

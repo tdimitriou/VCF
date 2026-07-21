@@ -216,10 +216,11 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **B-RESZ** / **B-NAV** — ~~Phase0 benches~~
   **ListView bind hotspot** — ~~B-BIND-DENSE~~ (clone preserves bindings; 21×6 gate)
   **Margin/Padding family 1** — ~~ListView Margin=0 Padding=4,1,4,1~~ (**P2a-PAD**)
-  then   TextBox/Button Padding · 7c-dialog when UI contributes
-
-  then   7c-dialog (`@` → DataTemplate) when UI contributes fixtures
-  later  WPF Margin/Padding defaults (phased) — after layout/nav; see POS_LAYOUT_RESIZE.md §6
+  **Margin/Padding family 2** — ~~TextBox/Button Padding=1 (Aero2)~~ (**P2a-PAD-TB**)
+  **Margin/Padding family 3** — ~~UniformGrid Padding default=2~~ (**P2a-PAD-UG**)
+  **7c-dialog** — ~~ItemsControl Button DataTemplate (no `@`)~~ (**P7c-DLG**)
+  later  ItemsPanelTemplate · System/OS theme · §2.11 ContentPresenter composition
+  deferred RelativeSource / ElementName for window-level Command (item-level Command works)
 
 Phase 2b — POS integration (deferred)
   Full DeNovo.vbp pin + KernelLib / Data / DB + smoke §3 — when all teams ready
@@ -365,7 +366,7 @@ From [VCF_WPF_ALIGNMENT_NOTES.md §8](./VCF_WPF_ALIGNMENT_NOTES.md):
 | Remove `VCF_SHUTDOWN_DIAG` instrumentation | Before consumer pin vs keep | **DONE — removed** |
 | XAML load batching in `XAMLReader` | Phase 7f vs Phase 8 | **7f done:** `LockRefresh` + `BeginRenderUpdate` in `LoadSuperclassData` |
 | Border HWND always `Create(0)`? | vs create mode from final border | **Yes default**; XAML `BorderStyle=2` applied before `Form.Show` — [WINDOW_LIFECYCLE.md](./WINDOW_LIFECYCLE.md) |
-| WPF Margin/Padding defaults on all controls | Global sweep vs phased family-by-family | **Phase 2a later** — [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) §6; after nav/layout + B-RESZ/B-NAV. Interim: ListView item pad 4,1,4,1 only |
+| WPF Margin/Padding defaults on all controls | Global sweep vs phased family-by-family | **Phase 2a done** — ListView / TextBox+Button / UniformGrid=2; layout hosts stay Margin=0 — [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) §6 |
 
 ---
 
@@ -434,6 +435,9 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-07-21 | **Phase 2a / 2b split** — VCF continues locally (2a); full POS / `DeNovo.vbp` = **2b** when Data+Kernel+UI ready |
 | 2026-07-21 | **Phase 2a.1 done** — Visibility auto Relayout validated in DeNovoSmoke; Option C deferred |
 | 2026-07-21 | **P2a-PAD** — ListView Margin/Padding DPs (default 0 / 4,1,4,1); Phase0 **35** tests |
+| 2026-07-21 | **P2a-PAD-TB** — TextBox/Button Padding (Aero2=1); Phase0 **36** tests |
+| 2026-07-21 | **P2a-PAD-UG** — UniformGrid Padding default=2 locked; Phase0 **37** tests |
+| 2026-07-21 | **P7c-DLG** — ItemsControl Button DataTemplate (no `@`); Phase0 **38** tests |
 | 2026-07-21 | **B-BIND-DENSE** — ItemTemplate TextBlock binding fidelity + Phase0 21×6 gate (34 tests) |
 | 2026-07-21 | **B-RESZ** + **B-NAV** — Phase0 nested UniformGrid ×50 + Visibility nav / Windows registry (33 tests) |
 | 2026-07-21 | **Phase 2a.1 start** — `Window.OnChildVisibilityChanged`; harness nav drops manual Relayout/Rebuild |
