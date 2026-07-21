@@ -5,6 +5,23 @@
 
 ---
 
+## [2.28.0] — 2026-07-21 — Phase 2a (ContentControl Content unify)
+
+### Changed
+
+- **`ContentControl.Content`** — now a bindable **`vbVariant` DP** (was children-only `Object` Set). String Content paints via **`ContentPresenter`**; `IUIElement` Content remains a single visual child (suppresses caption).
+
+### Added
+
+- **`ContentControl.ContentPresenter`** / **`SyncContentPresenter`** — same paint-only model as Button.
+- Phase0 **P6e-CC** — gate **42/42**.
+
+### Notes
+
+- VB6 does not inherit `Button` from `ContentControl`; shared semantics only. Lookless template trees still deferred.
+
+---
+
 ## [2.27.0] — 2026-07-21 — Phase 2a (ContentAlignment on ContentPresenter / Button)
 
 ### Added

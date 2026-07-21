@@ -614,17 +614,14 @@ Scanner char → TextBoxBase.W_KeyPress → InsertText
 - **`Content="{Binding ...}"`** supported.
 - Separate: **`ContentTemplate`** for complex content (later for VCF).
 
-### 2.10.2 VCF Button today
+### 2.10.2 VCF Button / ContentControl today
 
 | Aspect | VCF |
 |--------|-----|
-| **`Content` / `Text` DP** | **None** on `Button` |
-| **`W_Paint`** | Draws background, border, overlay only — **no text** |
-| **Caption** | **Child `TextBlock`** in `m_Children`, scaled via `MoveChild` (Design* math) |
-| **Font on button** | Base style sets `FontName`, `ForeColor`, … on **`W` (Widget)** — **not used for caption text** |
-| **Designer** | Property editor lists `Content`, `Caption` as **future** names — not implemented |
-
-**POS impact:** Hundreds of command fragments (`Commands/*.xml`, grid buttons) repeat the same **Button + TextBlock** pattern — good **AI migration** target once `Content` exists.
+| **`Button.Content`** | **`vbVariant` DP** — string caption via paint-only **`ContentPresenter`** (**P6e-PRES** / **P6e-ALIGN**); children suppress caption |
+| **`ContentControl.Content`** | Same DP + presenter model (**P6e-CC**); `IUIElement` Content = single child |
+| **`W_Paint`** | Button draws chrome + presenter caption; ContentControl draws presenter caption only |
+| **Inheritance** | No VB6 `Button : ContentControl` — shared semantics only |
 
 ### 2.10.3 Recommended design (VCF team)
 

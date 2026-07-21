@@ -52,6 +52,7 @@ Public Sub RunAll()
     If Not Phase6dBench_RenderCoalesce() Then Failed = Failed + 1
     If Not Phase6eBench_ContentPresenter() Then Failed = Failed + 1
     If Not Phase6eBench_ContentAlignment() Then Failed = Failed + 1
+    If Not Phase6eBench_ContentControlContent() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
     If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
     If Not Phase7dBench_BorderDesignResize() Then Failed = Failed + 1
@@ -67,7 +68,7 @@ Public Sub RunAll()
 
     ' Report only — do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (41 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (42 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1255,6 +1256,65 @@ Fail:
     Phase6eBench_ContentAlignment = False
     On Error Resume Next
     KeepAlive Btn
+    KeepAlive Root
+    Err.Clear
+End Function
+
+' §2.11 ContentControl shares Button Content model (string presenter + IUIElement child).
+Public Function Phase6eBench_ContentControlContent() As Boolean
+    Dim CC As ContentControl
+    Dim Tb As TextBlock
+    Dim Reader As XAMLReader
+    Dim Root As ContentControl
+    Dim Child As Object
+
+    On Error GoTo Fail
+
+    Set CC = New ContentControl
+    If CC.ContentPresenter Is Nothing Then Err.Raise vbObjectError, , "ContentControl.ContentPresenter is Nothing"
+
+    CC.Content = "Hello"
+    CC.SyncContentPresenter
+    If CStr(CC.Content) <> "Hello" Then Err.Raise vbObjectError, , "Content string expected Hello"
+    If Not CC.ContentPresenter.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected True for string"
+    If CC.Children.Count <> 0 Then Err.Raise vbObjectError, , "String Content should not add children"
+
+    Set Tb = New TextBlock
+    Tb.Text = "Child"
+    Set CC.Content = Tb
+    CC.SyncContentPresenter
+    If CC.Children.Count <> 1 Then Err.Raise vbObjectError, , "Object Content expected 1 child"
+    Set Child = CC.Content
+    If Not Child Is Tb Then Err.Raise vbObjectError, , "Content Get expected TextBlock child"
+    If Not CC.ContentPresenter.SuppressContent Then Err.Raise vbObjectError, , "Suppress expected True with child"
+    If CC.ContentPresenter.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected False with child"
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load("<ContentControl Content=""Hi"" Width=""100"" Height=""30""/>")
+    If Root Is Nothing Then Err.Raise vbObjectError, , "XAML ContentControl returned Nothing"
+    If CStr(Root.Content) <> "Hi" Then Err.Raise vbObjectError, , "XAML Content expected Hi"
+    Root.SyncContentPresenter
+    If Not Root.ContentPresenter.WouldDrawCaption Then Err.Raise vbObjectError, , "XAML WouldDrawCaption expected True"
+
+    KeepAlive CC
+    KeepAlive Root
+    Set Tb = Nothing
+    Set Child = Nothing
+    Set CC = Nothing
+    Set Root = Nothing
+    Set Reader = Nothing
+
+    LogResult "P6e-CC", 0, "OK ContentControl Content string+IUIElement + XAML"
+    Debug.Print "PASS  P6e-CC ContentControl Content unify"
+    Phase6eBench_ContentControlContent = True
+    Exit Function
+
+Fail:
+    LogResult "P6e-CC", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6e-CC — " & Err.Description
+    Phase6eBench_ContentControlContent = False
+    On Error Resume Next
+    KeepAlive CC
     KeepAlive Root
     Err.Clear
 End Function

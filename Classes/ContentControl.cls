@@ -32,28 +32,43 @@ Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As List
 Private m_BaseUIElement As UIElementBase
 Private m_Layout As FrameworkElement
+Private m_ContentPresenter As ContentPresenter
 
 Public Name As String
 
-Public Property Get Content() As Object
-    If m_Children.Count > 0 Then
-        Set Content = m_Children(0)
+' WPF-aligned Content (Variant): string → paint via ContentPresenter; IUIElement → single child.
+Public Property Get Content() As Variant
+    Dim V As Variant
+
+    Call API.CopyVariable(m_DependencyProperties.GetValue("Content"), V)
+    If IsEmpty(V) Or IsNull(V) Then
+        If Not m_Children Is Nothing Then
+            If m_Children.Count > 0 Then
+                Set Content = m_Children(0)
+                Exit Property
+            End If
+        End If
     End If
+    Call API.CopyVariable(V, Content)
+End Property
+
+Public Property Let Content(ByVal Value As Variant)
+    Call m_DependencyProperties.SetValue("Content", Value)
 End Property
 
 Public Property Set Content(ByVal Value As Object)
-    Dim i As Long
-
-    For i = m_Children.Count - 1 To 0 Step -1
-        m_Children.RemoveAt i
-    Next
-
-    If Not Value Is Nothing Then
-        If TypeOf Value Is IUIElement Then
-            m_Children.Add Value
-        End If
-    End If
+    Call m_DependencyProperties.SetValue("Content", Value)
 End Property
+
+' §2.11 paint-only presenter (shared model with Button).
+Public Property Get ContentPresenter() As ContentPresenter
+    Set ContentPresenter = m_ContentPresenter
+End Property
+
+Public Sub SyncContentPresenter()
+    SyncContentPresenterContent
+    SyncContentPresenterSuppress
+End Sub
 
 '#Region Public Properties
     Public Property Get Bindings() As VCF.List
@@ -193,11 +208,13 @@ End Property
 '#Region Class Events
     Private Sub Class_Initialize()
         Set m_Bindings = New List
+        Set m_ContentPresenter = New ContentPresenter
         Set m_DependencyProperties = NewDependencyProperties(Me)
         With m_DependencyProperties
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
             Call .Register("ShowGridLines", vbBoolean)
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
+            Call .Register("Content", vbVariant, , , , NewDependencyPropertyMetadata(False, True, False, OneWay))
             .SetValue "Style", Nothing
         End With
         
@@ -218,8 +235,6 @@ End Property
         m_Layout.Visibility = VisibilityVisible
         
         NewUIElementBase Me, m_BaseUIElement
-        
-        'EnumerateProperties Me
         
         Set Style = GetBaseStyle
     End Sub
@@ -335,7 +350,8 @@ Try:
                 MoveChild Child
             Next
         End If
-        
+
+        SyncContentPresenterSuppress
         If Not W.LockRefresh Then W.Refresh
         
         Exit Sub
@@ -355,12 +371,64 @@ End Sub
             ArrangeDecoratorChild m_Children(0), W
         End If
     End Sub
+
+    Private Sub SyncContentPresenterContent()
+        Dim V As Variant
+
+        If m_ContentPresenter Is Nothing Then Exit Sub
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Content"), V)
+        If IsObject(V) Then
+            Set m_ContentPresenter.Content = V
+        Else
+            m_ContentPresenter.Content = V
+        End If
+    End Sub
+
+    Private Sub SyncContentPresenterSuppress()
+        If m_ContentPresenter Is Nothing Then Exit Sub
+        m_ContentPresenter.SuppressContent = (m_Children.Count > 0)
+    End Sub
+
+    Private Sub ApplyContentValue(ByVal Value As Variant)
+        Dim i As Long
+        Dim El As IUIElement
+
+        If m_Children Is Nothing Then Exit Sub
+
+        If IsObject(Value) Then
+            If Not Value Is Nothing Then
+                If TypeOf Value Is IUIElement Then
+                    For i = m_Children.Count - 1 To 0 Step -1
+                        m_Children.RemoveAt i
+                    Next
+                    Set El = Value
+                    m_Children.Add El
+                    SyncContentPresenterContent
+                    SyncContentPresenterSuppress
+                    Exit Sub
+                End If
+            End If
+        End If
+
+        ' String / empty / non-visual: clear visual children; paint via presenter.
+        For i = m_Children.Count - 1 To 0 Step -1
+            m_Children.RemoveAt i
+        Next
+        SyncContentPresenterContent
+        SyncContentPresenterSuppress
+    End Sub
 '#End Region
 
 '#Region DependencyProperties Events
     Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
+        Dim V As Variant
+
         Select Case Property.Name
             Case "Style":           ApplyStyle
+            Case "Content":
+                Call API.CopyVariable(Property.GetValue, V)
+                ApplyContentValue V
+                modRenderCoalescer.RequestWidgetRefresh W
             Case Else
                 If Not m_Children Is Nothing Then
                     If m_Layout.HandlesLayoutProperty(Property.Name) Then
@@ -375,15 +443,23 @@ End Sub
 
 '#Region Widget Events
     Private Sub W_Paint(CC As vbRichClient5.cCairoContext, ByVal xAbs As Single, ByVal yAbs As Single, ByVal dx_Aligned As Single, ByVal dy_Aligned As Single, UserObj As Object)
-        
         Dim dx As Double, dy As Double
-        
+
+        If (Not W.Visible) Or W.IsHidden Then Exit Sub
+
         dx = dx_Aligned
         dy = dy_Aligned
-        
-        
+
         CC.Save
-        
+        SyncContentPresenterContent
+        SyncContentPresenterSuppress
+        If Not m_ContentPresenter Is Nothing Then
+            If m_ContentPresenter.WouldDrawCaption Then
+                m_ContentPresenter.Draw CC, 0, 0, dx, dy, _
+                    W.FontName, W.FontSize, W.ForeColor, _
+                    W.FontBold, W.FontItalic, W.FontUnderline, W.FontStrikeThrough
+            End If
+        End If
         CC.Restore
     End Sub
     

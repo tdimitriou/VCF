@@ -67,6 +67,7 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P7c-PANEL | ItemsPanelTemplate | `Phase7cBench_ItemsPanelUniformGrid` | pass | Code+XAML UniformGrid ItemsPanel shell (no item inflate; Button covered by P7c-DLG) |
 | P6e-PRES | ContentPresenter paint-only | `Phase6eBench_ContentPresenter` | pass | Caption path + SuppressContent with children |
 | P6e-ALIGN | ContentAlignment H/V | `Phase6eBench_ContentAlignment` | pass | Presenter + Button DPs + XAML numeric attrs |
+| P6e-CC | ContentControl Content unify | `Phase6eBench_ContentControlContent` | pass | String presenter + IUIElement child + XAML |
 
 ---
 
