@@ -72,8 +72,12 @@ Public Sub DetachBindingsTree(ByVal Root As Object)
     If TypeOf Root Is IControl Then
         Dim Ctrl As IControl
         Dim Child As Object
+        Dim Kids As UIElementCollection
         Set Ctrl = Root
-        For Each Child In Ctrl.Children
+        ' TextBlock/Image etc. return Children = Nothing — For Each Nothing AVs in VB6/Cairo.
+        Set Kids = Ctrl.Children
+        If Kids Is Nothing Then Exit Sub
+        For Each Child In Kids
             DetachBindingsTree Child
         Next
     End If

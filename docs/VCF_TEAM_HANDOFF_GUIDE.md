@@ -213,8 +213,9 @@ Phase 7 — POS migration support (denovo)
 Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp)
   **2a.1** auto RelayoutChildren after Visibility swap — ~~done~~ (WINDOW_LIFECYCLE.md §9)
   Option C — deferred (B + LoginViewWpf sufficient; revisit if Design* edge cases appear)
-  **B-RESZ** / **B-NAV** — Phase0 benches added (`Phase2aBench_*`)
-  then   ListView bind hotspot
+  **B-RESZ** / **B-NAV** — ~~Phase0 benches~~
+  **ListView bind hotspot** — ~~B-BIND-DENSE~~ (clone preserves bindings; 21×6 gate)
+  then   Margin/Padding defaults (phased) · 7c-dialog when UI contributes
 
   then   7c-dialog (`@` → DataTemplate) when UI contributes fixtures
   later  WPF Margin/Padding defaults (phased) — after layout/nav; see POS_LAYOUT_RESIZE.md §6
@@ -262,7 +263,8 @@ Each **major** or **breaking minor** release MUST include:
 | Collection Add | `New List` per notification | Single-item args |
 | Binding graph | Binding + NestedProperty + 3× WithEvents | BindingExpression, detach on navigate |
 | Layout resize | Design* MoveChild cascade + Widgets.RemoveAll | Measure/Arrange, stable widget tree |
-| ListView bind | Template clone + 6 bindings/cell (POS menu grid) | Framework-first; POS VM deferred |
+| ListView bind | Template clone dropped TextBlock `{Binding}`s | **Fixed** — `CloneTextBlockQuick` → full `Clone` when Bindings.Count > 0; **B-BIND-DENSE** |
+
 | **XAML tree load** | Per-node refresh; push DataContext O(n) | **7f:** `LockRefresh`/`BeginRenderUpdate` in `LoadSuperclassData`; lazy inheritance §2.8 |
 | **Real-screen load time** | B-GOLD is minimal only | **7f:** P7d-LOAD-SPLASH / LOGIN timed gates |
 
@@ -430,6 +432,7 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-07-21 | **Phase 1 complete** — tag **`v2.23.0-wpf-alignment-phase1-complete`** |
 | 2026-07-21 | **Phase 2a / 2b split** — VCF continues locally (2a); full POS / `DeNovo.vbp` = **2b** when Data+Kernel+UI ready |
 | 2026-07-21 | **Phase 2a.1 done** — Visibility auto Relayout validated in DeNovoSmoke; Option C deferred |
+| 2026-07-21 | **B-BIND-DENSE** — ItemTemplate TextBlock binding fidelity + Phase0 21×6 gate (34 tests) |
 | 2026-07-21 | **B-RESZ** + **B-NAV** — Phase0 nested UniformGrid ×50 + Visibility nav / Windows registry (33 tests) |
 | 2026-07-21 | **Phase 2a.1 start** — `Window.OnChildVisibilityChanged`; harness nav drops manual Relayout/Rebuild |
 | 2026-07-20 | Deferred WPF Margin/Padding defaults (doc only) — schedule under Phase 2a after layout/nav |

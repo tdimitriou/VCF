@@ -5,6 +5,25 @@
 
 ---
 
+## [2.24.0] — 2026-07-21 — Phase 2a (B-RESZ / B-NAV / ListView bind fidelity)
+
+### Fixed
+
+- **`modItemTemplateEngine`** — ItemTemplate `TextBlock` clones copy **Bindings** via `CloneTextBlockWithBindings` (not `TextBlock.Clone` / `cProperties.BindTo`, which crashed the IDE under dense clones).
+- **`VCF.CloneDataTemplateForItem`** — public wrapper for Phase0 / tests (module not in typelib).
+- **`DetachBindingsTree`** — skip `For Each` when `IControl.Children` is **Nothing** (TextBlock/Image); previously Access Violation in vbRichClient5.
+
+### Added (Phase0)
+
+- **B-RESZ**, **B-NAV**, **B-BIND-DENSE** — Phase0 gate **34/34**.
+
+### Notes
+
+- POS menu grid XAML / VM dual-path still deferred (framework-first only).
+- Full `DeNovo.vbp` remains **Phase 2b**.
+
+---
+
 ## [2.23.0] — 2026-07-21 — Phase 1 harness exit (DeNovoSmoke m3)
 
 Tag: **`v2.23.0-wpf-alignment-phase1-complete`**

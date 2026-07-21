@@ -182,6 +182,16 @@ Public Sub DetachBindingsTree(ByVal Root As Object)
     modBindingExpressions.DetachBindingsTree Root
 End Sub
 
+' Phase 2a / B-BIND-DENSE — expose item template clone for Phase0 (module is not in typelib).
+Public Function CloneDataTemplateForItem( _
+    ByVal ItemTemplate As DataTemplate, _
+    ByVal Item As Variant, _
+    Optional ByVal ResourceHost As UIElementBase, _
+    Optional ByVal ItemTypeName As String = vbNullString) As DataTemplate
+
+    Set CloneDataTemplateForItem = modItemTemplateEngine.CloneDataTemplateForItem(ItemTemplate, Item, ResourceHost, ItemTypeName)
+End Function
+
 Public Sub ResetInheritanceCounters()
     DependencyPropertiesStatic.ResetInheritanceCounters
 End Sub

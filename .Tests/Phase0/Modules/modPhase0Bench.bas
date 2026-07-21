@@ -45,8 +45,15 @@ Public Sub RunAll()
     If Not Phase8Bench_InheritanceBatch() Then Failed = Failed + 1
     If Not Phase2aBench_NestedUniformGridResize() Then Failed = Failed + 1
     If Not Phase2aBench_ViewNavLeak() Then Failed = Failed + 1
+    If Not Phase2aBench_ListViewBindHotspot() Then Failed = Failed + 1
 
-    Debug.Print "=== Done: " & (33 - Failed) & " passed, " & Failed & " failed ==="
+    On Error Resume Next
+    Cairo.WidgetForms.RemoveAll
+    VCF.ClearApplication
+    DoEvents
+    On Error GoTo 0
+
+    Debug.Print "=== Done: " & (34 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1429,6 +1436,161 @@ Fail:
     Debug.Print "FAIL  B-NAV — " & FailDesc
     Phase2aBench_ViewNavLeak = False
 End Function
+
+' ListView bind hotspot (framework-first): menu-like density = 21 rows × 6 DataContext bindings/cell.
+' Gates CloneDataTemplateForItem binding fidelity (ItemsControl generation is covered by P4b-ICtrl).
+Public Function Phase2aBench_ListViewBindHotspot() As Boolean
+    Const ROW_COUNT As Long = 21
+    Const BIND_PER_CELL As Long = 6
+
+    Dim Coll As ObservableCollection
+    Dim Tmpl As DataTemplate
+    Dim Tb As TextBlock
+    Dim Vm As Phase0ViewModel
+    Dim RowItem As Object
+    Dim i As Long
+    Dim j As Long
+    Dim Started As Single
+    Dim ElapsedMs As Long
+    Dim Cloned As DataTemplate
+    Dim FirstClone As DataTemplate
+    Dim ChildTb As TextBlock
+    Dim FirstCells(0 To BIND_PER_CELL - 1) As TextBlock
+
+    On Error GoTo Fail
+
+    Set Coll = New ObservableCollection
+    For i = 1 To ROW_COUNT
+        Set Vm = New Phase0ViewModel
+        Vm.Title = "R" & CStr(i)
+        Coll.Add Vm
+    Next
+
+    Set Tmpl = New DataTemplate
+    For j = 1 To BIND_PER_CELL
+        Set Tb = New TextBlock
+        Tb.Text = "?"
+        AttachDataContextTitleBinding Tb
+        Tmpl.Children.Add Tb
+    Next
+
+    Started = Timer
+    For i = 0 To ROW_COUNT - 1
+        Set RowItem = Coll(i)
+        Set Cloned = VCF.CloneDataTemplateForItem(Tmpl, RowItem, Nothing)
+        If Cloned Is Nothing Then Err.Raise vbObjectError, , "CloneDataTemplateForItem returned Nothing at " & i
+        If Cloned.Children.Count <> BIND_PER_CELL Then Err.Raise vbObjectError, , "Expected " & BIND_PER_CELL & " children, got " & Cloned.Children.Count
+        If i = 0 Then
+            Set FirstClone = Cloned
+            For j = 0 To BIND_PER_CELL - 1
+                Set FirstCells(j) = FirstClone.Children(j)
+            Next
+        Else
+            For j = 0 To Cloned.Children.Count - 1
+                VCF.DetachBindingsTree Cloned.Children(j)
+            Next
+            Set Cloned = Nothing
+        End If
+    Next
+    ElapsedMs = CLng((Timer - Started) * 1000#)
+
+    If FirstCells(0).Text <> "R1" Then Err.Raise vbObjectError, , "Expected R1 after clone+DataContext, got [" & FirstCells(0).Text & "]"
+    If FirstCells(BIND_PER_CELL - 1).Text <> "R1" Then Err.Raise vbObjectError, , "Expected R1 on last cell binding, got [" & FirstCells(BIND_PER_CELL - 1).Text & "]"
+
+    Set Vm = Coll(0)
+    Vm.Title = "Mutated"
+    If FirstCells(0).Text <> "Mutated" Then Err.Raise vbObjectError, , "Expected Mutated after INPC, got [" & FirstCells(0).Text & "]"
+    If FirstCells(BIND_PER_CELL - 1).Text <> "Mutated" Then Err.Raise vbObjectError, , "Expected Mutated on last cell after INPC, got [" & FirstCells(BIND_PER_CELL - 1).Text & "]"
+
+    For j = 0 To BIND_PER_CELL - 1
+        VCF.DetachBindingsTree FirstCells(j)
+    Next
+
+    Vm.Title = "AfterDetach"
+    If FirstCells(0).Text = "AfterDetach" Then Err.Raise vbObjectError, , "Binding leaked after DetachBindingsTree"
+
+    CleanupBindDenseArtifacts Tmpl, FirstClone, FirstCells, Coll
+
+    LogResult "B-BIND-DENSE", ElapsedMs, "OK 21x6 template clone+bind+INPC+detach"
+    Debug.Print "PASS  B-BIND-DENSE ListView template bind hotspot (" & ElapsedMs & " ms)"
+    Phase2aBench_ListViewBindHotspot = True
+    Exit Function
+
+Fail:
+    Dim FailDesc As String
+    Dim FailNum As Long
+    FailNum = Err.Number
+    FailDesc = Err.Description
+    On Error Resume Next
+    CleanupBindDenseArtifacts Tmpl, FirstClone, FirstCells, Coll
+    LogResult "B-BIND-DENSE", 0, "FAIL: " & CStr(FailNum) & " " & FailDesc
+    Debug.Print "FAIL  B-BIND-DENSE — (" & FailNum & ") " & FailDesc
+    Phase2aBench_ListViewBindHotspot = False
+End Function
+
+Private Sub CleanupBindDenseArtifacts( _
+    ByRef Tmpl As DataTemplate, _
+    ByRef FirstClone As DataTemplate, _
+    ByRef FirstCells() As TextBlock, _
+    ByRef Coll As ObservableCollection)
+
+    Dim j As Long
+    Dim Child As Object
+    Dim El As IUIElement
+
+    On Error Resume Next
+
+    For j = LBound(FirstCells) To UBound(FirstCells)
+        If Not FirstCells(j) Is Nothing Then
+            VCF.DetachBindingsTree FirstCells(j)
+            Set FirstCells(j).DataContext = Nothing
+            Set FirstCells(j) = Nothing
+        End If
+    Next
+
+    If Not FirstClone Is Nothing Then
+        For j = 0 To FirstClone.Children.Count - 1
+            Set Child = FirstClone.Children(j)
+            VCF.DetachBindingsTree Child
+            If TypeOf Child Is IUIElement Then
+                Set El = Child
+                Set El.DataContext = Nothing
+            End If
+        Next
+        Set FirstClone = Nothing
+    End If
+
+    If Not Tmpl Is Nothing Then
+        For j = 0 To Tmpl.Children.Count - 1
+            Set Child = Tmpl.Children(j)
+            VCF.DetachBindingsTree Child
+            If TypeOf Child Is IUIElement Then
+                Set El = Child
+                Set El.DataContext = Nothing
+            End If
+        Next
+        Set Tmpl = Nothing
+    End If
+
+    If Not Coll Is Nothing Then
+        Coll.Clear
+        Set Coll = Nothing
+    End If
+
+    Cairo.WidgetForms.RemoveAll
+End Sub
+
+' Markup-equivalent: Source = DataContext DP, Path = Title (same as BindingsManager default).
+Private Sub AttachDataContextTitleBinding(ByVal Tb As TextBlock)
+    Dim B As Binding
+
+    Set B = New Binding
+    Set B.TargetProperty = Tb.DependencyProperties.GetProperty("Text")
+    Set B.Source = Tb.DependencyProperties.GetProperty("DataContext")
+    B.Path = "Title"
+    Set B.Target = Tb
+    Tb.Bindings.Add B
+End Sub
 
 Private Function LoadTextFile(ByVal Path As String) As String
     Dim Fn As Integer

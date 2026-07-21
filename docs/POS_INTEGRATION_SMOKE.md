@@ -25,7 +25,7 @@
 
 | Check | Command / location | Pass |
 |-------|-------------------|------|
-| Phase0 suite | `.Tests/Phase0` → `RunAll` | **33/33** (includes **B-RESZ**, **B-NAV**) |
+| Phase0 suite | `.Tests/Phase0` → `RunAll` | **34/34** (includes **B-RESZ**, **B-NAV**, **B-BIND-DENSE**) |
 | Strict XAML | `VCF.StrictXamlLoad = True` in test bootstrap | B-STRICT-* pass |
 | DeNovoSmoke harness | `.Tests/DeNovoSmoke` (when scaffold lands) | Milestone screens per [README](../.Tests/DeNovoSmoke/README.md) |
 

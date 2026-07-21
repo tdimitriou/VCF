@@ -31,13 +31,15 @@ End Function
 
 Private Function CloneTemplateChild(ByVal Child As Object) As Object
     Dim Cloner As ICloneable
+    Dim TbSrc As TextBlock
 
     If Child Is Nothing Then Exit Function
 
     If TypeOf Child Is TextBlock Then
-        Dim TbSrc As TextBlock
         Set TbSrc = Child
-        Set CloneTemplateChild = CloneTextBlockQuick(TbSrc)
+        ' Never use TextBlock.Clone here — cProperties.BindTo copies the full COM surface and
+        ' destabilizes the IDE under dense ItemTemplate clones. Copy paint props + Bindings only.
+        Set CloneTemplateChild = CloneTextBlockWithBindings(TbSrc)
     ElseIf TypeOf Child Is ICloneable Then
         Set Cloner = Child
         Set CloneTemplateChild = Cloner.Clone
@@ -125,6 +127,56 @@ Private Function CloneTextBlockQuick(ByVal Source As TextBlock) As TextBlock
     Target.VerticalAlignment = Source.VerticalAlignment
 
     Set CloneTextBlockQuick = Target
+End Function
+
+' Paint props + Binding graph (DataContext SrcDepObj or fixed Source). Avoids TextBlock.Clone.
+Private Function CloneTextBlockWithBindings(ByVal Source As TextBlock) As TextBlock
+    Dim Target As TextBlock
+    Dim Item As Variant
+    Dim SrcB As Binding
+    Dim DstB As Binding
+
+    Set Target = CloneTextBlockQuick(Source)
+    If Source.Bindings Is Nothing Then
+        Set CloneTextBlockWithBindings = Target
+        Exit Function
+    End If
+    If Source.Bindings.Count = 0 Then
+        Set CloneTextBlockWithBindings = Target
+        Exit Function
+    End If
+
+    On Error GoTo Fail
+
+    For Each Item In Source.Bindings
+        If Not TypeOf Item Is Binding Then GoTo NextBinding
+        Set SrcB = Item
+        If SrcB.TargetProperty Is Nothing Then GoTo NextBinding
+
+        Set DstB = New Binding
+        Set DstB.TargetProperty = Target.DependencyProperties.GetProperty(SrcB.TargetProperty.Name)
+
+        If Not SrcB.SrcDepObj Is Nothing Then
+            ' Markup default: Source is the DataContext DP (or other SrcDepObj).
+            Set DstB.Source = Target.DependencyProperties.GetProperty(SrcB.SrcDepObj.Name)
+        ElseIf Not SrcB.Source Is Nothing Then
+            Set DstB.Source = SrcB.Source
+        End If
+
+        DstB.Path = SrcB.Path
+        DstB.Mode = SrcB.Mode
+        If Not SrcB.Converter Is Nothing Then Set DstB.Converter = SrcB.Converter
+        DstB.StringFormat = SrcB.StringFormat
+        Set DstB.Target = Target
+        Target.Bindings.Add DstB
+NextBinding:
+    Next
+
+    Set CloneTextBlockWithBindings = Target
+    Exit Function
+
+Fail:
+    Err.Raise Err.Number, "modItemTemplateEngine.CloneTextBlockWithBindings", Err.Description
 End Function
 
 Public Sub ValidateItemsSourceValue(Value, ByVal SourceName As String)
