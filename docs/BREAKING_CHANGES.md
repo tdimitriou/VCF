@@ -5,6 +5,19 @@
 
 ---
 
+## [2.29.0] — 2026-07-21 — Phase 2a (UniformGrid ItemsHost harden)
+
+### Fixed
+
+- **`UniformGrid.MoveChildren`** — honors `LockRefresh` / reentrancy guard; uses `ControlWidgetKey`; skips per-add layout during ItemsControl silent batch (was O(N²) `Widgets.RemoveAll` → IDE hang).
+- **`ItemsControl`** — silent Add for UniformGrid hosts again; **`ArrangeGeneratedItems`** calls `UniformGrid.ArrangeChildren` once after rebuild.
+
+### Changed
+
+- Phase0 **P7c-PANEL** — also asserts UniformGrid + TextBlock/Button item inflate (KeepAlive). Gate remains **42/42**.
+
+---
+
 ## [2.28.0] — 2026-07-21 — Phase 2a (ContentControl Content unify)
 
 ### Changed
@@ -43,7 +56,7 @@
 ### Notes
 
 - ControlTemplate visual-tree expansion (Border + live presenter widgets) remains deferred.
-- UniformGrid ItemsHost item inflate still deferred (IDE hang).
+- UniformGrid ItemsHost item inflate hardened in **2.29.0** (**P7c-PANEL**).
 
 ---
 
@@ -68,7 +81,7 @@
 ### Notes
 
 - Margin/Padding content-control families complete; layout hosts stay Margin=0 / no content Padding.
-- **P7c-DLG** / **P7c-PANEL** prove dialog DataTemplate + ItemsPanelTemplate. **UniformGrid ItemsHost with generated items** deferred (IDE hang via `Widgets.RemoveAll`/`Add`); use StackPanel ItemsPanel for button rows until hardened. P7c-PANEL covers custom StackPanel ItemsPanel + XAML UniformGrid shell only.
+- **P7c-DLG** / **P7c-PANEL** prove dialog DataTemplate + ItemsPanelTemplate. UniformGrid ItemsHost with generated items is gated (LockRefresh + one arrange per rebuild).
 - Full `DeNovo.vbp` remains **Phase 2b**.
 
 ---

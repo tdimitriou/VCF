@@ -225,7 +225,7 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **ContentControl Content unify** — ~~string + IUIElement~~ (**P6e-CC**)
   later  System/OS theme · lookless ControlTemplate visual tree · Button : ContentControl (VB6 limits)
   deferred RelativeSource / ElementName for window-level Command (item-level Command works)
-  deferred UniformGrid ItemsHost with generated items (IDE hang)
+  ~~deferred UniformGrid ItemsHost with generated items~~ (**P7c-PANEL** TextBlock+Button inflate)
 
 Phase 2b — POS integration (deferred)
   Full DeNovo.vbp pin + KernelLib / Data / DB + smoke §3 — when all teams ready

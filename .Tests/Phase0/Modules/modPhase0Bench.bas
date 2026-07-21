@@ -2051,8 +2051,7 @@ Fail:
     Err.Clear
 End Function
 
-' ItemsPanelTemplate gate — code + XAML UniformGrid shell only (no item inflate;
-' Button ItemsPanel covered by P7c-DLG). No mid-suite host Terminate.
+' ItemsPanelTemplate gate — UniformGrid shell + ItemsSource inflate (TextBlock then Button).
 Public Function Phase7cBench_ItemsPanelUniformGrid() As Boolean
     Dim IC As ItemsControl
     Dim PanelTmpl As ItemsPanelTemplate
@@ -2062,6 +2061,17 @@ Public Function Phase7cBench_ItemsPanelUniformGrid() As Boolean
     Dim Root As ItemsControl
     Dim UgXaml As UniformGrid
     Dim ZeroPad As Thickness
+    Dim Coll As ObservableCollection
+    Dim Tmpl As DataTemplate
+    Dim TbTmpl As TextBlock
+    Dim BtnTmpl As Button
+    Dim OkItem As Phase0DialogButtonItem
+    Dim CancelItem As Phase0DialogButtonItem
+    Dim Tb0 As TextBlock
+    Dim Tb1 As TextBlock
+    Dim Btn0 As Button
+    Dim Btn1 As Button
+    Dim B As Binding
 
     On Error GoTo Fail
     Debug.Print "P7c-PANEL enter"
@@ -2113,8 +2123,118 @@ Public Function Phase7cBench_ItemsPanelUniformGrid() As Boolean
     Set Root = Nothing
     Set Reader = Nothing
 
-    LogResult "P7c-PANEL", 0, "OK ItemsPanel code+XAML UniformGrid shell"
-    Debug.Print "PASS  P7c-PANEL ItemsPanelTemplate (UniformGrid shell; no item inflate)"
+    ' --- T: UniformGrid ItemsHost + TextBlock ItemTemplate ---
+    Set OkItem = New Phase0DialogButtonItem
+    OkItem.Text = "OK"
+    Set CancelItem = New Phase0DialogButtonItem
+    CancelItem.Text = "Cancel"
+    Set Coll = New ObservableCollection
+    Coll.Add OkItem
+    Coll.Add CancelItem
+
+    Set TbTmpl = New TextBlock
+    Set B = New Binding
+    Set B.TargetProperty = TbTmpl.DependencyProperties.GetProperty("Text")
+    Set B.Source = TbTmpl.DependencyProperties.GetProperty("DataContext")
+    B.Path = "Text"
+    B.Mode = OneWay
+    Set B.Target = TbTmpl
+    TbTmpl.Bindings.Add B
+
+    Set Tmpl = New DataTemplate
+    Tmpl.Children.Add TbTmpl
+
+    Set UgProto = New UniformGrid
+    Set ZeroPad = New Thickness
+    ZeroPad.Left = 0: ZeroPad.Top = 0: ZeroPad.Right = 0: ZeroPad.Bottom = 0
+    UgProto.Widget.LockRefresh = True
+    UgProto.Rows = 1
+    UgProto.Columns = 2
+    Set UgProto.Padding = ZeroPad
+    UgProto.Widget.LockRefresh = False
+
+    Set PanelTmpl = New ItemsPanelTemplate
+    PanelTmpl.Children.Add UgProto
+
+    Set IC = New ItemsControl
+    IC.Widget.Move 0, 0, 200, 40
+    Set IC.ItemsPanel = PanelTmpl
+    Set IC.ItemTemplate = Tmpl
+    Set IC.ItemsSource = Coll
+    Debug.Print "P7c-PANEL T ItemsSource set"
+
+    If Not TypeOf IC.ItemsHost Is UniformGrid Then Err.Raise vbObjectError, , "T ItemsHost expected UniformGrid"
+    Set UgHost = IC.ItemsHost
+    If UgHost.Children.Count <> 2 Then Err.Raise vbObjectError, , "T expected 2 UniformGrid children"
+    Set Tb0 = UgHost.Children(0)
+    Set Tb1 = UgHost.Children(1)
+    If Tb0.Text <> "OK" Then Err.Raise vbObjectError, , "T Tb0 expected OK got " & Tb0.Text
+    If Tb1.Text <> "Cancel" Then Err.Raise vbObjectError, , "T Tb1 expected Cancel got " & Tb1.Text
+    Debug.Print "P7c-PANEL T UniformGrid+TextBlock OK"
+    KeepAlive IC
+    Set Tb0 = Nothing
+    Set Tb1 = Nothing
+    Set UgHost = Nothing
+    Set IC = Nothing
+    Set Tmpl = Nothing
+    Set TbTmpl = Nothing
+    Set PanelTmpl = Nothing
+    Set UgProto = Nothing
+    Set B = Nothing
+
+    ' --- B: UniformGrid ItemsHost + Button ItemTemplate ---
+    Set BtnTmpl = New Button
+    BtnTmpl.DesignWidth = 80
+    BtnTmpl.DesignHeight = 28
+    Set B = New Binding
+    Set B.TargetProperty = BtnTmpl.DependencyProperties.GetProperty("Content")
+    Set B.Source = BtnTmpl.DependencyProperties.GetProperty("DataContext")
+    B.Path = "Text"
+    B.Mode = OneWay
+    Set B.Target = BtnTmpl
+    BtnTmpl.Bindings.Add B
+
+    Set Tmpl = New DataTemplate
+    Tmpl.Children.Add BtnTmpl
+
+    Set UgProto = New UniformGrid
+    Set ZeroPad = New Thickness
+    ZeroPad.Left = 0: ZeroPad.Top = 0: ZeroPad.Right = 0: ZeroPad.Bottom = 0
+    UgProto.Widget.LockRefresh = True
+    UgProto.Rows = 1
+    UgProto.Columns = 2
+    Set UgProto.Padding = ZeroPad
+    UgProto.Widget.LockRefresh = False
+
+    Set PanelTmpl = New ItemsPanelTemplate
+    PanelTmpl.Children.Add UgProto
+
+    Set IC = New ItemsControl
+    IC.Widget.Move 0, 0, 200, 40
+    Set IC.ItemsPanel = PanelTmpl
+    Set IC.ItemTemplate = Tmpl
+    Set IC.ItemsSource = Coll
+    Debug.Print "P7c-PANEL B ItemsSource set"
+
+    If Not TypeOf IC.ItemsHost Is UniformGrid Then Err.Raise vbObjectError, , "B ItemsHost expected UniformGrid"
+    Set UgHost = IC.ItemsHost
+    If UgHost.Children.Count <> 2 Then Err.Raise vbObjectError, , "B expected 2 UniformGrid children"
+    Set Btn0 = UgHost.Children(0)
+    Set Btn1 = UgHost.Children(1)
+    If CStr(Btn0.Content) <> "OK" Then Err.Raise vbObjectError, , "B Btn0 Content expected OK"
+    If CStr(Btn1.Content) <> "Cancel" Then Err.Raise vbObjectError, , "B Btn1 Content expected Cancel"
+    Debug.Print "P7c-PANEL B UniformGrid+Button OK"
+    KeepAlive IC
+    Set Btn0 = Nothing
+    Set Btn1 = Nothing
+    Set UgHost = Nothing
+    Set IC = Nothing
+    Set Coll = Nothing
+    Set OkItem = Nothing
+    Set CancelItem = Nothing
+
+    LogResult "P7c-PANEL", 0, "OK ItemsPanel UG shell + TextBlock/Button inflate"
+    Debug.Print "PASS  P7c-PANEL ItemsPanelTemplate (UniformGrid items hardened)"
     Phase7cBench_ItemsPanelUniformGrid = True
     Exit Function
 

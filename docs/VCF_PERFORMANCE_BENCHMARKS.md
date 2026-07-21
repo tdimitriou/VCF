@@ -64,7 +64,7 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P2a-PAD-TB | TextBox/Button Margin/Padding defaults | `Phase2aBench_TextBoxButtonPaddingDefaults` | pass | TextBox 0/1; Button Padding=1 |
 | P2a-PAD-UG | UniformGrid Padding default | `Phase2aBench_UniformGridPaddingDefault` | pass | Padding=2 locked |
 | P7c-DLG | Dialog Button DataTemplate | `Phase7cBench_DialogDataTemplate` | pass | ItemsControl+Button Content/Command |
-| P7c-PANEL | ItemsPanelTemplate | `Phase7cBench_ItemsPanelUniformGrid` | pass | Code+XAML UniformGrid ItemsPanel shell (no item inflate; Button covered by P7c-DLG) |
+| P7c-PANEL | ItemsPanelTemplate | `Phase7cBench_ItemsPanelUniformGrid` | pass | UG shell + TextBlock/Button ItemsSource inflate (hardened) |
 | P6e-PRES | ContentPresenter paint-only | `Phase6eBench_ContentPresenter` | pass | Caption path + SuppressContent with children |
 | P6e-ALIGN | ContentAlignment H/V | `Phase6eBench_ContentAlignment` | pass | Presenter + Button DPs + XAML numeric attrs |
 | P6e-CC | ContentControl Content unify | `Phase6eBench_ContentControlContent` | pass | String presenter + IUIElement child + XAML |

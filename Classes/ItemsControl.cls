@@ -431,8 +431,8 @@ Private Sub AddItemAt(ByVal Index As Long, ByVal Item As Variant, Optional ByVal
 
     Set HostChildren = HostChildrenCollection
 
-    ' UniformGrid relies on CollectionChanged → MoveChildren to attach widgets; AddSilent skips that.
-    UseSilent = Silent And Not (TypeOf m_ItemsHost Is UniformGrid)
+    ' Silent batch under host LockRefresh; UniformGrid ArrangeChildren runs once after unlock.
+    UseSilent = Silent
 
     If Index >= m_ItemVisuals.Count Then
         m_ItemVisuals.Add Root
@@ -632,9 +632,10 @@ Private Sub ArrangeItemsHost()
     m_ItemsHost.Widget.Move 0, 0, W.Width, W.Height
 End Sub
 
-' StackPanel needs explicit arrange; UniformGrid lays out on Move/W_Resize after children attach.
+' StackPanel / UniformGrid: one arrange after silent item batch.
 Private Sub ArrangeGeneratedItems()
     Dim Sp As StackPanel
+    Dim Ug As UniformGrid
 
     If m_ItemsHost Is Nothing Then Exit Sub
     If W.Width <= 0! Or W.Height <= 0! Then Exit Sub
@@ -643,6 +644,9 @@ Private Sub ArrangeGeneratedItems()
         Set Sp = m_ItemsHost
         Call modLayoutEngine.ArrangeStackPanelChildren( _
             Sp.Children, Sp.Widget, Sp.Orientation, W.Width, W.Height)
+    ElseIf TypeOf m_ItemsHost Is UniformGrid Then
+        Set Ug = m_ItemsHost
+        Ug.ArrangeChildren
     End If
 End Sub
 

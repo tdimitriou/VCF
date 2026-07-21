@@ -28,6 +28,7 @@ Private WithEvents W As cWidgetBase
 Attribute W.VB_VarHelpID = -1
 Private WithEvents m_Children As UIElementCollection
 Attribute m_Children.VB_VarHelpID = -1
+Private m_Arranging As Boolean
 Private WithEvents ActiveStyle As Style
 Attribute ActiveStyle.VB_VarHelpID = -1
 
@@ -334,15 +335,21 @@ Public Name As String
         On Error GoTo Catch
             
         Dim Child As Object
+        Dim Key As String
         
 Try:
                        
         If Not e.OldItems Is Nothing Then
             For Each Child In e.OldItems
-                If TypeOf Child Is IControl Then If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove Child.Widget.Key
+                If TypeOf Child Is IControl Then
+                    Key = modLayoutEngine.ControlWidgetKey(Child)
+                    If W.Widgets.Exists(Key) Then W.Widgets.Remove Key
+                End If
             Next
         End If
-        
+
+        ' Honor LockRefresh — ItemsControl batches AddSilent under lock then ArrangeChildren once.
+        If W.LockRefresh Then Exit Sub
         MoveChildren
         If Not W.LockRefresh Then W.Refresh
         
@@ -354,6 +361,11 @@ Catch:
 '#End Region
 
 '#Region Private Methods
+    ' ItemsControl post-rebuild arrange (Friend — same project).
+    Friend Sub ArrangeChildren()
+        MoveChildren
+    End Sub
+
     Private Sub MoveChildren()
         Dim MAX_ITEMS As Long
         Dim Index As Long
@@ -362,9 +374,17 @@ Catch:
         Dim CellPosition As Coordinates
         Dim Cells
         
+        If W.LockRefresh Then Exit Sub
+        If m_Arranging Then Exit Sub
+        m_Arranging = True
+
+        On Error GoTo Clean
+        
         MAX_ITEMS = m_Rows * m_Columns
+        If MAX_ITEMS < 1 Then GoTo Clean
         ReDim Cells(0 To MAX_ITEMS - 1) As Long
         
+        ' Single RemoveAll per arrange (not per child add) — avoids O(N^2) IDE hang.
         W.Widgets.RemoveAll
         ItemIndex = 0
         For Index = 0 To MAX_ITEMS - 1
@@ -387,6 +407,9 @@ Catch:
                 ItemIndex = ItemIndex + 1
             End If
         Next
+
+Clean:
+        m_Arranging = False
 End Sub
     
     Private Function GetGridPosition(ByVal Index As Long) As Coordinates
@@ -410,10 +433,9 @@ End Sub
     Private Sub MoveChild(Child As Object, Position As Coordinates, StartIndex As Long, CellPosition As Coordinates, Cells)
         On Error Resume Next
         
-        'If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove Child.Widget.Key
-        'If Not W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Add Child, "_" & ObjPtr(Child)
-        
         Dim Obj As IUIElement
+        Dim Key As String
+        Dim ChildVis As Visibility
         Set Obj = Child
         
         Dim ColSpan As Integer
@@ -454,11 +476,13 @@ End Sub
             WW = .W * ColSpan - (Padding.Left + Padding.Right)
             HH = .H * RowSpan - (Padding.Top + Padding.Bottom)
             
-            'If Not W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Add Child, "_" & ObjPtr(Child), CDbl(LL), CDbl(TT), CDbl(WW), CDbl(HH)
         End With
     
-        If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove (Child.Widget.Key)
-        W.Widgets.Add Child, "_" & ObjPtr(Child), , , , , Child.Widget.Visible
+        Key = modLayoutEngine.ControlWidgetKey(Child)
+        ChildVis = ReadElementVisibility(Child)
+        If Not W.Widgets.Exists(Key) Then
+            W.Widgets.Add Child, Key, , , , , IsWidgetVisible(ChildVis)
+        End If
         Child.Move LL, TT, WW, HH
     End Sub
     
@@ -511,10 +535,8 @@ End Sub
     End Sub
     
     Private Sub W_Resize()
-'        If Not W.Visible Or W.IsHidden Then Exit Sub
-        
+        If W.LockRefresh Then Exit Sub
         Call MoveChildren
-    
     End Sub
 '#End Region
 
