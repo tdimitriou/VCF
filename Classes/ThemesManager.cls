@@ -25,6 +25,8 @@ Private m_ActiveThemeName As String
 Private m_HostResources As ResourceDictionary
 ' Currently merged theme ResourceDictionary instance (for unmerge on swap).
 Private m_PublishedTheme As ResourceDictionary
+' When ActiveThemeName="System", optional test/OS override: "Light" / "Dark" / "" (read OS).
+Private m_SystemThemeOverride As String
 
 '#Region ObservableDictionary Implementation & Inheritance
 
@@ -184,7 +186,15 @@ Attribute Item.VB_UserMemId = 0
     Public Property Let ActiveThemeName(ByVal Value As String)
         Dim Host As ResourceDictionary
 
-        If m_ActiveThemeName = Value Then Exit Property
+        If m_ActiveThemeName = Value Then
+            ' Re-publish when staying on System but OS/override preference may have changed.
+            If StrComp(Value, "System", vbTextCompare) = 0 Then
+                Set Host = ResolveHostResources()
+                If Not Host Is Nothing Then PublishActiveThemeTo Host
+                RaiseEvent ThemeCkanged
+            End If
+            Exit Property
+        End If
 
         m_ActiveThemeName = Value
 
@@ -194,11 +204,47 @@ Attribute Item.VB_UserMemId = 0
         RaiseEvent ThemeCkanged
     End Property
 
+    ' Phase0 / harness: force System resolution without reading the OS registry.
+    Public Property Get SystemThemeOverride() As String
+        SystemThemeOverride = m_SystemThemeOverride
+    End Property
+
+    Public Property Let SystemThemeOverride(ByVal Value As String)
+        Dim Host As ResourceDictionary
+
+        If StrComp(m_SystemThemeOverride, Value, vbTextCompare) = 0 Then Exit Property
+        m_SystemThemeOverride = Value
+        If StrComp(m_ActiveThemeName, "System", vbTextCompare) = 0 Then
+            Set Host = ResolveHostResources()
+            If Not Host Is Nothing Then PublishActiveThemeTo Host
+            RaiseEvent ThemeCkanged
+        End If
+    End Property
+
+    ' Resolved concrete theme key used for merge ("Light"/"Dark"/named), never "System".
+    Public Property Get EffectiveThemeName() As String
+        EffectiveThemeName = ResolveEffectiveThemeKey()
+    End Property
+
+    ' Re-read OS preference and republish when ActiveThemeName is System.
+    Public Sub RefreshSystemTheme()
+        Dim Host As ResourceDictionary
+
+        If StrComp(m_ActiveThemeName, "System", vbTextCompare) <> 0 Then Exit Sub
+        Set Host = ResolveHostResources()
+        If Not Host Is Nothing Then PublishActiveThemeTo Host
+        RaiseEvent ThemeCkanged
+    End Sub
+
     Public Property Get ActiveTheme() As ObservableDictionary
         Dim ThemeObj As Object
+        Dim Key As String
 
-        If Base.ContainsKey(m_ActiveThemeName) Then
-            Set ThemeObj = Base(m_ActiveThemeName)
+        Key = ResolveEffectiveThemeKey()
+        If Len(Key) = 0 Then Exit Property
+
+        If Base.ContainsKey(Key) Then
+            Set ThemeObj = Base(Key)
         ElseIf Base.Count > 0 Then
             Set ThemeObj = Base.ItemAt(0)
         End If
@@ -225,6 +271,7 @@ Attribute Item.VB_UserMemId = 0
         Dim i As Long
         Dim K As Variant
         Dim V As Variant
+        Dim ThemeKey As String
 
         On Error GoTo Handler
 
@@ -238,10 +285,11 @@ Attribute Item.VB_UserMemId = 0
             Set m_PublishedTheme = Nothing
         End If
 
-        If Len(m_ActiveThemeName) = 0 Then Exit Sub
-        If Not Base.ContainsKey(m_ActiveThemeName) Then Exit Sub
+        ThemeKey = ResolveEffectiveThemeKey()
+        If Len(ThemeKey) = 0 Then Exit Sub
+        If Not Base.ContainsKey(ThemeKey) Then Exit Sub
 
-        Set ThemeObj = Base(m_ActiveThemeName)
+        Set ThemeObj = Base(ThemeKey)
         If ThemeObj Is Nothing Then Exit Sub
 
         If TypeOf ThemeObj Is ResourceDictionary Then
@@ -284,7 +332,65 @@ Handler:
         Err.Clear
     End Function
 
+    ' Map ActiveThemeName to a concrete bag key. "System" → OS Light/Dark preference.
+    Private Function ResolveEffectiveThemeKey() As String
+        Dim Preferred As String
+
+        If Len(m_ActiveThemeName) = 0 Then Exit Function
+
+        If StrComp(m_ActiveThemeName, "System", vbTextCompare) <> 0 Then
+            If Base.ContainsKey(m_ActiveThemeName) Then
+                ResolveEffectiveThemeKey = m_ActiveThemeName
+                Exit Function
+            End If
+            ' Fall through to first available if named theme missing.
+            If Base.Count > 0 Then ResolveEffectiveThemeKey = CStr(Base.KeyOfIndex(0))
+            Exit Function
+        End If
+
+        Preferred = ResolveOsPreferredThemeName()
+        If Base.ContainsKey(Preferred) Then
+            ResolveEffectiveThemeKey = Preferred
+            Exit Function
+        End If
+
+        ' Prefer the other common name, then first bag.
+        If StrComp(Preferred, "Light", vbTextCompare) = 0 Then
+            If Base.ContainsKey("Dark") Then ResolveEffectiveThemeKey = "Dark": Exit Function
+        Else
+            If Base.ContainsKey("Light") Then ResolveEffectiveThemeKey = "Light": Exit Function
+        End If
+        If Base.ContainsKey("Default") Then ResolveEffectiveThemeKey = "Default": Exit Function
+        If Base.Count > 0 Then ResolveEffectiveThemeKey = CStr(Base.KeyOfIndex(0))
+    End Function
+
+    ' OS apps theme: Light when AppsUseLightTheme=1, else Dark. Override wins for tests.
+    Public Function ResolveOsPreferredThemeName() As String
+        Dim Shell As Object
+        Dim Raw As Variant
+
+        If Len(m_SystemThemeOverride) > 0 Then
+            ResolveOsPreferredThemeName = m_SystemThemeOverride
+            Exit Function
+        End If
+
+        On Error Resume Next
+        Set Shell = CreateObject("WScript.Shell")
+        Raw = Shell.RegRead("HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize\AppsUseLightTheme")
+        Err.Clear
+        On Error GoTo 0
+
+        If IsEmpty(Raw) Or IsNull(Raw) Then
+            ResolveOsPreferredThemeName = "Light"
+        ElseIf CLng(Raw) <> 0 Then
+            ResolveOsPreferredThemeName = "Light"
+        Else
+            ResolveOsPreferredThemeName = "Dark"
+        End If
+    End Function
+
     Private Sub Class_Initialize()
         Set Base = New ObservableDictionary
+        m_SystemThemeOverride = ""
     End Sub
 

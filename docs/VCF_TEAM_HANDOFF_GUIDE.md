@@ -228,7 +228,8 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **Live ContentPresenter TemplateBinding** — ~~paint-only content slot~~ (**P6h-CP**)
   **Nested Border.Child ContentPresenter** — ~~visual-tree widget~~ (**P6i-NEST**)
   **Theme dictionary merge/swap** — ~~ActiveThemeName → MergedDictionaries~~ (**P2a-THEME-SWAP**)
-  later  OS Light/Dark → ActiveThemeName · deeper multi-node templates
+  **OS System theme** — ~~System → Light/Dark~~ (**P2a-THEME-OS**)
+  later  deeper multi-node templates
   deferred RelativeSource / ElementName for window-level Command (item-level Command works)
   ~~deferred UniformGrid ItemsHost with generated items~~ (**P7c-PANEL** TextBlock+Button inflate)
 

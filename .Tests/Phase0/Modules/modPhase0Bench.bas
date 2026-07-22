@@ -58,6 +58,7 @@ Public Sub RunAll()
     If Not Phase6hBench_LiveContentPresenter() Then Failed = Failed + 1
     If Not Phase6iBench_NestedContentPresenter() Then Failed = Failed + 1
     If Not Phase2aBench_ThemeDictionarySwap() Then Failed = Failed + 1
+    If Not Phase2aBench_SystemThemeResolve() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
     If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
     If Not Phase7dBench_BorderDesignResize() Then Failed = Failed + 1
@@ -73,7 +74,7 @@ Public Sub RunAll()
 
     ' Report only  do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (47 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (48 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1720,6 +1721,57 @@ Fail:
     LogResult "P2a-THEME-SWAP", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P2a-THEME-SWAP - " & Err.Description
     Phase2aBench_ThemeDictionarySwap = False
+End Function
+
+' Phase 2a: ActiveThemeName=System resolves to OS Light/Dark (override for gate).
+Public Function Phase2aBench_SystemThemeResolve() As Boolean
+    Dim TM As ThemesManager
+    Dim Host As ResourceDictionary
+    Dim Light As ObservableDictionary
+    Dim Dark As ObservableDictionary
+    Dim V As Variant
+
+    On Error GoTo Fail
+
+    Set Light = New ObservableDictionary
+    Light.Add "AccentToken", "LightAccent"
+    Set Dark = New ObservableDictionary
+    Dark.Add "AccentToken", "DarkAccent"
+
+    Set TM = New ThemesManager
+    TM.Add "Light", Light
+    TM.Add "Dark", Dark
+
+    Set Host = New ResourceDictionary
+    TM.AttachToResources Host
+
+    TM.SystemThemeOverride = "Dark"
+    TM.ActiveThemeName = "System"
+    If TM.ActiveThemeName <> "System" Then Err.Raise vbObjectError, , "ActiveThemeName expected System"
+    If TM.EffectiveThemeName <> "Dark" Then Err.Raise vbObjectError, , "EffectiveThemeName expected Dark, got " & TM.EffectiveThemeName
+    If Not Host.TryGetResource("AccentToken", V) Then Err.Raise vbObjectError, , "Dark AccentToken missing"
+    If CStr(V) <> "DarkAccent" Then Err.Raise vbObjectError, , "Expected DarkAccent, got " & CStr(V)
+
+    TM.SystemThemeOverride = "Light"
+    If TM.EffectiveThemeName <> "Light" Then Err.Raise vbObjectError, , "EffectiveThemeName expected Light after override, got " & TM.EffectiveThemeName
+    If Not Host.TryGetResource("AccentToken", V) Then Err.Raise vbObjectError, , "Light AccentToken missing after override"
+    If CStr(V) <> "LightAccent" Then Err.Raise vbObjectError, , "Expected LightAccent, got " & CStr(V)
+
+    ' Named theme still works alongside System.
+    TM.ActiveThemeName = "Dark"
+    If TM.EffectiveThemeName <> "Dark" Then Err.Raise vbObjectError, , "Named Dark EffectiveThemeName expected Dark"
+    If Not Host.TryGetResource("AccentToken", V) Then Err.Raise vbObjectError, , "Named Dark AccentToken missing"
+    If CStr(V) <> "DarkAccent" Then Err.Raise vbObjectError, , "Named Dark expected DarkAccent"
+
+    LogResult "P2a-THEME-OS", 0, "OK System theme resolves Light/Dark via override"
+    Debug.Print "PASS  P2a-THEME-OS System Light/Dark resolve"
+    Phase2aBench_SystemThemeResolve = True
+    Exit Function
+
+Fail:
+    LogResult "P2a-THEME-OS", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2a-THEME-OS - " & Err.Description
+    Phase2aBench_SystemThemeResolve = False
 End Function
 
 Public Function Phase7aBench_PosSalesOrderShell() As Boolean

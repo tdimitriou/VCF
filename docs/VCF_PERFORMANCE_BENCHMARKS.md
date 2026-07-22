@@ -73,6 +73,7 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P6h-CP | Live ContentPresenter | `Phase6hBench_LiveContentPresenter` | pass | Paint/slot TemplateBinding Content+align |
 | P6i-NEST | Nested Border.Child CP | `Phase6iBench_NestedContentPresenter` | pass | Live CP under Border.Child visual tree |
 | P2a-THEME-SWAP | Theme dictionary merge | `Phase2aBench_ThemeDictionarySwap` | pass | ActiveThemeName swaps MergedDictionaries |
+| P2a-THEME-OS | System→Light/Dark | `Phase2aBench_SystemThemeResolve` | pass | System theme + override resolves bag |
 
 ---
 

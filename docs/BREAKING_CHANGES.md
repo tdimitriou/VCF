@@ -5,6 +5,22 @@
 
 ---
 
+## [2.35.0] — 2026-07-22 — Phase 2a (OS System theme → Light/Dark)
+
+### Changed
+
+- **`ThemesManager`** — `ActiveThemeName = "System"` resolves to OS preferred Light/Dark (`AppsUseLightTheme` registry) and merges that bag. `SystemThemeOverride` forces resolution for tests/harness. `EffectiveThemeName` / `RefreshSystemTheme` expose the concrete key and re-publish.
+
+### Added
+
+- Phase0 **P2a-THEME-OS** — gate **48/48**.
+
+### Notes
+
+- Deeper multi-node templates and RelativeSource/ElementName remain later/deferred.
+
+---
+
 ## [2.34.0] — 2026-07-22 — Phase 2a (theme dictionary merge/swap)
 
 ### Changed
