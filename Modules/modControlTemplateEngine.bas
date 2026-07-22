@@ -30,8 +30,7 @@ Handler:
 End Sub
 
 ' Lookless-prep (P6f-TBIND): Border chrome only here.
-' ContentPresenter-slot alignment is applied via StyleManager.PushTemplateContentAlignment
-' / Button.ApplyTemplateContentAlignment.
+' ContentPresenter-slot alignment is applied via StyleManager.PushTemplateContentAlignment.
 Private Sub ApplyButtonTemplate(ByVal Btn As Button, ByVal Tmpl As ControlTemplate)
     Dim i As Long
     Dim Node As Object

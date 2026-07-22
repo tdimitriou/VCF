@@ -91,9 +91,6 @@ Private Sub PushTemplateContentAlignment(ByVal St As Style, ByVal Target As Obje
         End If
     End If
 
-290 CallByName Target, "SyncContentPresenter", VbMethod
-300 CallByName Target, "NoteTemplateContentAlignmentPush", VbMethod, HAlign
-
     Exit Sub
 
 Handler:

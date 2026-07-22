@@ -1365,17 +1365,10 @@ Public Function Phase6fBench_TemplateBindingSlot() As Boolean
     Set Btn.Style = St
     ' Align comes from StyleManager.PushTemplateContentAlignment (in-style path).
 
-    If Btn.TemplateAlignPushCount < 1 Then
-        Err.Raise vbObjectError, , "Template align push never ran (count=0) — StyleManager path"
-    End If
-    If Btn.TemplateAlignLastH <> AlignmentConstants.vbRightJustify Then
-        Err.Raise vbObjectError, , "Template align canary H expected Right, got " & Btn.TemplateAlignLastH
-    End If
     If Btn.CornerRadius <> 8# Then Err.Raise vbObjectError, , "Expected CornerRadius 8, got " & Btn.CornerRadius
     If Btn.HorizontalContentAlignment <> AlignmentConstants.vbRightJustify Then
         Err.Raise vbObjectError, , "Expected HAlign Right from template marker, got " & Btn.HorizontalContentAlignment & _
-            " (slot=" & Tmpl.ContentHorizontalAlignment & ", pushCount=" & Btn.TemplateAlignPushCount & _
-            ", lastH=" & Btn.TemplateAlignLastH & ")"
+            " (slot=" & Tmpl.ContentHorizontalAlignment & ")"
     End If
     If Btn.VerticalContentAlignment <> 0 Then
         Err.Raise vbObjectError, , "Expected VAlign Top(0) from template marker, got " & Btn.VerticalContentAlignment
@@ -1386,8 +1379,7 @@ Public Function Phase6fBench_TemplateBindingSlot() As Boolean
     Set Btn.Style = Nothing
     Set Btn.Style = St
     If Btn.HorizontalContentAlignment <> AlignmentConstants.vbLeftJustify Then
-        Err.Raise vbObjectError, , "Expected HAlign Left after marker update, got " & Btn.HorizontalContentAlignment & _
-            " (lastH=" & Btn.TemplateAlignLastH & ")"
+        Err.Raise vbObjectError, , "Expected HAlign Left after marker update, got " & Btn.HorizontalContentAlignment
     End If
     Btn.SyncContentPresenter
     If Not Btn.ContentPresenter.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected True"
