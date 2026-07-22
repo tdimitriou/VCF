@@ -5,6 +5,24 @@
 
 ---
 
+## [2.30.0] — 2026-07-22 — Phase 2a (ControlTemplate ContentPresenter marker)
+
+### Changed
+
+- **`ApplyControlTemplate` / Button** — flat `ControlTemplate` children: `Border` (chrome) + optional **`ContentPresenter` alignment slot** (`SetContentAlignmentMarker`). Never attaches template nodes as live Button children.
+- **`StyleManager`** — after chrome, pushes slot H/V via `SetCurrentValue`. `GetValue("BackColor")` on template `Border` is gated with `Exists` (Border has no BackColor DP; unconditional get raised 424 and aborted apply before align push).
+
+### Added
+
+- Phase0 **P6f-TBIND** — gate **43/43**.
+- **`modStyleApplyLog`** — `On Error GoTo` + `Erl` logging for the ApplyStyle chain (`%TEMP%\VCF_StyleApply.log`); kept for upcoming Style/template work.
+
+### Notes
+
+- Live lookless visual tree (Border widget under Button) remains deferred.
+
+---
+
 ## [2.29.0] — 2026-07-21 — Phase 2a (UniformGrid ItemsHost harden)
 
 ### Fixed

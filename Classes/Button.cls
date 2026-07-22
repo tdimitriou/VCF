@@ -35,6 +35,8 @@ Private m_CornerRadius                          As Double
 Private m_GradientBackground                    As Boolean
 Private m_BorderWidth                           As Double
 Private m_ClickMode                             As ClickMode
+Private m_TemplateAlignPushCount                As Long
+Private m_TemplateAlignLastH                    As Long
 Private WithEvents m_DependencyProperties       As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings                              As VCF.List
@@ -152,6 +154,29 @@ Attribute TmrRelease.VB_VarHelpID = -1
     Public Property Let VerticalContentAlignment(ByVal Value As Long)
         Call m_DependencyProperties.SetValue("VerticalContentAlignment", Value)
     End Property
+
+    ' Phase0 / StyleManager canary: template align push ran (lookless-prep).
+    Public Property Get TemplateAlignPushCount() As Long
+        TemplateAlignPushCount = m_TemplateAlignPushCount
+    End Property
+
+    Public Property Get TemplateAlignLastH() As Long
+        TemplateAlignLastH = m_TemplateAlignLastH
+    End Property
+
+    Public Sub NoteTemplateContentAlignmentPush(ByVal HAlign As Long)
+        m_TemplateAlignPushCount = m_TemplateAlignPushCount + 1
+        m_TemplateAlignLastH = HAlign
+    End Sub
+
+    ' Safe to call after Style is applied (outside Style DP handler).
+    Public Sub ApplyTemplateContentAlignment()
+        On Error GoTo Handler
+100     ApplyTemplateContentAlignmentMarker
+        Exit Sub
+Handler:
+        modStyleApplyLog.LogErrorAndReraise "Button", "ApplyTemplateContentAlignment"
+    End Sub
     
     Public Property Get ClickMode() As ClickMode
         ClickMode = m_ClickMode
@@ -874,15 +899,56 @@ Private Function GetBaseStyle() As Style
 End Function
 
 Private Sub ApplyStyle()
-    If Not ActiveStyle Is Style Then Set ActiveStyle = Style
-    If Style Is Nothing Then Exit Sub
-    With New StyleManager
-        .ApplyStyle Style, Me
+    On Error GoTo Handler
+
+100 If Not ActiveStyle Is Style Then Set ActiveStyle = Style
+110 If Style Is Nothing Then Exit Sub
+120 With New StyleManager
+130     .ApplyStyle Style, Me
     End With
+
+    Exit Sub
+
+Handler:
+    modStyleApplyLog.LogErrorAndReraise "Button", "ApplyStyle"
 End Sub
 
+' Lookless-prep: ControlTemplate content-alignment slot → Button DPs.
+' Prefer SetCurrentValue (value sticks even if nested Style-notify errors).
+Private Sub ApplyTemplateContentAlignmentMarker()
+    Dim Tmpl As ControlTemplate
+    Dim St As Style
+    Dim HAlign As Long
+    Dim VAlign As Long
+
+    On Error GoTo Handler
+
+200 Set St = ActiveStyle
+210 If St Is Nothing Then Set St = Style
+220 If St Is Nothing Then Exit Sub
+230 Set Tmpl = St.Template
+240 If Tmpl Is Nothing Then Exit Sub
+250 If Not Tmpl.HasContentAlignmentMarker Then Exit Sub
+
+260 HAlign = Tmpl.ContentHorizontalAlignment
+270 VAlign = Tmpl.ContentVerticalAlignment
+
+280 NoteTemplateContentAlignmentPush HAlign
+290 m_DependencyProperties.SetCurrentValue "HorizontalContentAlignment", HAlign
+300 m_DependencyProperties.SetCurrentValue "VerticalContentAlignment", VAlign
+310 SyncContentPresenter
+
+    Exit Sub
+
+Handler:
+    modStyleApplyLog.LogErrorAndReraise "Button", "ApplyTemplateContentAlignmentMarker"
+End Sub
 
     Private Sub ActiveStyle_StyleChanged()
-        ApplyStyle
+        On Error GoTo Handler
+400     ApplyStyle
+        Exit Sub
+Handler:
+        modStyleApplyLog.LogErrorAndReraise "Button", "ActiveStyle_StyleChanged"
     End Sub
 

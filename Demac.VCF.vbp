@@ -127,6 +127,7 @@ Module=modItemTemplateEngine; Modules\modItemTemplateEngine.bas
 Class=ControlTemplate; Classes\ControlTemplate.cls
 Class=PropertyTrigger; Classes\PropertyTrigger.cls
 Module=modControlTemplateEngine; Modules\modControlTemplateEngine.bas
+Module=modStyleApplyLog; Modules\modStyleApplyLog.bas
 Module=modSelectorEngine; Modules\modSelectorEngine.bas
 Module=modStyleTriggerEngine; Modules\modStyleTriggerEngine.bas
 Module=modRenderCoalescer; Modules\modRenderCoalescer.bas

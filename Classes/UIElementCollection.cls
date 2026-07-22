@@ -122,6 +122,7 @@ End Sub
 
 '#Region ObservableCollection Events
 Private Sub m_List_CollectionChanged(Sender As Object, e As CollectionChangedEventArgs)
+    Dim Item As Variant
     Dim UIElement As IUIElement
     Dim Index As Long
     
@@ -130,28 +131,48 @@ Private Sub m_List_CollectionChanged(Sender As Object, e As CollectionChangedEve
         Case CollectionChangedActionAdd
             If m_ParentPtr <> 0 Then
                 If Not e.NewItems Is Nothing Then
-                    For Each UIElement In e.NewItems
-                        Set UIElement.Parent = Parent
+                    For Each Item In e.NewItems
+                        If IsObject(Item) Then
+                            If TypeOf Item Is IUIElement Then
+                                Set UIElement = Item
+                                Set UIElement.Parent = Parent
+                            End If
+                        End If
                     Next
                 End If
             End If
         Case CollectionChangedActionRemove
             If Not e.OldItems Is Nothing Then
-                For Each UIElement In e.OldItems
-                    Set UIElement.Parent = Nothing
+                For Each Item In e.OldItems
+                    If IsObject(Item) Then
+                        If TypeOf Item Is IUIElement Then
+                            Set UIElement = Item
+                            Set UIElement.Parent = Nothing
+                        End If
+                    End If
                 Next
             End If
         Case CollectionChangedActionReplace
             If Not e.OldItems Is Nothing Then
-                For Each UIElement In e.OldItems
-                    Set UIElement.Parent = Nothing
+                For Each Item In e.OldItems
+                    If IsObject(Item) Then
+                        If TypeOf Item Is IUIElement Then
+                            Set UIElement = Item
+                            Set UIElement.Parent = Nothing
+                        End If
+                    End If
                 Next
             End If
             
             If m_ParentPtr <> 0 Then
                 If Not e.NewItems Is Nothing Then
-                    For Each UIElement In e.NewItems
-                        Set UIElement.Parent = Parent
+                    For Each Item In e.NewItems
+                        If IsObject(Item) Then
+                            If TypeOf Item Is IUIElement Then
+                                Set UIElement = Item
+                                Set UIElement.Parent = Parent
+                            End If
+                        End If
                     Next
                 End If
             End If
@@ -159,8 +180,13 @@ Private Sub m_List_CollectionChanged(Sender As Object, e As CollectionChangedEve
             '
         Case CollectionChangedActionReset
             If Not e.OldItems Is Nothing Then
-                For Each UIElement In e.OldItems
-                    Set UIElement.Parent = Nothing
+                For Each Item In e.OldItems
+                    If IsObject(Item) Then
+                        If TypeOf Item Is IUIElement Then
+                            Set UIElement = Item
+                            Set UIElement.Parent = Nothing
+                        End If
+                    End If
                 Next
             End If
     End Select

@@ -18,120 +18,180 @@ Public Sub ApplyStyle(ByVal Style As Style, ByVal Target As Object)
     Dim FailNum As Long
     Dim FailSrc As String
     Dim FailDesc As String
+    Dim FailErl As Long
 
-    If TypeName(Target) <> Style.TargetType Then
+    On Error GoTo Handler
+
+100 If Style Is Nothing Then Err.Raise 91, "StyleManager.ApplyStyle", "Style is Nothing"
+102 If Target Is Nothing Then Err.Raise 91, "StyleManager.ApplyStyle", "Target is Nothing"
+104 If TypeName(Target) <> Style.TargetType Then
         Err.Raise vbObjectError, TypeName(Me), "Target Type mismatch"
-        Exit Sub
     End If
 
-    On Error GoTo ApplyStyleFail
-
-    modInheritanceBatch.BeginInheritanceUpdate Target
+110 modInheritanceBatch.BeginInheritanceUpdate Target
     InheritanceBatchStarted = True
 
-    SetObjectProperties Target, Style
-    modStyleTriggerEngine.ApplyActiveTriggers Style, Target
-    modControlTemplateEngine.ApplyControlTemplate Style, Target
+120 SetObjectProperties Target, Style
+130 modStyleTriggerEngine.ApplyActiveTriggers Style, Target
 
-    modInheritanceBatch.EndInheritanceUpdate
+140 modInheritanceBatch.EndInheritanceUpdate
     InheritanceBatchStarted = False
 
-    modRenderCoalescer.RequestWidgetRefresh Target.Widget
+150 modControlTemplateEngine.ApplyControlTemplate Style, Target
+160 PushTemplateContentAlignment Style, Target
+
+170 modRenderCoalescer.RequestWidgetRefresh Target.Widget
 
     Exit Sub
 
-ApplyStyleFail:
+Handler:
     FailNum = Err.Number
     FailSrc = Err.Source
     FailDesc = Err.Description
+    FailErl = Erl
+    modStyleApplyLog.LogError "StyleManager", "ApplyStyle", FailNum, FailDesc, FailErl
     If InheritanceBatchStarted Then
         On Error Resume Next
         modInheritanceBatch.EndInheritanceUpdate
         On Error GoTo 0
     End If
-    Err.Raise FailNum, FailSrc, FailDesc
+    If Len(FailSrc) = 0 Then
+        Err.Raise FailNum, "StyleManager.ApplyStyle", FailDesc
+    Else
+        Err.Raise FailNum, FailSrc, FailDesc
+    End If
 End Sub
 
-'CSEH: ErrMsgBox
+' Lookless-prep: ControlTemplate alignment slot → target DPs via SetCurrentValue
+Private Sub PushTemplateContentAlignment(ByVal St As Style, ByVal Target As Object)
+    Dim Tmpl As ControlTemplate
+    Dim Dep As IDependencyObject
+    Dim HAlign As Long
+    Dim VAlign As Long
+
+    On Error GoTo Handler
+
+200 If St Is Nothing Then Exit Sub
+202 If Target Is Nothing Then Exit Sub
+
+210 Set Tmpl = St.Template
+212 If Tmpl Is Nothing Then Exit Sub
+214 If Not Tmpl.HasContentAlignmentMarker Then Exit Sub
+
+220 HAlign = Tmpl.ContentHorizontalAlignment
+222 VAlign = Tmpl.ContentVerticalAlignment
+
+230 If TypeOf Target Is IDependencyObject Then
+240     Set Dep = Target
+250     If Dep.DependencyProperties.Exists("HorizontalContentAlignment") Then
+260         Dep.DependencyProperties.SetCurrentValue "HorizontalContentAlignment", HAlign
+        End If
+270     If Dep.DependencyProperties.Exists("VerticalContentAlignment") Then
+280         Dep.DependencyProperties.SetCurrentValue "VerticalContentAlignment", VAlign
+        End If
+    End If
+
+290 CallByName Target, "SyncContentPresenter", VbMethod
+300 CallByName Target, "NoteTemplateContentAlignmentPush", VbMethod, HAlign
+
+    Exit Sub
+
+Handler:
+    modStyleApplyLog.LogErrorAndReraise "StyleManager", "PushTemplateContentAlignment"
+End Sub
+
 Private Sub SetObjectProperties(Obj As Object, Style As Style)
     Dim Dep As IDependencyObject
-        
-    ' Set DependencyProperties is implemented using the 'SetCurrentValue'
-    ' method allowing both Styling and individual property setters
-    ' through XAML or code. However if a Style Property is not offered
-    ' as a dependency property, the method will write the property value
-    ' of the VCF object, or the contained WidgetBase, if no match is found.
-    ' This will allow the inheritance of styles, however any property
-    ' setters through XAML or code, will be overwritten each time the
-    ' style is applied. The registration of a DependencyProperty, for any
-    ' Style related property, is highly recommended for all VCF objects.
-    If TypeOf Obj Is IDependencyObject Then
-        Set Dep = Obj
-        SetDependencyProperties Dep, Style
+
+    On Error GoTo Handler
+
+400 If TypeOf Obj Is IDependencyObject Then
+410     Set Dep = Obj
+420     SetDependencyProperties Dep, Style
     Else
-        SetProperties Obj, Style
+430     SetProperties Obj, Style
     End If
+
+    Exit Sub
+
+Handler:
+    modStyleApplyLog.LogErrorAndReraise "StyleManager", "SetObjectProperties"
 End Sub
 
 Private Sub SetDependencyProperties(ByVal Dep As IDependencyObject, Style As Style)
     Dim Obj As Object
-        
-    Set Obj = API.CObj(Dep)
-    
     Dim Setter As KeyValuePair
     Dim Value
-    
     Dim e
-    For Each e In Style
-        
-        Setter = e
-        
-        With New MarkupExtensions
-            API.CopyVariable .GetMarkupValue(Setter.Value, Nothing, Setter.Key), Value
+
+    On Error GoTo Handler
+
+500 Set Obj = API.CObj(Dep)
+
+510 For Each e In Style
+520     Setter = e
+530     With New MarkupExtensions
+540         API.CopyVariable .GetMarkupValue(Setter.Value, Nothing, Setter.Key), Value
         End With
-    
-        If Dep.DependencyProperties.Exists(CStr(Setter.Key)) Then
-            SetDependencyProperty Dep, Setter.Key, Value
+
+550     If Dep.DependencyProperties.Exists(CStr(Setter.Key)) Then
+560         SetDependencyProperty Dep, Setter.Key, Value
         Else
-            SetProperty Obj, Setter.Key, Value
+570         SetProperty Obj, Setter.Key, Value
         End If
-    Next
+580 Next
+
+    Exit Sub
+
+Handler:
+    modStyleApplyLog.LogErrorAndReraise "StyleManager", "SetDependencyProperties"
 End Sub
 
 Private Sub SetProperties(ByVal Obj As Object, Style As Style)
     Dim Setter As KeyValuePair
     Dim e
-    
     Dim Value
-    For Each e In Style
-        Setter = e
-        
-        With New MarkupExtensions
-            API.CopyVariable .GetMarkupValue(Setter.Value, Nothing, Setter.Key), Value
+
+    On Error GoTo Handler
+
+600 For Each e In Style
+610     Setter = e
+620     With New MarkupExtensions
+630         API.CopyVariable .GetMarkupValue(Setter.Value, Nothing, Setter.Key), Value
         End With
-        
-        SetProperty Obj, Setter.Key, Value
-    Next
+640     SetProperty Obj, Setter.Key, Value
+650 Next
+
+    Exit Sub
+
+Handler:
+    modStyleApplyLog.LogErrorAndReraise "StyleManager", "SetProperties"
 End Sub
 
 Private Sub SetDependencyProperty(ByVal Obj As IDependencyObject, ByVal PropertyName As String, Value)
     Dim Prop As DependencyProperty
-    
-    Set Prop = Obj.DependencyProperties.GetProperty(PropertyName)
-    
-    With New XAMLDependencyPropertyManager
-        
-        Obj.DependencyProperties.SetCurrentValue PropertyName, .GetPropertyValueFromString(Prop, Value)
-    
+
+    On Error GoTo Handler
+
+700 Set Prop = Obj.DependencyProperties.GetProperty(PropertyName)
+710 If Prop Is Nothing Then Err.Raise 91, "StyleManager.SetDependencyProperty", "Property not found: " & PropertyName
+
+720 With New XAMLDependencyPropertyManager
+730     Obj.DependencyProperties.SetCurrentValue PropertyName, .GetPropertyValueFromString(Prop, Value)
     End With
 
+    Exit Sub
+
+Handler:
+    modStyleApplyLog.LogErrorAndReraise "StyleManager", "SetDependencyProperty"
 End Sub
 
+' Intentional soft probe for non-DP property names — keep Resume Next (not part of fail-fast chain).
 Private Function SetProperty(ByVal Obj As Object, ByVal Name As String, ByVal Value As String, Optional ByVal Recursive As Boolean = True) As Boolean
     On Error Resume Next
-    
+
     Err.Clear
-    
+
     If LCase$(Name) = "imagekey" Then
         If Not TypeOf Obj Is cWidgetBase Then
             With New XAMLImagePropertyManager
@@ -139,40 +199,28 @@ Private Function SetProperty(ByVal Obj As Object, ByVal Name As String, ByVal Va
             End With
         End If
     End If
-    
+
     CallByName Obj, Name, VbLet, Value
-        
+
     SetProperty = (Err.Number = 0)
     If SetProperty Then Exit Function
-'    Err.Clear
     If Not Recursive Then Exit Function
-    
-'    SetProperty = SetProperty(Obj.Widget, Name, Value, False)
-'    If SetProperty Then Exit Function
-'
-'    If TypeOf Obj Is Window Then
-'        SetProperty = SetProperty(Obj.Form, Name, Value, False)
-'        If SetProperty Then Exit Function
-'    End If
-    
+
     Err.Clear
     If TypeOf Obj Is VCF.Window Then
         Dim ObjWin As VCF.Window
         Set ObjWin = Obj
-        
+
         SetProperty ObjWin, Name, Value, False
 
         If Err.Number = 0 Then Exit Function
         Err.Clear
         SetProperty ObjWin.Form, Name, Value, False
 
-        'If Err.Number = 0 Then Exit Function
-        'Err.Clear
         SetProperty ObjWin.Form.WidgetRoot, Name, Value, False
     Else
         SetProperty Obj.Widget, Name, Value
     End If
-    
+
     Err.Clear
 End Function
-

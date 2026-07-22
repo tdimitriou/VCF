@@ -53,6 +53,7 @@ Public Sub RunAll()
     If Not Phase6eBench_ContentPresenter() Then Failed = Failed + 1
     If Not Phase6eBench_ContentAlignment() Then Failed = Failed + 1
     If Not Phase6eBench_ContentControlContent() Then Failed = Failed + 1
+    If Not Phase6fBench_TemplateBindingSlot() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
     If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
     If Not Phase7dBench_BorderDesignResize() Then Failed = Failed + 1
@@ -68,7 +69,7 @@ Public Sub RunAll()
 
     ' Report only — do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (42 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (43 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1316,6 +1317,101 @@ Fail:
     On Error Resume Next
     KeepAlive CC
     KeepAlive Root
+    Err.Clear
+End Function
+
+' §2.11 lookless-prep: ControlTemplate Border chrome + ContentPresenter marker (no live widgets).
+Public Function Phase6fBench_TemplateBindingSlot() As Boolean
+    Dim Tmpl As ControlTemplate
+    Dim St As Style
+    Dim Btn As Button
+    Dim B As Border
+    Dim CP As ContentPresenter
+    Dim Rad As VCF.CornerRadius
+
+    On Error GoTo Fail
+
+    Set Tmpl = New ControlTemplate
+    Tmpl.TargetType = "Button"
+
+    Set B = New Border
+    Rad.TopLeft = 8
+    Rad.TopRight = 8
+    Rad.BottomLeft = 8
+    Rad.BottomRight = 8
+    B.CornerRadius = Rad
+    Tmpl.Children.Add B
+
+    Set CP = New ContentPresenter
+    ' Use Right(1) not Left(0) first so a failed apply cannot be confused with Long default 0.
+    CP.HorizontalContentAlignment = AlignmentConstants.vbRightJustify
+    CP.VerticalContentAlignment = 0
+    Tmpl.Children.Add CP
+    ' Explicit slot — TypeOf ContentPresenter is unreliable across EXE/DLL boundary.
+    Tmpl.SetContentAlignmentMarker AlignmentConstants.vbRightJustify, 0
+    If Tmpl.Children.Count <> 2 Then Err.Raise vbObjectError, , "Template expected Border+ContentPresenter children, count=" & Tmpl.Children.Count
+    If Not Tmpl.HasContentAlignmentMarker Then Err.Raise vbObjectError, , "HasContentAlignmentMarker expected True"
+    If Tmpl.ContentHorizontalAlignment <> AlignmentConstants.vbRightJustify Then
+        Err.Raise vbObjectError, , "Template slot HAlign not Right before Style apply"
+    End If
+
+    Set St = NewStyle("Button")
+    Set St.Template = Tmpl
+    If Not St.Template Is Tmpl Then Err.Raise vbObjectError, , "Style.Template must be same instance as Tmpl"
+    If Not St.Template.HasContentAlignmentMarker Then Err.Raise vbObjectError, , "Style.Template marker missing"
+
+    Set Btn = New Button
+    Btn.Content = "OK"
+    Set Btn.Style = St
+    ' Align comes from StyleManager.PushTemplateContentAlignment (in-style path).
+
+    If Btn.TemplateAlignPushCount < 1 Then
+        Err.Raise vbObjectError, , "Template align push never ran (count=0) — StyleManager path"
+    End If
+    If Btn.TemplateAlignLastH <> AlignmentConstants.vbRightJustify Then
+        Err.Raise vbObjectError, , "Template align canary H expected Right, got " & Btn.TemplateAlignLastH
+    End If
+    If Btn.CornerRadius <> 8# Then Err.Raise vbObjectError, , "Expected CornerRadius 8, got " & Btn.CornerRadius
+    If Btn.HorizontalContentAlignment <> AlignmentConstants.vbRightJustify Then
+        Err.Raise vbObjectError, , "Expected HAlign Right from template marker, got " & Btn.HorizontalContentAlignment & _
+            " (slot=" & Tmpl.ContentHorizontalAlignment & ", pushCount=" & Btn.TemplateAlignPushCount & _
+            ", lastH=" & Btn.TemplateAlignLastH & ")"
+    End If
+    If Btn.VerticalContentAlignment <> 0 Then
+        Err.Raise vbObjectError, , "Expected VAlign Top(0) from template marker, got " & Btn.VerticalContentAlignment
+    End If
+
+    ' Second pass: Left(0) via marker; clear Style so SetValue re-fires ApplyStyle.
+    Tmpl.SetContentAlignmentMarker AlignmentConstants.vbLeftJustify, 0
+    Set Btn.Style = Nothing
+    Set Btn.Style = St
+    If Btn.HorizontalContentAlignment <> AlignmentConstants.vbLeftJustify Then
+        Err.Raise vbObjectError, , "Expected HAlign Left after marker update, got " & Btn.HorizontalContentAlignment & _
+            " (lastH=" & Btn.TemplateAlignLastH & ")"
+    End If
+    Btn.SyncContentPresenter
+    If Not Btn.ContentPresenter.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected True"
+    If Btn.Children.Count <> 0 Then Err.Raise vbObjectError, , "Template must not add live Button children"
+    If CStr(Btn.Content) <> "OK" Then Err.Raise vbObjectError, , "Content expected OK (TemplateBinding from parent)"
+
+    KeepAlive Btn
+    Set Btn = Nothing
+    Set St = Nothing
+    Set Tmpl = Nothing
+    Set B = Nothing
+    Set CP = Nothing
+
+    LogResult "P6f-TBIND", 0, "OK ControlTemplate Border+ContentPresenter marker (no live tree)"
+    Debug.Print "PASS  P6f-TBIND template ContentPresenter slot"
+    Phase6fBench_TemplateBindingSlot = True
+    Exit Function
+
+Fail:
+    LogResult "P6f-TBIND", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6f-TBIND — " & Err.Description
+    Phase6fBench_TemplateBindingSlot = False
+    On Error Resume Next
+    KeepAlive Btn
     Err.Clear
 End Function
 
