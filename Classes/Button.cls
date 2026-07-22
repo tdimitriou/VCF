@@ -808,9 +808,14 @@ End Sub
     ' Called from modControlTemplateEngine ù clear previous live template Border.
     Friend Sub ClearTemplateChrome()
         Dim WKey As String
+        Dim ChromeClear As Border
 
         On Error Resume Next
         If Not m_TemplateRoot Is Nothing Then
+            If TypeOf m_TemplateRoot Is Border Then
+                Set ChromeClear = m_TemplateRoot
+                Set ChromeClear.Child = Nothing
+            End If
             WKey = "VCF_TPL_" & Hex$(ObjPtr(Me))
             If W.Widgets.Exists(WKey) Then W.Widgets.Remove WKey
             If Not m_Children Is Nothing Then
@@ -846,14 +851,29 @@ Handler:
         Set m_TemplateRoot = Nothing
     End Sub
 
-    ' Attach cloned paint-only ContentPresenter as lookless content slot (TemplateBinding).
+    ' Attach ContentPresenter as lookless content slot nested under template Border.Child (WPF).
     Friend Sub AttachTemplatePresenter(ByVal Presenter As ContentPresenter)
+        Dim Chrome As Border
+
         If Presenter Is Nothing Then Exit Sub
+        Presenter.SyncTypographyFromWidget W
         Set m_TemplatePresenter = Presenter
+        If Not m_TemplateRoot Is Nothing Then
+            If TypeOf m_TemplateRoot Is Border Then
+                Set Chrome = m_TemplateRoot
+                Set Chrome.Child = Presenter
+            End If
+        End If
         SyncContentPresenterContent
         SyncContentPresenterSuppress
         SyncContentPresenterAlignment
     End Sub
+
+    Private Function IsNestedTemplatePresenter() As Boolean
+        If m_TemplatePresenter Is Nothing Then Exit Function
+        If m_TemplatePresenter.Parent Is Nothing Then Exit Function
+        IsNestedTemplatePresenter = True
+    End Function
 
     Private Sub SyncContentPresenterAlignment()
         Dim CP As ContentPresenter
@@ -884,6 +904,8 @@ Handler:
         SyncContentPresenterContent
         SyncContentPresenterSuppress
         SyncContentPresenterAlignment
+        ' WPF lookless: nested ContentPresenter paints in the visual tree.
+        If IsNestedTemplatePresenter() Then Exit Sub
         Set CP = ActiveContentPresenter()
         If CP Is Nothing Then Exit Sub
         If Not CP.WouldDrawCaption Then Exit Sub

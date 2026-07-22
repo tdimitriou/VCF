@@ -226,7 +226,8 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **ControlTemplate ContentPresenter marker** — ~~chrome + align slot~~ (**P6f-TBIND**)
   **Live lookless ControlTemplate chrome** — ~~cloned Border in Children~~ (**P6g-LIVE**)
   **Live ContentPresenter TemplateBinding** — ~~paint-only content slot~~ (**P6h-CP**)
-  later  System/OS theme · nested multi-node templates / Border.Child ContentPresenter widget
+  **Nested Border.Child ContentPresenter** — ~~visual-tree widget~~ (**P6i-NEST**)
+  later  System/OS theme · deeper multi-node templates
   deferred RelativeSource / ElementName for window-level Command (item-level Command works)
   ~~deferred UniformGrid ItemsHost with generated items~~ (**P7c-PANEL** TextBlock+Button inflate)
 

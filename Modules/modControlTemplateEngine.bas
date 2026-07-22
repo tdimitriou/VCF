@@ -36,9 +36,8 @@ Handler:
     modStyleApplyLog.LogErrorAndReraise "modControlTemplateEngine", "ApplyControlTemplate"
 End Sub
 
-' Lookless (P6g/P6h): clone first template Border into Button.Children;
-' clone ContentPresenter as paint-only TemplateBinding content slot.
-' Alignment marker still pushed via StyleManager.PushTemplateContentAlignment.
+' Lookless (P6g/P6h/P6i): clone Border into Button.Children; nest ContentPresenter
+' under Border.Child (WPF visual tree). Align marker via StyleManager push.
 Private Sub ApplyButtonTemplate(ByVal Btn As Button, ByVal Tmpl As ControlTemplate)
     Dim i As Long
     Dim Node As Object
@@ -88,9 +87,6 @@ NextNode:
 310 Call API.CopyVariable(B.DependencyProperties.GetValue("CornerRadius"), Rad)
 320 If Rad.TopLeft > 0# Then Btn.CornerRadius = Rad.TopLeft
 
-    ' Border does not register BackColor as a DP (widget BackColor only).
-    ' Unconditional GetValue("BackColor") raised 424 and aborted Style apply
-    ' before PushTemplateContentAlignment - P6f HAlign stayed at default.
 330 If B.DependencyProperties.Exists("BackColor") Then
 340     Call API.CopyVariable(B.DependencyProperties.GetValue("BackColor"), BackColor)
 350     If Not IsEmpty(BackColor) And Not IsNull(BackColor) Then
@@ -98,15 +94,12 @@ NextNode:
         End If
     End If
 
-    ' Clone - never attach the template-bag instance (shared Style/template).
 370 Set Clone = New Border
 380 Clone.Widget.BackColor = Btn.Widget.BackColor
 390 Clone.BorderColor = B.BorderColor
 400 Btn.AttachTemplateChrome Clone
-    ' CornerRadius after parenting; rebuild UDT fields so SetValue sticks.
 410 Call ApplyCloneCornerRadius(Clone, Rad)
 
-    ' Live content slot (paint-only; no widget) when template has CP and/or align marker.
 420 If Not CPSrc Is Nothing Or Tmpl.HasContentAlignmentMarker Then
 430     Set CPClone = New ContentPresenter
 440     If Not CPSrc Is Nothing Then

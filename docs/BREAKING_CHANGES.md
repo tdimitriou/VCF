@@ -5,6 +5,23 @@
 
 ---
 
+## [2.33.0] — 2026-07-22 — Phase 2a (nested Border.Child ContentPresenter)
+
+### Changed
+
+- **`ContentPresenter`** — implements `IUIElement` / `IControl` with Cairo widget; caption paints in `W_Paint`. Public `Draw()` retained for host paint path.
+- **`ApplyButtonTemplate` / `Button.AttachTemplatePresenter`** — nests live `ContentPresenter` under cloned `Border.Child` (WPF visual tree). Host skips `DrawContent` when the presenter is nested. Hits pass through so Button still receives clicks.
+
+### Added
+
+- Phase0 **P6i-NEST** — gate **46/46**.
+
+### Notes
+
+- Flat template bags (`Border` + `ContentPresenter` siblings) are still accepted; apply-time nesting builds the WPF tree. System/OS theme still deferred.
+
+---
+
 ## [2.32.0] — 2026-07-22 — Phase 2a (live ContentPresenter TemplateBinding)
 
 ### Changed

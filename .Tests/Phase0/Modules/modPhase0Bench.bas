@@ -56,6 +56,7 @@ Public Sub RunAll()
     If Not Phase6fBench_TemplateBindingSlot() Then Failed = Failed + 1
     If Not Phase6gBench_LiveTemplateChrome() Then Failed = Failed + 1
     If Not Phase6hBench_LiveContentPresenter() Then Failed = Failed + 1
+    If Not Phase6iBench_NestedContentPresenter() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
     If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
     If Not Phase7dBench_BorderDesignResize() Then Failed = Failed + 1
@@ -71,7 +72,7 @@ Public Sub RunAll()
 
     ' Report only  do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (45 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (46 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1580,6 +1581,97 @@ Fail:
     LogResult "P6h-CP", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P6h-CP - " & Err.Description
     Phase6hBench_LiveContentPresenter = False
+    On Error Resume Next
+    KeepAlive Btn
+    Err.Clear
+End Function
+
+' Nested lookless: ContentPresenter widget under live Border.Child (WPF visual tree).
+Public Function Phase6iBench_NestedContentPresenter() As Boolean
+    Dim Tmpl As ControlTemplate
+    Dim St As Style
+    Dim Btn As Button
+    Dim B As Border
+    Dim Live As Border
+    Dim CP As ContentPresenter
+    Dim Nested As ContentPresenter
+    Dim Rad As VCF.CornerRadius
+
+    On Error GoTo Fail
+
+    Set Tmpl = New ControlTemplate
+    Tmpl.TargetType = "Button"
+
+    Set B = New Border
+    Rad.TopLeft = 8
+    Rad.TopRight = 8
+    Rad.BottomLeft = 8
+    Rad.BottomRight = 8
+    B.CornerRadius = Rad
+    Tmpl.Children.Add B
+
+    Set CP = New ContentPresenter
+    CP.HorizontalContentAlignment = AlignmentConstants.vbRightJustify
+    CP.VerticalContentAlignment = 0
+    Tmpl.Children.Add CP
+    Tmpl.SetContentAlignmentMarker AlignmentConstants.vbRightJustify, 0
+
+    Set St = NewStyle("Button")
+    Set St.Template = Tmpl
+
+    Set Btn = New Button
+    Btn.Content = "OK"
+    Set Btn.Style = St
+
+    If Btn.Children.Count <> 1 Then Err.Raise vbObjectError, , "Expected 1 live Border child, got " & Btn.Children.Count
+    Set Live = Btn.Children(0)
+    If Live.Child Is Nothing Then Err.Raise vbObjectError, , "Live Border.Child expected ContentPresenter"
+    If TypeName(Live.Child) <> "ContentPresenter" Then Err.Raise vbObjectError, , "Border.Child expected ContentPresenter, got " & TypeName(Live.Child)
+    Set Nested = Live.Child
+    If Nested Is CP Then Err.Raise vbObjectError, , "Nested CP must be a clone, not template-bag instance"
+    If Not Btn.ContentPresenter Is Nested Then Err.Raise vbObjectError, , "Button.ContentPresenter must be nested live slot"
+    If Nested.Parent Is Nothing Then Err.Raise vbObjectError, , "Nested CP Parent expected (Border)"
+    If Not Nested.Parent Is Live Then Err.Raise vbObjectError, , "Nested CP Parent expected live Border"
+
+    Btn.SyncContentPresenter
+    If CStr(Nested.Content) <> "OK" Then Err.Raise vbObjectError, , "TemplateBinding Content expected OK"
+    If Nested.HorizontalContentAlignment <> AlignmentConstants.vbRightJustify Then
+        Err.Raise vbObjectError, , "Nested CP HAlign expected Right"
+    End If
+    If Nested.SuppressContent Then Err.Raise vbObjectError, , "Nested CP SuppressContent expected False"
+    If Not Nested.WouldDrawCaption Then Err.Raise vbObjectError, , "Nested CP WouldDrawCaption expected True"
+
+    Btn.Content = "Save"
+    Btn.SyncContentPresenter
+    If CStr(Nested.Content) <> "Save" Then Err.Raise vbObjectError, , "TemplateBinding Content expected Save"
+
+    Set Btn.Style = Nothing
+    If Btn.Children.Count <> 0 Then Err.Raise vbObjectError, , "Clear Style must remove live template tree"
+    If Btn.ContentPresenter Is Nested Then Err.Raise vbObjectError, , "After clear, ContentPresenter must fall back to host"
+
+    Set Btn.Style = St
+    Set Live = Btn.Children(0)
+    If Live.Child Is Nothing Then Err.Raise vbObjectError, , "Re-apply Border.Child expected"
+    If TypeName(Live.Child) <> "ContentPresenter" Then Err.Raise vbObjectError, , "Re-apply Border.Child expected ContentPresenter"
+
+    KeepAlive Btn
+    Set Btn = Nothing
+    Set St = Nothing
+    Set Tmpl = Nothing
+    Set B = Nothing
+    Set Live = Nothing
+    Set CP = Nothing
+    Set Nested = Nothing
+
+    LogResult "P6i-NEST", 0, "OK nested Border.Child ContentPresenter visual tree"
+    Debug.Print "PASS  P6i-NEST nested Border.Child ContentPresenter"
+    Phase6iBench_NestedContentPresenter = True
+    Exit Function
+
+Fail:
+    LogResult "P6i-NEST", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6i-NEST - " & Err.Description
+    Phase6iBench_NestedContentPresenter = False
     On Error Resume Next
     KeepAlive Btn
     Err.Clear
