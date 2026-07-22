@@ -42,6 +42,8 @@ Private m_BaseUIElement                         As UIElementBase
 Private m_OverlayWidget                         As OverlayWidget
 Private m_Layout                                As FrameworkElement
 Private m_ContentPresenter                      As ContentPresenter
+' Live lookless ControlTemplate root (cloned Border); not a public COM property.
+Private m_TemplateRoot                          As Object
 
 Private Const OVERLAY_ALPHA                     As Single = 0.25
 Private Const OVERLAY_COLOR                     As Long = vbBlack
@@ -56,7 +58,7 @@ Attribute TmrRelease.VB_VarHelpID = -1
         Set Bindings = m_Bindings
     End Property
 
-    ' ยง2.11 paint-only presenter used for string Content (Phase0 P6e-PRES).
+    ' ง2.11 paint-only presenter used for string Content (Phase0 P6e-PRES).
     Public Property Get ContentPresenter() As ContentPresenter
         Set ContentPresenter = m_ContentPresenter
     End Property
@@ -527,7 +529,24 @@ Catch:
         Dim Offs As Single
         Dim Pad As Thickness
         Dim PadL As Single, PadT As Single, PadR As Single, PadB As Single
+        Dim LL As Single, TT As Single, WW As Single, HH As Single
+        Dim WKey As String
         
+        ' Lookless template chrome fills the host client area (WPF visual-tree root).
+        If Not m_TemplateRoot Is Nothing Then
+            If Child Is m_TemplateRoot Then
+                LL = 0!
+                TT = 0!
+                WW = CSng(W.Width)
+                HH = CSng(W.Height)
+                If WW <= 0! Then WW = CSng(m_Layout.Width)
+                If HH <= 0! Then HH = CSng(m_Layout.Height)
+                WKey = "VCF_TPL_" & Hex$(ObjPtr(Me))
+                If Not W.Widgets.Exists(WKey) Then W.Widgets.Add Child, WKey, CDbl(LL), CDbl(TT), CDbl(WW), CDbl(HH)
+                Child.Move LL, TT, WW, HH
+                Exit Sub
+            End If
+        End If
         
         Offs = m_BorderWidth
         If IsMouseDown Then Offs = BorderWidth + 1
@@ -544,11 +563,6 @@ Catch:
         
         xFactor = W.Width / m_Layout.Width
         yFactor = W.Height / m_Layout.Height
-        
-        
-        'If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove Child.Widget.Key
-        
-        Dim LL As Single, TT As Single, WW As Single, HH As Single
         
         With Child
             
@@ -688,6 +702,7 @@ End Sub
         If (Not W.Visible) Or W.IsHidden Then Exit Sub
         
         Dim dx As Double, dy As Double
+        Dim Lookless As Boolean
         
         dx = dx_Aligned
         dy = dy_Aligned
@@ -699,8 +714,12 @@ End Sub
         Dim IsSelected As Boolean
         IsSelected = Selected
         
-        Call DrawBackground(CC, dx, dy, IsSelected)
-        Call DrawBorder(CC, dx, dy, IsSelected)
+        ' WPF lookless: live template Border owns chrome; host skips fill/stroke.
+        Lookless = Not (m_TemplateRoot Is Nothing)
+        If Not Lookless Then
+            Call DrawBackground(CC, dx, dy, IsSelected)
+            Call DrawBorder(CC, dx, dy, IsSelected)
+        End If
         Call DrawContent(CC, dx, dy)
         
         Call SetupOverlay(IsSelected)
@@ -732,9 +751,80 @@ End Sub
         End If
     End Sub
 
+    Private Function ContentIsUIElement() As Boolean
+        Dim V As Variant
+        Dim UI As IUIElement
+
+        On Error Resume Next
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Content"), V)
+        If IsObject(V) Then
+            If Not V Is Nothing Then
+                If TypeOf V Is IUIElement Then
+                    Set UI = V
+                    ContentIsUIElement = Not (UI Is Nothing)
+                End If
+            End If
+        End If
+        Err.Clear
+    End Function
+
+    Private Function NonTemplateChildCount() As Long
+        Dim Child As Object
+        Dim N As Long
+
+        For Each Child In m_Children
+            If m_TemplateRoot Is Nothing Then
+                N = N + 1
+            ElseIf Not Child Is m_TemplateRoot Then
+                N = N + 1
+            End If
+        Next
+        NonTemplateChildCount = N
+    End Function
+
     Private Sub SyncContentPresenterSuppress()
         If m_ContentPresenter Is Nothing Then Exit Sub
-        m_ContentPresenter.SuppressContent = (m_Children.Count > 0)
+        ' Suppress string Content only for element Content or non-template children.
+        ' Live template chrome alone must not hide the caption (WPF lookless).
+        m_ContentPresenter.SuppressContent = ContentIsUIElement() Or (NonTemplateChildCount() > 0)
+    End Sub
+
+    ' Called from modControlTemplateEngine — clear previous live template Border.
+    Friend Sub ClearTemplateChrome()
+        Dim WKey As String
+
+        On Error Resume Next
+        If Not m_TemplateRoot Is Nothing Then
+            WKey = "VCF_TPL_" & Hex$(ObjPtr(Me))
+            If W.Widgets.Exists(WKey) Then W.Widgets.Remove WKey
+            If Not m_Children Is Nothing Then
+                If m_Children.Contains(m_TemplateRoot) Then m_Children.Remove m_TemplateRoot
+            End If
+            Set m_TemplateRoot = Nothing
+        End If
+        SyncContentPresenterSuppress
+        Err.Clear
+    End Sub
+
+    ' Attach a cloned Border as live lookless chrome under Children (stable widget key).
+    Friend Sub AttachTemplateChrome(ByVal Chrome As Object)
+        Dim B As Border
+
+        On Error GoTo Handler
+        ClearTemplateChrome
+        If Chrome Is Nothing Then Exit Sub
+        If Not TypeOf Chrome Is Border Then Exit Sub
+        Set B = Chrome
+        B.DesignLeft = 0
+        B.DesignTop = 0
+        B.DesignWidth = m_Layout.Width
+        B.DesignHeight = m_Layout.Height
+        Set m_TemplateRoot = B
+        m_Children.Add B
+        SyncContentPresenterSuppress
+        Exit Sub
+Handler:
+        Set m_TemplateRoot = Nothing
     End Sub
 
     Private Sub SyncContentPresenterAlignment()
@@ -877,7 +967,10 @@ Private Sub ApplyStyle()
     On Error GoTo Handler
 
 100 If Not ActiveStyle Is Style Then Set ActiveStyle = Style
-110 If Style Is Nothing Then Exit Sub
+110 If Style Is Nothing Then
+112     ClearTemplateChrome
+114     Exit Sub
+    End If
 120 With New StyleManager
 130     .ApplyStyle Style, Me
     End With

@@ -5,6 +5,23 @@
 
 ---
 
+## [2.31.0] — 2026-07-22 — Phase 2a (live lookless ControlTemplate chrome)
+
+### Changed
+
+- **`ApplyButtonTemplate`** — clones the first template `Border` into `Button.Children` (never attaches the template-bag instance). Host `CornerRadius` copy and `Exists("BackColor")` guard retained for overlay / align safety.
+- **`Button`** — `SuppressContent` ignores live template chrome (string caption still draws). When template chrome is live, host skips `DrawBackground` / `DrawBorder` (template Border owns chrome). `Style = Nothing` clears chrome. Stable widget key `VCF_TPL_<ObjPtr>`.
+
+### Added
+
+- Phase0 **P6g-LIVE** — gate **44/44**.
+
+### Notes
+
+- No public `TemplateVisual` API; assert via `Children`. ContentPresenter remains paint-only (no live widget / TemplateBinding yet).
+
+---
+
 ## [2.30.0] — 2026-07-22 — Phase 2a (ControlTemplate ContentPresenter marker)
 
 ### Changed

@@ -3,7 +3,7 @@ Option Explicit
 
 Private Const LOG_FILE As String = "Phase0_bench.log"
 
-' Hold Button/ItemsControl trees for the IDE session â€” releasing them (Terminate /
+' Hold Button/ItemsControl trees for the IDE session — releasing them (Terminate /
 ' WidgetForms.RemoveAll) hangs or silently crashes VB6 after a successful RunAll.
 Private m_KeepAlive As Collection
 
@@ -54,6 +54,7 @@ Public Sub RunAll()
     If Not Phase6eBench_ContentAlignment() Then Failed = Failed + 1
     If Not Phase6eBench_ContentControlContent() Then Failed = Failed + 1
     If Not Phase6fBench_TemplateBindingSlot() Then Failed = Failed + 1
+    If Not Phase6gBench_LiveTemplateChrome() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
     If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
     If Not Phase7dBench_BorderDesignResize() Then Failed = Failed + 1
@@ -67,9 +68,9 @@ Public Sub RunAll()
     If Not Phase7cBench_DialogDataTemplate() Then Failed = Failed + 1
     If Not Phase7cBench_ItemsPanelUniformGrid() Then Failed = Failed + 1
 
-    ' Report only â€” do not RemoveAll / release KeepAlive here (Button ItemsHost
+    ' Report only — do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (43 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (44 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -102,7 +103,7 @@ Public Function Phase0Bench_GoldenXamlLoad() As Boolean
 
 Fail:
     LogResult "B-GOLD", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  B-GOLD â€” " & Err.Description
+    Debug.Print "FAIL  B-GOLD — " & Err.Description
     Phase0Bench_GoldenXamlLoad = False
 End Function
 
@@ -130,7 +131,7 @@ Public Function Phase0Bench_CollectionAdd1000() As Boolean
 
 Fail:
     LogResult "B-COLL", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  B-COLL â€” " & Err.Description
+    Debug.Print "FAIL  B-COLL — " & Err.Description
     Phase0Bench_CollectionAdd1000 = False
 End Function
 
@@ -161,7 +162,7 @@ Public Function Phase0Bench_DualListCollectionView() As Boolean
 
 Fail:
     LogResult "B-LCV", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  B-LCV â€” " & Err.Description
+    Debug.Print "FAIL  B-LCV — " & Err.Description
     Phase0Bench_DualListCollectionView = False
 End Function
 
@@ -190,7 +191,7 @@ Fail:
         Phase0Bench_StrictMalformedXaml = True
     Else
         LogResult "B-STRICT-MALFORM", 0, "FAIL: " & Err.Number & " " & Err.Description
-        Debug.Print "FAIL  B-STRICT Malformed â€” " & Err.Description
+        Debug.Print "FAIL  B-STRICT Malformed — " & Err.Description
         Phase0Bench_StrictMalformedXaml = False
     End If
 End Function
@@ -220,7 +221,7 @@ Fail:
         Phase0Bench_StrictUnknownType = True
     Else
         LogResult "B-STRICT-UNKNOWN", 0, "FAIL: " & Err.Number & " " & Err.Description
-        Debug.Print "FAIL  B-STRICT Unknown â€” " & Err.Description
+        Debug.Print "FAIL  B-STRICT Unknown — " & Err.Description
         Phase0Bench_StrictUnknownType = False
     End If
 End Function
@@ -247,7 +248,7 @@ Public Function Phase1Bench_LayoutWidthXaml() As Boolean
 
 Fail:
     LogResult "P1-WIDTH", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P1-WIDTH â€” " & Err.Description
+    Debug.Print "FAIL  P1-WIDTH — " & Err.Description
     Phase1Bench_LayoutWidthXaml = False
 End Function
 
@@ -270,7 +271,7 @@ Public Function Phase1Bench_PanelVisibilityCollapsed() As Boolean
 
 Fail:
     LogResult "P1-VIS", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P1-VIS â€” " & Err.Description
+    Debug.Print "FAIL  P1-VIS — " & Err.Description
     Phase1Bench_PanelVisibilityCollapsed = False
 End Function
 
@@ -295,7 +296,7 @@ Public Function Phase1Bench_BorderWidthXaml() As Boolean
 
 Fail:
     LogResult "P1-BORDER", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P1-BORDER â€” " & Err.Description
+    Debug.Print "FAIL  P1-BORDER — " & Err.Description
     Phase1Bench_BorderWidthXaml = False
 End Function
 
@@ -322,7 +323,7 @@ Public Function Phase2Bench_StackPanelXaml() As Boolean
 
 Fail:
     LogResult "P2-STACK", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P2-STACK â€” " & Err.Description
+    Debug.Print "FAIL  P2-STACK — " & Err.Description
     Phase2Bench_StackPanelXaml = False
 End Function
 
@@ -357,7 +358,7 @@ Public Function Phase2Bench_StackPanelLayout() As Boolean
 
 Fail:
     LogResult "P2-STACK-LAY", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P2-STACK-LAY â€” " & Err.Description
+    Debug.Print "FAIL  P2-STACK-LAY — " & Err.Description
     Phase2Bench_StackPanelLayout = False
 End Function
 
@@ -385,7 +386,7 @@ Public Function Phase2Bench_GridRowDefinitionsXaml() As Boolean
 
 Fail:
     LogResult "P2-GRID", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P2-GRID â€” " & Err.Description
+    Debug.Print "FAIL  P2-GRID — " & Err.Description
     Phase2Bench_GridRowDefinitionsXaml = False
 End Function
 
@@ -416,7 +417,7 @@ Public Function Phase3Bench_MergedDictionaryLookup() As Boolean
 
 Fail:
     LogResult "P3-MERGE", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P3-MERGE â€” " & Err.Description
+    Debug.Print "FAIL  P3-MERGE — " & Err.Description
     Phase3Bench_MergedDictionaryLookup = False
 End Function
 
@@ -446,7 +447,7 @@ Public Function Phase3Bench_ResourceSourceLoad() As Boolean
 
 Fail:
     LogResult "P3-SOURCE", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P3-SOURCE â€” " & Err.Description
+    Debug.Print "FAIL  P3-SOURCE — " & Err.Description
     Phase3Bench_ResourceSourceLoad = False
 End Function
 
@@ -475,7 +476,7 @@ Public Function Phase3Bench_DynamicResourceExtension() As Boolean
 
 Fail:
     LogResult "P3-DYNAMIC", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P3-DYNAMIC â€” " & Err.Description
+    Debug.Print "FAIL  P3-DYNAMIC — " & Err.Description
     Phase3Bench_DynamicResourceExtension = False
 End Function
 
@@ -504,7 +505,7 @@ Fail:
         Phase3Bench_StrictUnknownProperty = True
     Else
         LogResult "P3-STRICT-PROP", 0, "FAIL: " & Err.Number & " " & Err.Description
-        Debug.Print "FAIL  P3-STRICT â€” " & Err.Description
+        Debug.Print "FAIL  P3-STRICT — " & Err.Description
         Phase3Bench_StrictUnknownProperty = False
     End If
 End Function
@@ -540,7 +541,7 @@ Fail:
     On Error Resume Next
     If Not Expr Is Nothing Then Expr.Detach
     LogResult "P4-BIND", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P4-BIND â€” " & Err.Description
+    Debug.Print "FAIL  P4-BIND — " & Err.Description
     Phase4Bench_BindingOneWay = False
 End Function
 
@@ -584,7 +585,7 @@ Fail:
     On Error Resume Next
     If Not Expr Is Nothing Then Expr.Detach
     LogResult "P4-DCTX", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P4-DCTX â€” " & Err.Description
+    Debug.Print "FAIL  P4-DCTX — " & Err.Description
     Phase4Bench_DataContextRebind = False
 End Function
 
@@ -619,7 +620,7 @@ Fail:
     On Error Resume Next
     If Not Expr Is Nothing Then Expr.Detach
     LogResult "P4-DETACH", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P4-DETACH â€” " & Err.Description
+    Debug.Print "FAIL  P4-DETACH — " & Err.Description
     Phase4Bench_BindingDetach = False
 End Function
 
@@ -654,7 +655,7 @@ Fail:
     On Error Resume Next
     If Not Sink Is Nothing Then Sink.Detach
     LogResult "P4b-DEFER", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P4b-DEFER â€” " & Err.Description
+    Debug.Print "FAIL  P4b-DEFER — " & Err.Description
     Phase4bBench_BeginUpdateDefer = False
 End Function
 
@@ -689,7 +690,7 @@ Fail:
     On Error Resume Next
     If Not Sink Is Nothing Then Sink.Detach
     LogResult "P4b-MOVE", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P4b-MOVE â€” " & Err.Description
+    Debug.Print "FAIL  P4b-MOVE — " & Err.Description
     Phase4bBench_Move = False
 End Function
 
@@ -729,7 +730,7 @@ Public Function Phase4bBench_ItemsControl() As Boolean
 
 Fail:
     LogResult "P4b-ICtrl", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P4b-ICtrl â€” " & Err.Description
+    Debug.Print "FAIL  P4b-ICtrl — " & Err.Description
     Phase4bBench_ItemsControl = False
 End Function
 
@@ -802,37 +803,37 @@ Public Function Phase4dBench_Selector() As Boolean
 
 FailNew:
     LogResult "P4d-SEL", 0, "FAIL at New ListView: " & Err.Description
-    Debug.Print "FAIL  P4d-SEL â€” New ListView: " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — New ListView: " & Err.Description
     Phase4dBench_Selector = False
     Exit Function
 
 FailSource:
     LogResult "P4d-SEL", 0, "FAIL at ListView ItemsSource: " & Err.Description
-    Debug.Print "FAIL  P4d-SEL â€” ListView ItemsSource: " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — ListView ItemsSource: " & Err.Description
     Phase4dBench_Selector = False
     Exit Function
 
 FailIndex1:
     LogResult "P4d-SEL", 0, "FAIL at ListView SelectedIndex=1: " & Err.Description
-    Debug.Print "FAIL  P4d-SEL â€” ListView SelectedIndex=1: " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — ListView SelectedIndex=1: " & Err.Description
     Phase4dBench_Selector = False
     Exit Function
 
 FailIndex2:
     LogResult "P4d-SEL", 0, "FAIL at ListView SelectedIndex=2: " & Err.Description
-    Debug.Print "FAIL  P4d-SEL â€” ListView SelectedIndex=2: " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — ListView SelectedIndex=2: " & Err.Description
     Phase4dBench_Selector = False
     Exit Function
 
 FailSelector:
     LogResult "P4d-SEL", 0, "FAIL at Selector: " & Err.Description
-    Debug.Print "FAIL  P4d-SEL â€” Selector: " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — Selector: " & Err.Description
     Phase4dBench_Selector = False
     Exit Function
 
 Fail:
     LogResult "P4d-SEL", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P4d-SEL â€” " & Err.Description
+    Debug.Print "FAIL  P4d-SEL — " & Err.Description
     Phase4dBench_Selector = False
 End Function
 
@@ -867,7 +868,7 @@ Public Function Phase5aBench_OwnerDrawListView() As Boolean
 
 Fail:
     LogResult "P5a-OWN", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P5a-OWN â€” " & Err.Description
+    Debug.Print "FAIL  P5a-OWN — " & Err.Description
     Phase5aBench_OwnerDrawListView = False
 End Function
 
@@ -890,7 +891,7 @@ Public Function Phase5bBench_MeasureRow() As Boolean
 
 Fail:
     LogResult "P5b-MSR", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P5b-MSR â€” " & Err.Description
+    Debug.Print "FAIL  P5b-MSR — " & Err.Description
     Phase5bBench_MeasureRow = False
 End Function
 
@@ -918,7 +919,7 @@ Public Function Phase5cBench_RowLevel() As Boolean
 
 Fail:
     LogResult "P5c-HIER", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P5c-HIER â€” " & Err.Description
+    Debug.Print "FAIL  P5c-HIER — " & Err.Description
     Phase5cBench_RowLevel = False
 End Function
 
@@ -978,7 +979,7 @@ Fail:
     VCF.StrictXamlLoad = SavedStrict
     If Not Expr Is Nothing Then Expr.Detach
     LogResult "P6a-CONTENT", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P6a-CONTENT â€” " & Err.Description
+    Debug.Print "FAIL  P6a-CONTENT — " & Err.Description
     Phase6aBench_ButtonContent = False
 End Function
 
@@ -1016,7 +1017,7 @@ Public Function Phase6bBench_PropertyTrigger() As Boolean
 
 Fail:
     LogResult "P6b-TRIG", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P6b-TRIG â€” " & Err.Description
+    Debug.Print "FAIL  P6b-TRIG — " & Err.Description
     Phase6bBench_PropertyTrigger = False
 End Function
 
@@ -1071,7 +1072,7 @@ Public Function Phase6cBench_ControlTemplate() As Boolean
 
 Fail:
     LogResult "P6c-TMPL", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P6c-TMPL â€” " & Err.Description
+    Debug.Print "FAIL  P6c-TMPL — " & Err.Description
     Phase6cBench_ControlTemplate = False
 End Function
 
@@ -1126,11 +1127,11 @@ Public Function Phase6dBench_RenderCoalesce() As Boolean
 
 Fail:
     LogResult "P6d-COAL", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P6d-COAL â€” " & Err.Description
+    Debug.Print "FAIL  P6d-COAL — " & Err.Description
     Phase6dBench_RenderCoalesce = False
 End Function
 
-' Â§2.11 ContentPresenter paint-only path (Button caption delegates here).
+' §2.11 ContentPresenter paint-only path (Button caption delegates here).
 Public Function Phase6eBench_ContentPresenter() As Boolean
     Dim CP As ContentPresenter
     Dim Btn As Button
@@ -1175,14 +1176,14 @@ Public Function Phase6eBench_ContentPresenter() As Boolean
 
 Fail:
     LogResult "P6e-PRES", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P6e-PRES â€” " & Err.Description
+    Debug.Print "FAIL  P6e-PRES — " & Err.Description
     Phase6eBench_ContentPresenter = False
     On Error Resume Next
     KeepAlive Btn
     Err.Clear
 End Function
 
-' Â§2.11 ContentPresenter / Button HorizontalContentAlignment + VerticalContentAlignment.
+' §2.11 ContentPresenter / Button HorizontalContentAlignment + VerticalContentAlignment.
 Public Function Phase6eBench_ContentAlignment() As Boolean
     Dim CP As ContentPresenter
     Dim Btn As Button
@@ -1253,7 +1254,7 @@ Public Function Phase6eBench_ContentAlignment() As Boolean
 
 Fail:
     LogResult "P6e-ALIGN", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P6e-ALIGN â€” " & Err.Description
+    Debug.Print "FAIL  P6e-ALIGN — " & Err.Description
     Phase6eBench_ContentAlignment = False
     On Error Resume Next
     KeepAlive Btn
@@ -1261,7 +1262,7 @@ Fail:
     Err.Clear
 End Function
 
-' Â§2.11 ContentControl shares Button Content model (string presenter + IUIElement child).
+' §2.11 ContentControl shares Button Content model (string presenter + IUIElement child).
 Public Function Phase6eBench_ContentControlContent() As Boolean
     Dim CC As ContentControl
     Dim Tb As TextBlock
@@ -1312,7 +1313,7 @@ Public Function Phase6eBench_ContentControlContent() As Boolean
 
 Fail:
     LogResult "P6e-CC", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P6e-CC â€” " & Err.Description
+    Debug.Print "FAIL  P6e-CC — " & Err.Description
     Phase6eBench_ContentControlContent = False
     On Error Resume Next
     KeepAlive CC
@@ -1320,7 +1321,7 @@ Fail:
     Err.Clear
 End Function
 
-' Â§2.11 lookless-prep: ControlTemplate Border chrome + ContentPresenter marker (no live widgets).
+' §2.11 lookless: ControlTemplate Border chrome + ContentPresenter marker (+ live clone gated in P6g).
 Public Function Phase6fBench_TemplateBindingSlot() As Boolean
     Dim Tmpl As ControlTemplate
     Dim St As Style
@@ -1347,7 +1348,7 @@ Public Function Phase6fBench_TemplateBindingSlot() As Boolean
     CP.HorizontalContentAlignment = AlignmentConstants.vbRightJustify
     CP.VerticalContentAlignment = 0
     Tmpl.Children.Add CP
-    ' Explicit slot â€” TypeOf ContentPresenter is unreliable across EXE/DLL boundary.
+    ' Explicit slot — TypeOf ContentPresenter is unreliable across EXE/DLL boundary.
     Tmpl.SetContentAlignmentMarker AlignmentConstants.vbRightJustify, 0
     If Tmpl.Children.Count <> 2 Then Err.Raise vbObjectError, , "Template expected Border+ContentPresenter children, count=" & Tmpl.Children.Count
     If Not Tmpl.HasContentAlignmentMarker Then Err.Raise vbObjectError, , "HasContentAlignmentMarker expected True"
@@ -1383,7 +1384,6 @@ Public Function Phase6fBench_TemplateBindingSlot() As Boolean
     End If
     Btn.SyncContentPresenter
     If Not Btn.ContentPresenter.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected True"
-    If Btn.Children.Count <> 0 Then Err.Raise vbObjectError, , "Template must not add live Button children"
     If CStr(Btn.Content) <> "OK" Then Err.Raise vbObjectError, , "Content expected OK (TemplateBinding from parent)"
 
     KeepAlive Btn
@@ -1393,15 +1393,93 @@ Public Function Phase6fBench_TemplateBindingSlot() As Boolean
     Set B = Nothing
     Set CP = Nothing
 
-    LogResult "P6f-TBIND", 0, "OK ControlTemplate Border+ContentPresenter marker (no live tree)"
+    LogResult "P6f-TBIND", 0, "OK ControlTemplate Border+ContentPresenter marker"
     Debug.Print "PASS  P6f-TBIND template ContentPresenter slot"
     Phase6fBench_TemplateBindingSlot = True
     Exit Function
 
 Fail:
     LogResult "P6f-TBIND", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P6f-TBIND â€” " & Err.Description
+    Debug.Print "FAIL  P6f-TBIND — " & Err.Description
     Phase6fBench_TemplateBindingSlot = False
+    On Error Resume Next
+    KeepAlive Btn
+    Err.Clear
+End Function
+
+' §2.11 lookless: live cloned Border under Button.Children; caption not suppressed.
+Public Function Phase6gBench_LiveTemplateChrome() As Boolean
+    Dim Tmpl As ControlTemplate
+    Dim St As Style
+    Dim Btn As Button
+    Dim B As Border
+    Dim Live As Border
+    Dim CP As ContentPresenter
+    Dim Rad As VCF.CornerRadius
+    Dim LiveRad As VCF.CornerRadius
+
+    On Error GoTo Fail
+
+    Set Tmpl = New ControlTemplate
+    Tmpl.TargetType = "Button"
+
+    Set B = New Border
+    Rad.TopLeft = 8
+    Rad.TopRight = 8
+    Rad.BottomLeft = 8
+    Rad.BottomRight = 8
+    B.CornerRadius = Rad
+    Tmpl.Children.Add B
+
+    Set CP = New ContentPresenter
+    CP.HorizontalContentAlignment = AlignmentConstants.vbRightJustify
+    CP.VerticalContentAlignment = 0
+    Tmpl.Children.Add CP
+    Tmpl.SetContentAlignmentMarker AlignmentConstants.vbRightJustify, 0
+
+    Set St = NewStyle("Button")
+    Set St.Template = Tmpl
+
+    Set Btn = New Button
+    Btn.Content = "OK"
+    Set Btn.Style = St
+
+    If Btn.Children.Count <> 1 Then Err.Raise vbObjectError, , "Expected 1 live child (template Border), got " & Btn.Children.Count
+    If TypeName(Btn.Children(0)) <> "Border" Then Err.Raise vbObjectError, , "Expected live Border, got " & TypeName(Btn.Children(0))
+    Set Live = Btn.Children(0)
+    If Live Is B Then Err.Raise vbObjectError, , "Live Border must be a clone, not template-bag instance"
+    Call API.CopyVariable(Live.CornerRadius, LiveRad)
+    If LiveRad.TopLeft <> 8# Then Err.Raise vbObjectError, , "Live Border CornerRadius expected 8, got " & LiveRad.TopLeft
+    If Btn.CornerRadius <> 8# Then Err.Raise vbObjectError, , "Host CornerRadius expected 8, got " & Btn.CornerRadius
+
+    Btn.SyncContentPresenter
+    If Btn.ContentPresenter.SuppressContent Then Err.Raise vbObjectError, , "SuppressContent must be False with template chrome only"
+    If Not Btn.ContentPresenter.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected True with live template chrome"
+
+    ' Re-apply must replace chrome without stacking children.
+    Set Btn.Style = Nothing
+    If Btn.Children.Count <> 0 Then Err.Raise vbObjectError, , "Clear Style must remove live template chrome, count=" & Btn.Children.Count
+    Set Btn.Style = St
+    If Btn.Children.Count <> 1 Then Err.Raise vbObjectError, , "Re-apply expected 1 live child, got " & Btn.Children.Count
+    If TypeName(Btn.Children(0)) <> "Border" Then Err.Raise vbObjectError, , "Re-apply expected Border"
+
+    KeepAlive Btn
+    Set Btn = Nothing
+    Set St = Nothing
+    Set Tmpl = Nothing
+    Set B = Nothing
+    Set Live = Nothing
+    Set CP = Nothing
+
+    LogResult "P6g-LIVE", 0, "OK live ControlTemplate Border chrome + caption"
+    Debug.Print "PASS  P6g-LIVE live template Border chrome"
+    Phase6gBench_LiveTemplateChrome = True
+    Exit Function
+
+Fail:
+    LogResult "P6g-LIVE", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6g-LIVE — " & Err.Description
+    Phase6gBench_LiveTemplateChrome = False
     On Error Resume Next
     KeepAlive Btn
     Err.Clear
@@ -1431,7 +1509,7 @@ Public Function Phase7aBench_PosSalesOrderShell() As Boolean
 
 Fail:
     LogResult "P7a-SMOKE", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P7a-SMOKE â€” " & Err.Description
+    Debug.Print "FAIL  P7a-SMOKE — " & Err.Description
     Phase7aBench_PosSalesOrderShell = False
 End Function
 
@@ -1462,7 +1540,7 @@ Public Function Phase7cBench_LegacyLayoutShim() As Boolean
 
 Fail:
     LogResult "P7c-LAY", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P7c-LAY â€” " & Err.Description
+    Debug.Print "FAIL  P7c-LAY — " & Err.Description
     Phase7cBench_LegacyLayoutShim = False
 End Function
 
@@ -1502,7 +1580,7 @@ Public Function Phase7dBench_BorderDesignResize() As Boolean
 
 Fail:
     LogResult "P7d-LAY-RESIZE", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P7d-LAY-RESIZE â€” " & Err.Description
+    Debug.Print "FAIL  P7d-LAY-RESIZE — " & Err.Description
     Phase7dBench_BorderDesignResize = False
 End Function
 
@@ -1564,7 +1642,7 @@ Fail:
     On Error Resume Next
     If Not Expr Is Nothing Then Expr.Detach
     LogResult "P8-INHERIT", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P8-INHERIT â€” " & Err.Description
+    Debug.Print "FAIL  P8-INHERIT — " & Err.Description
     Phase8Bench_InheritanceBatch = False
 End Function
 
@@ -1598,9 +1676,9 @@ Public Function Phase2aBench_NestedUniformGridResize() As Boolean
     Next
     ElapsedMs = CLng((Timer - Started) * 1000#)
 
-    ' Loop ends on odd i=49 â†’ half size; i=50 even â†’ full. Assert full cell size.
-    If Abs(Inner.Widget.Width - 200!) > 3! Then Err.Raise vbObjectError, , "After 50Ã— resize Inner.Width expected ~200, got " & Inner.Widget.Width
-    If Abs(Inner.Widget.Height - 150!) > 3! Then Err.Raise vbObjectError, , "After 50Ã— resize Inner.Height expected ~150, got " & Inner.Widget.Height
+    ' Loop ends on odd i=49 ? half size; i=50 even ? full. Assert full cell size.
+    If Abs(Inner.Widget.Width - 200!) > 3! Then Err.Raise vbObjectError, , "After 50× resize Inner.Width expected ~200, got " & Inner.Widget.Width
+    If Abs(Inner.Widget.Height - 150!) > 3! Then Err.Raise vbObjectError, , "After 50× resize Inner.Height expected ~150, got " & Inner.Widget.Height
 
     LogResult "B-RESZ", ElapsedMs, "OK nested UniformGrid 50x resize"
     Debug.Print "PASS  B-RESZ nested UniformGrid resize x50 (" & ElapsedMs & " ms)"
@@ -1609,7 +1687,7 @@ Public Function Phase2aBench_NestedUniformGridResize() As Boolean
 
 Fail:
     LogResult "B-RESZ", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  B-RESZ â€” " & Err.Description
+    Debug.Print "FAIL  B-RESZ — " & Err.Description
     Phase2aBench_NestedUniformGridResize = False
 End Function
 
@@ -1726,11 +1804,11 @@ Fail:
     Set AppHost = Nothing
     VCF.ClearApplication
     LogResult "B-NAV", 0, "FAIL: " & FailDesc
-    Debug.Print "FAIL  B-NAV â€” " & FailDesc
+    Debug.Print "FAIL  B-NAV — " & FailDesc
     Phase2aBench_ViewNavLeak = False
 End Function
 
-' ListView bind hotspot (framework-first): menu-like density = 21 rows Ã— 6 DataContext bindings/cell.
+' ListView bind hotspot (framework-first): menu-like density = 21 rows × 6 DataContext bindings/cell.
 ' Gates CloneDataTemplateForItem binding fidelity (ItemsControl generation is covered by P4b-ICtrl).
 Public Function Phase2aBench_ListViewBindHotspot() As Boolean
     Const ROW_COUNT As Long = 21
@@ -1817,7 +1895,7 @@ Fail:
     On Error Resume Next
     CleanupBindDenseArtifacts Tmpl, FirstClone, FirstCells, Coll
     LogResult "B-BIND-DENSE", 0, "FAIL: " & CStr(FailNum) & " " & FailDesc
-    Debug.Print "FAIL  B-BIND-DENSE â€” (" & FailNum & ") " & FailDesc
+    Debug.Print "FAIL  B-BIND-DENSE — (" & FailNum & ") " & FailDesc
     Phase2aBench_ListViewBindHotspot = False
 End Function
 
@@ -1928,12 +2006,12 @@ Public Function Phase2aBench_ListViewPaddingDefaults() As Boolean
 
 Fail:
     LogResult "P2a-PAD", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P2a-PAD â€” " & Err.Description
+    Debug.Print "FAIL  P2a-PAD — " & Err.Description
     Phase2aBench_ListViewPaddingDefaults = False
 End Function
 
 ' Phase 2a Margin/Padding family 2: TextBox (Margin=0, Padding=1) + Button (Padding=1 Aero2).
-' Qualify VCF.TextBox â€” bare TextBox resolves to VB.TextBox (higher in project refs).
+' Qualify VCF.TextBox — bare TextBox resolves to VB.TextBox (higher in project refs).
 Public Function Phase2aBench_TextBoxButtonPaddingDefaults() As Boolean
     Dim Tb As VCF.TextBox
     Dim Btn As Button
@@ -2000,7 +2078,7 @@ Public Function Phase2aBench_TextBoxButtonPaddingDefaults() As Boolean
 
 Fail:
     LogResult "P2a-PAD-TB", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P2a-PAD-TB â€” " & Err.Description
+    Debug.Print "FAIL  P2a-PAD-TB — " & Err.Description
     Phase2aBench_TextBoxButtonPaddingDefaults = False
 End Function
 
@@ -2040,7 +2118,7 @@ Public Function Phase2aBench_UniformGridPaddingDefault() As Boolean
 
 Fail:
     LogResult "P2a-PAD-UG", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P2a-PAD-UG â€” " & Err.Description
+    Debug.Print "FAIL  P2a-PAD-UG — " & Err.Description
     Phase2aBench_UniformGridPaddingDefault = False
 End Function
 
@@ -2115,7 +2193,7 @@ Public Function Phase7cBench_DialogDataTemplate() As Boolean
     Debug.Print "PASS  P7c-DLG dialog DataTemplate (no @)"
     Phase7cBench_DialogDataTemplate = True
 
-    ' Keepalive â€” releasing Button ItemsHost mid-suite disconnects widgets (RPC_E_DISCONNECTED).
+    ' Keepalive — releasing Button ItemsHost mid-suite disconnects widgets (RPC_E_DISCONNECTED).
     KeepAlive IC
     Set Btn0 = Nothing
     Set Btn1 = Nothing
@@ -2132,14 +2210,14 @@ Public Function Phase7cBench_DialogDataTemplate() As Boolean
 
 Fail:
     LogResult "P7c-DLG", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P7c-DLG â€” " & Err.Description
+    Debug.Print "FAIL  P7c-DLG — " & Err.Description
     Phase7cBench_DialogDataTemplate = False
     On Error Resume Next
     KeepAlive IC
     Err.Clear
 End Function
 
-' ItemsPanelTemplate gate â€” UniformGrid shell + ItemsSource inflate (TextBlock then Button).
+' ItemsPanelTemplate gate — UniformGrid shell + ItemsSource inflate (TextBlock then Button).
 Public Function Phase7cBench_ItemsPanelUniformGrid() As Boolean
     Dim IC As ItemsControl
     Dim PanelTmpl As ItemsPanelTemplate
@@ -2328,7 +2406,7 @@ Public Function Phase7cBench_ItemsPanelUniformGrid() As Boolean
 
 Fail:
     LogResult "P7c-PANEL", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P7c-PANEL â€” " & Err.Description
+    Debug.Print "FAIL  P7c-PANEL — " & Err.Description
     Phase7cBench_ItemsPanelUniformGrid = False
     On Error Resume Next
     KeepAlive IC
@@ -2400,6 +2478,6 @@ Private Sub ClearLog()
     Dim Fn As Integer
     Fn = FreeFile
     Open App.Path & "\" & LOG_FILE For Output As #Fn
-    Print #Fn, "Phase 0 benchmark log â€” " & Format$(Now, "yyyy-mm-dd hh:nn:ss")
+    Print #Fn, "Phase 0 benchmark log — " & Format$(Now, "yyyy-mm-dd hh:nn:ss")
     Close #Fn
 End Sub

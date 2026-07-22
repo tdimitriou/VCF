@@ -10,17 +10,24 @@ Public Sub ApplyControlTemplate(ByVal Style As Style, ByVal Target As Object)
 102 If Target Is Nothing Then Exit Sub
 
 110 Set Tmpl = Style.Template
-112 If Tmpl Is Nothing Then Exit Sub
-
-120 If Len(Tmpl.TargetType) > 0 Then
-122     If TypeName(Target) <> Tmpl.TargetType Then Exit Sub
+112 If Tmpl Is Nothing Then
+114     If TypeName(Target) = "Button" Then
+116         Dim BtnClear As Button
+118         Set BtnClear = Target
+120         BtnClear.ClearTemplateChrome
+        End If
+122     Exit Sub
     End If
 
-130 If Tmpl.Children.Count = 0 Then Exit Sub
+130 If Len(Tmpl.TargetType) > 0 Then
+132     If TypeName(Target) <> Tmpl.TargetType Then Exit Sub
+    End If
 
-140 Select Case TypeName(Target)
+140 If Tmpl.Children.Count = 0 Then Exit Sub
+
+150 Select Case TypeName(Target)
         Case "Button"
-150         ApplyButtonTemplate Target, Tmpl
+160         ApplyButtonTemplate Target, Tmpl
     End Select
 
     Exit Sub
@@ -29,12 +36,13 @@ Handler:
     modStyleApplyLog.LogErrorAndReraise "modControlTemplateEngine", "ApplyControlTemplate"
 End Sub
 
-' Lookless-prep (P6f-TBIND): Border chrome only here.
+' Lookless (P6g-LIVE): clone first template Border into Button.Children.
 ' ContentPresenter-slot alignment is applied via StyleManager.PushTemplateContentAlignment.
 Private Sub ApplyButtonTemplate(ByVal Btn As Button, ByVal Tmpl As ControlTemplate)
     Dim i As Long
     Dim Node As Object
     Dim B As Border
+    Dim Clone As Border
     Dim Rad As VCF.CornerRadius
     Dim BackColor As Variant
     Dim Tn As String
@@ -59,20 +67,30 @@ Private Sub ApplyButtonTemplate(ByVal Btn As Button, ByVal Tmpl As ControlTempla
 NextNode:
 260 Next
 
-270 If B Is Nothing Then Exit Sub
+270 If B Is Nothing Then
+272     Btn.ClearTemplateChrome
+274     Exit Sub
+    End If
 
 280 Call API.CopyVariable(B.DependencyProperties.GetValue("CornerRadius"), Rad)
 290 If Rad.TopLeft > 0# Then Btn.CornerRadius = Rad.TopLeft
 
     ' Border does not register BackColor as a DP (widget BackColor only).
     ' Unconditional GetValue("BackColor") raised 424 and aborted Style apply
-    ' before PushTemplateContentAlignment — P6f HAlign stayed at default.
+    ' before PushTemplateContentAlignment ? P6f HAlign stayed at default.
 300 If B.DependencyProperties.Exists("BackColor") Then
 310     Call API.CopyVariable(B.DependencyProperties.GetValue("BackColor"), BackColor)
 320     If Not IsEmpty(BackColor) And Not IsNull(BackColor) Then
 330         Btn.DependencyProperties.SetCurrentValue "BackColor", BackColor
         End If
     End If
+
+    ' Clone ? never attach the template-bag instance (shared Style/template).
+340 Set Clone = New Border
+350 Clone.CornerRadius = Rad
+360 Clone.Widget.BackColor = Btn.Widget.BackColor
+370 Clone.BorderColor = B.BorderColor
+380 Btn.AttachTemplateChrome Clone
 
     Exit Sub
 

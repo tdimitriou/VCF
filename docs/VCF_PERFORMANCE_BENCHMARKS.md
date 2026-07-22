@@ -68,7 +68,8 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P6e-PRES | ContentPresenter paint-only | `Phase6eBench_ContentPresenter` | pass | Caption path + SuppressContent with children |
 | P6e-ALIGN | ContentAlignment H/V | `Phase6eBench_ContentAlignment` | pass | Presenter + Button DPs + XAML numeric attrs |
 | P6e-CC | ContentControl Content unify | `Phase6eBench_ContentControlContent` | pass | String presenter + IUIElement child + XAML |
-| P6f-TBIND | ControlTemplate CP marker | `Phase6fBench_TemplateBindingSlot` | pass | Border chrome + presenter align; no live tree |
+| P6f-TBIND | ControlTemplate CP marker | `Phase6fBench_TemplateBindingSlot` | pass | Border chrome + presenter align |
+| P6g-LIVE | Live template Border | `Phase6gBench_LiveTemplateChrome` | pass | Cloned Border in Children; caption not suppressed |
 
 ---
 
