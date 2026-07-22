@@ -70,6 +70,7 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P6e-CC | ContentControl Content unify | `Phase6eBench_ContentControlContent` | pass | String presenter + IUIElement child + XAML |
 | P6f-TBIND | ControlTemplate CP marker | `Phase6fBench_TemplateBindingSlot` | pass | Border chrome + presenter align |
 | P6g-LIVE | Live template Border | `Phase6gBench_LiveTemplateChrome` | pass | Cloned Border in Children; caption not suppressed |
+| P6h-CP | Live ContentPresenter | `Phase6hBench_LiveContentPresenter` | pass | Paint-only slot; Content/align TemplateBinding |
 
 ---
 

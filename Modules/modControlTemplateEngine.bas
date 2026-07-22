@@ -36,13 +36,16 @@ Handler:
     modStyleApplyLog.LogErrorAndReraise "modControlTemplateEngine", "ApplyControlTemplate"
 End Sub
 
-' Lookless (P6g-LIVE): clone first template Border into Button.Children.
-' ContentPresenter-slot alignment is applied via StyleManager.PushTemplateContentAlignment.
+' Lookless (P6g/P6h): clone first template Border into Button.Children;
+' clone ContentPresenter as paint-only TemplateBinding content slot.
+' Alignment marker still pushed via StyleManager.PushTemplateContentAlignment.
 Private Sub ApplyButtonTemplate(ByVal Btn As Button, ByVal Tmpl As ControlTemplate)
     Dim i As Long
     Dim Node As Object
     Dim B As Border
     Dim Clone As Border
+    Dim CPSrc As ContentPresenter
+    Dim CPClone As ContentPresenter
     Dim Rad As VCF.CornerRadius
     Dim BackColor As Variant
     Dim Tn As String
@@ -63,37 +66,78 @@ Private Sub ApplyButtonTemplate(ByVal Btn As Button, ByVal Tmpl As ControlTempla
                 End If
                 On Error GoTo Handler
             End If
+260     ElseIf StrComp(Tn, "ContentPresenter", vbTextCompare) = 0 Then
+270         If CPSrc Is Nothing Then
+                On Error Resume Next
+280             Set CPSrc = Node
+                If Err.Number <> 0 Then
+                    Err.Clear
+                    Set CPSrc = Nothing
+                End If
+                On Error GoTo Handler
+            End If
         End If
 NextNode:
-260 Next
+290 Next
 
-270 If B Is Nothing Then
-272     Btn.ClearTemplateChrome
-274     Exit Sub
+300 If B Is Nothing Then
+302     Btn.ClearTemplateChrome
+304     Exit Sub
     End If
 
-280 Call API.CopyVariable(B.DependencyProperties.GetValue("CornerRadius"), Rad)
-290 If Rad.TopLeft > 0# Then Btn.CornerRadius = Rad.TopLeft
+310 Call API.CopyVariable(B.DependencyProperties.GetValue("CornerRadius"), Rad)
+320 If Rad.TopLeft > 0# Then Btn.CornerRadius = Rad.TopLeft
 
     ' Border does not register BackColor as a DP (widget BackColor only).
     ' Unconditional GetValue("BackColor") raised 424 and aborted Style apply
-    ' before PushTemplateContentAlignment ? P6f HAlign stayed at default.
-300 If B.DependencyProperties.Exists("BackColor") Then
-310     Call API.CopyVariable(B.DependencyProperties.GetValue("BackColor"), BackColor)
-320     If Not IsEmpty(BackColor) And Not IsNull(BackColor) Then
-330         Btn.DependencyProperties.SetCurrentValue "BackColor", BackColor
+    ' before PushTemplateContentAlignment - P6f HAlign stayed at default.
+330 If B.DependencyProperties.Exists("BackColor") Then
+340     Call API.CopyVariable(B.DependencyProperties.GetValue("BackColor"), BackColor)
+350     If Not IsEmpty(BackColor) And Not IsNull(BackColor) Then
+360         Btn.DependencyProperties.SetCurrentValue "BackColor", BackColor
         End If
     End If
 
-    ' Clone ? never attach the template-bag instance (shared Style/template).
-340 Set Clone = New Border
-350 Clone.CornerRadius = Rad
-360 Clone.Widget.BackColor = Btn.Widget.BackColor
-370 Clone.BorderColor = B.BorderColor
-380 Btn.AttachTemplateChrome Clone
+    ' Clone - never attach the template-bag instance (shared Style/template).
+370 Set Clone = New Border
+380 Clone.Widget.BackColor = Btn.Widget.BackColor
+390 Clone.BorderColor = B.BorderColor
+400 Btn.AttachTemplateChrome Clone
+    ' CornerRadius after parenting; rebuild UDT fields so SetValue sticks.
+410 Call ApplyCloneCornerRadius(Clone, Rad)
+
+    ' Live content slot (paint-only; no widget) when template has CP and/or align marker.
+420 If Not CPSrc Is Nothing Or Tmpl.HasContentAlignmentMarker Then
+430     Set CPClone = New ContentPresenter
+440     If Not CPSrc Is Nothing Then
+450         CPClone.HorizontalContentAlignment = CPSrc.HorizontalContentAlignment
+460         CPClone.VerticalContentAlignment = CPSrc.VerticalContentAlignment
+470     ElseIf Tmpl.HasContentAlignmentMarker Then
+480         CPClone.HorizontalContentAlignment = Tmpl.ContentHorizontalAlignment
+490         CPClone.VerticalContentAlignment = Tmpl.ContentVerticalAlignment
+        End If
+500     Btn.AttachTemplatePresenter CPClone
+    End If
 
     Exit Sub
 
 Handler:
     modStyleApplyLog.LogErrorAndReraise "modControlTemplateEngine", "ApplyButtonTemplate"
+End Sub
+
+Private Sub ApplyCloneCornerRadius(ByVal Clone As Border, ByRef Src As VCF.CornerRadius)
+    Dim OutRad As VCF.CornerRadius
+
+    On Error GoTo Handler
+
+600 OutRad.TopLeft = Src.TopLeft
+610 OutRad.TopRight = Src.TopRight
+620 OutRad.BottomLeft = Src.BottomLeft
+630 OutRad.BottomRight = Src.BottomRight
+640 Clone.DependencyProperties.SetValue "CornerRadius", OutRad
+
+    Exit Sub
+
+Handler:
+    modStyleApplyLog.LogErrorAndReraise "modControlTemplateEngine", "ApplyCloneCornerRadius"
 End Sub

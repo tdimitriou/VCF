@@ -44,6 +44,8 @@ Private m_Layout                                As FrameworkElement
 Private m_ContentPresenter                      As ContentPresenter
 ' Live lookless ControlTemplate root (cloned Border); not a public COM property.
 Private m_TemplateRoot                          As Object
+' Live lookless content slot (cloned paint-only ContentPresenter); TemplateBinding target.
+Private m_TemplatePresenter                     As ContentPresenter
 
 Private Const OVERLAY_ALPHA                     As Single = 0.25
 Private Const OVERLAY_COLOR                     As Long = vbBlack
@@ -58,9 +60,10 @@ Attribute TmrRelease.VB_VarHelpID = -1
         Set Bindings = m_Bindings
     End Property
 
-    ' ß2.11 paint-only presenter used for string Content (Phase0 P6e-PRES).
+    ' ù2.11 paint-only presenter used for string Content (Phase0 P6e-PRES).
+    ' When a ControlTemplate content slot is live, returns that presenter (TemplateBinding).
     Public Property Get ContentPresenter() As ContentPresenter
-        Set ContentPresenter = m_ContentPresenter
+        Set ContentPresenter = ActiveContentPresenter()
     End Property
     
     Public Property Get Selected() As Boolean
@@ -739,15 +742,25 @@ End Sub
 '#End Region
 
 '#Region Drawing Functions
+    Private Function ActiveContentPresenter() As ContentPresenter
+        If Not m_TemplatePresenter Is Nothing Then
+            Set ActiveContentPresenter = m_TemplatePresenter
+        Else
+            Set ActiveContentPresenter = m_ContentPresenter
+        End If
+    End Function
+
     Private Sub SyncContentPresenterContent()
         Dim V As Variant
+        Dim CP As ContentPresenter
 
-        If m_ContentPresenter Is Nothing Then Exit Sub
+        Set CP = ActiveContentPresenter()
+        If CP Is Nothing Then Exit Sub
         Call API.CopyVariable(m_DependencyProperties.GetValue("Content"), V)
         If IsObject(V) Then
-            Set m_ContentPresenter.Content = V
+            Set CP.Content = V
         Else
-            m_ContentPresenter.Content = V
+            CP.Content = V
         End If
     End Sub
 
@@ -783,13 +796,16 @@ End Sub
     End Function
 
     Private Sub SyncContentPresenterSuppress()
-        If m_ContentPresenter Is Nothing Then Exit Sub
+        Dim CP As ContentPresenter
+
+        Set CP = ActiveContentPresenter()
+        If CP Is Nothing Then Exit Sub
         ' Suppress string Content only for element Content or non-template children.
         ' Live template chrome alone must not hide the caption (WPF lookless).
-        m_ContentPresenter.SuppressContent = ContentIsUIElement() Or (NonTemplateChildCount() > 0)
+        CP.SuppressContent = ContentIsUIElement() Or (NonTemplateChildCount() > 0)
     End Sub
 
-    ' Called from modControlTemplateEngine ó clear previous live template Border.
+    ' Called from modControlTemplateEngine ù clear previous live template Border.
     Friend Sub ClearTemplateChrome()
         Dim WKey As String
 
@@ -802,7 +818,10 @@ End Sub
             End If
             Set m_TemplateRoot = Nothing
         End If
+        Set m_TemplatePresenter = Nothing
+        SyncContentPresenterContent
         SyncContentPresenterSuppress
+        SyncContentPresenterAlignment
         Err.Clear
     End Sub
 
@@ -827,10 +846,22 @@ Handler:
         Set m_TemplateRoot = Nothing
     End Sub
 
+    ' Attach cloned paint-only ContentPresenter as lookless content slot (TemplateBinding).
+    Friend Sub AttachTemplatePresenter(ByVal Presenter As ContentPresenter)
+        If Presenter Is Nothing Then Exit Sub
+        Set m_TemplatePresenter = Presenter
+        SyncContentPresenterContent
+        SyncContentPresenterSuppress
+        SyncContentPresenterAlignment
+    End Sub
+
     Private Sub SyncContentPresenterAlignment()
-        If m_ContentPresenter Is Nothing Then Exit Sub
-        m_ContentPresenter.HorizontalContentAlignment = HorizontalContentAlignment
-        m_ContentPresenter.VerticalContentAlignment = VerticalContentAlignment
+        Dim CP As ContentPresenter
+
+        Set CP = ActiveContentPresenter()
+        If CP Is Nothing Then Exit Sub
+        CP.HorizontalContentAlignment = HorizontalContentAlignment
+        CP.VerticalContentAlignment = VerticalContentAlignment
     End Sub
 
     ' Keep presenter flags current for Phase0 / diagnostics without painting.
@@ -848,12 +879,14 @@ Handler:
         Dim Ht As Double
         Dim Pad As Thickness
         Dim PadL As Single, PadT As Single, PadR As Single, PadB As Single
+        Dim CP As ContentPresenter
 
         SyncContentPresenterContent
         SyncContentPresenterSuppress
         SyncContentPresenterAlignment
-        If m_ContentPresenter Is Nothing Then Exit Sub
-        If Not m_ContentPresenter.WouldDrawCaption Then Exit Sub
+        Set CP = ActiveContentPresenter()
+        If CP Is Nothing Then Exit Sub
+        If Not CP.WouldDrawCaption Then Exit Sub
 
         Offs = CSng(m_BorderWidth)
         If IsMouseDown Then Offs = CSng(BorderWidth + 1)
@@ -875,7 +908,7 @@ Handler:
         If Wd < 0# Then Wd = 0#
         If Ht < 0# Then Ht = 0#
 
-        m_ContentPresenter.Draw CC, L, T, L + Wd, T + Ht, _
+        CP.Draw CC, L, T, L + Wd, T + Ht, _
             W.FontName, W.FontSize, W.ForeColor, _
             W.FontBold, W.FontItalic, W.FontUnderline, W.FontStrikeThrough
     End Sub

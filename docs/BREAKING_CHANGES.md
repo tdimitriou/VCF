@@ -5,6 +5,23 @@
 
 ---
 
+## [2.32.0] — 2026-07-22 — Phase 2a (live ContentPresenter TemplateBinding)
+
+### Changed
+
+- **`ApplyButtonTemplate`** — clones template `ContentPresenter` (or marker-only) as a paint-only live content slot on `Button`; Content/align sync from host DPs (TemplateBinding). Still clones `Border` chrome into `Children`.
+- **`Button.ContentPresenter`** — returns the live template slot when present; falls back to the host presenter when Style/template is cleared.
+
+### Added
+
+- Phase0 **P6h-CP** — gate **45/45**.
+
+### Notes
+
+- ContentPresenter remains paint-only (no `cWidgetBase` / Border.Child widget). System/OS theme still deferred.
+
+---
+
 ## [2.31.0] — 2026-07-22 — Phase 2a (live lookless ControlTemplate chrome)
 
 ### Changed
