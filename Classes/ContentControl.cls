@@ -16,6 +16,7 @@ Option Explicit
 Implements IDependencyObject
 Implements IControl
 Implements IUIElement
+Implements IContentControl
 
 Private WithEvents W As cWidgetBase
 Attribute W.VB_VarHelpID = -1
@@ -30,11 +31,11 @@ Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As List
 Private m_BaseUIElement As UIElementBase
 Private m_Layout As FrameworkElement
-Private m_ContentPresenter As ContentPresenter
+Private m_ContentHost As ContentHost
 
 Public Name As String
 
-' WPF-aligned Content (Variant): string ? paint via ContentPresenter; IUIElement ? single child.
+' WPF-aligned Content (Variant): string -> paint via ContentPresenter; IUIElement -> single child.
 Public Property Get Content() As Variant
     Dim V As Variant
 
@@ -58,14 +59,14 @@ Public Property Set Content(ByVal Value As Object)
     Call m_DependencyProperties.SetValue("Content", Value)
 End Property
 
-' ?2.11 paint-only presenter (shared model with Button).
+' Host ContentPresenter (shared ContentHost with Button).
 Public Property Get ContentPresenter() As ContentPresenter
-    Set ContentPresenter = m_ContentPresenter
+    Set ContentPresenter = m_ContentHost.HostPresenter
 End Property
 
 Public Sub SyncContentPresenter()
-    SyncContentPresenterContent
-    SyncContentPresenterSuppress
+    m_ContentHost.SyncContent m_DependencyProperties
+    m_ContentHost.SyncSuppress (m_Children.Count > 0)
 End Sub
 
 '#Region Public Properties
@@ -87,6 +88,28 @@ End Sub
     Public Property Get DependencyProperties() As DependencyProperties
         Set DependencyProperties = m_DependencyProperties
     End Property
+'#End Region
+
+'#Region IContentControl Interface Implementation
+    Private Property Get IContentControl_Content() As Variant
+        Call API.CopyVariable(Content, IContentControl_Content)
+    End Property
+
+    Private Property Let IContentControl_Content(ByVal Value As Variant)
+        Content = Value
+    End Property
+
+    Private Property Set IContentControl_Content(ByVal Value As Object)
+        Set Content = Value
+    End Property
+
+    Private Property Get IContentControl_ContentPresenter() As ContentPresenter
+        Set IContentControl_ContentPresenter = ContentPresenter
+    End Property
+
+    Private Sub IContentControl_SyncContentPresenter()
+        SyncContentPresenter
+    End Sub
 '#End Region
 
 '#Region IDependencyObject Interface Implementation
@@ -181,7 +204,7 @@ End Sub
 '#Region Class Events
     Private Sub Class_Initialize()
         Set m_Bindings = New List
-        Set m_ContentPresenter = New ContentPresenter
+        Set m_ContentHost = New ContentHost
         Set m_DependencyProperties = NewDependencyProperties(Me)
         With m_DependencyProperties
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
@@ -297,7 +320,7 @@ Try:
             Next
         End If
 
-        SyncContentPresenterSuppress
+        SyncContentPresenter
         If Not W.LockRefresh Then W.Refresh
         
         Exit Sub
@@ -318,50 +341,8 @@ End Sub
         End If
     End Sub
 
-    Private Sub SyncContentPresenterContent()
-        Dim V As Variant
-
-        If m_ContentPresenter Is Nothing Then Exit Sub
-        Call API.CopyVariable(m_DependencyProperties.GetValue("Content"), V)
-        If IsObject(V) Then
-            Set m_ContentPresenter.Content = V
-        Else
-            m_ContentPresenter.Content = V
-        End If
-    End Sub
-
-    Private Sub SyncContentPresenterSuppress()
-        If m_ContentPresenter Is Nothing Then Exit Sub
-        m_ContentPresenter.SuppressContent = (m_Children.Count > 0)
-    End Sub
-
     Private Sub ApplyContentValue(ByVal Value As Variant)
-        Dim i As Long
-        Dim El As IUIElement
-
-        If m_Children Is Nothing Then Exit Sub
-
-        If IsObject(Value) Then
-            If Not Value Is Nothing Then
-                If TypeOf Value Is IUIElement Then
-                    For i = m_Children.Count - 1 To 0 Step -1
-                        m_Children.RemoveAt i
-                    Next
-                    Set El = Value
-                    m_Children.Add El
-                    SyncContentPresenterContent
-                    SyncContentPresenterSuppress
-                    Exit Sub
-                End If
-            End If
-        End If
-
-        ' String / empty / non-visual: clear visual children; paint via presenter.
-        For i = m_Children.Count - 1 To 0 Step -1
-            m_Children.RemoveAt i
-        Next
-        SyncContentPresenterContent
-        SyncContentPresenterSuppress
+        m_ContentHost.ApplyContentValue m_Children, m_DependencyProperties, Value
     End Sub
 '#End Region
 
@@ -397,15 +378,10 @@ End Sub
         dy = dy_Aligned
 
         CC.Save
-        SyncContentPresenterContent
-        SyncContentPresenterSuppress
-        If Not m_ContentPresenter Is Nothing Then
-            If m_ContentPresenter.WouldDrawCaption Then
-                m_ContentPresenter.Draw CC, 0, 0, dx, dy, _
-                    W.FontName, W.FontSize, W.ForeColor, _
-                    W.FontBold, W.FontItalic, W.FontUnderline, W.FontStrikeThrough
-            End If
-        End If
+        SyncContentPresenter
+        m_ContentHost.DrawCaption CC, 0, 0, dx, dy, _
+            W.FontName, W.FontSize, W.ForeColor, _
+            W.FontBold, W.FontItalic, W.FontUnderline, W.FontStrikeThrough
         CC.Restore
     End Sub
     

@@ -5,6 +5,26 @@
 
 ---
 
+## [3.1.0] — 2026-07-22 — IContentControl + ContentHost
+
+### Added
+
+- **`IContentControl`** — WPF ContentControl contract (`Content`, `ContentPresenter`, `SyncContentPresenter`). Implemented by **`ContentControl`** and **`Button`** (VB6 has no class inheritance).
+- **`ContentHost`** — shared composition helper (host presenter, optional template presenter slot, content/suppress/alignment sync, `ApplyContentValue` for IUIElement Content).
+
+### Changed
+
+- **`ContentControl` / `Button`** — compose `ContentHost` instead of duplicating presenter sync logic. Public APIs unchanged (`Content`, `ContentPresenter`, `SyncContentPresenter`).
+- Phase0 **P6e-CC** / **P6e-PRES** assert `TypeOf … Is IContentControl`.
+
+### Notes
+
+- Non-breaking for existing callers; new interface is additive.
+- **`ContentTemplate`** still deferred (next step on ContentHost / ContentControl).
+- DLL version **3.1.0**.
+
+---
+
 ## [3.0.0] — 2026-07-22 — Remove Design* / LegacyScaleLayout
 
 ### Breaking

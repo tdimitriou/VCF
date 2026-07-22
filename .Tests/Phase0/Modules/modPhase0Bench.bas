@@ -1574,6 +1574,7 @@ Public Function Phase6eBench_ContentPresenter() As Boolean
     If CP.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected False when suppressed"
 
     Set Btn = New Button
+    If Not TypeOf Btn Is IContentControl Then Err.Raise vbObjectError, , "Button should Implement IContentControl"
     If Btn.ContentPresenter Is Nothing Then Err.Raise vbObjectError, , "Button.ContentPresenter is Nothing"
     Btn.Content = "Save"
     Btn.SyncContentPresenter
@@ -1697,6 +1698,7 @@ Public Function Phase6eBench_ContentControlContent() As Boolean
     On Error GoTo Fail
 
     Set CC = New ContentControl
+    If Not TypeOf CC Is IContentControl Then Err.Raise vbObjectError, , "ContentControl should Implement IContentControl"
     If CC.ContentPresenter Is Nothing Then Err.Raise vbObjectError, , "ContentControl.ContentPresenter is Nothing"
 
     CC.Content = "Hello"

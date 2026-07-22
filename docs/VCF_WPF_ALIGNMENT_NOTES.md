@@ -621,7 +621,7 @@ Scanner char → TextBoxBase.W_KeyPress → InsertText
 | **`Button.Content`** | **`vbVariant` DP** — string caption via paint-only **`ContentPresenter`** (**P6e-PRES** / **P6e-ALIGN**); children suppress caption |
 | **`ContentControl.Content`** | Same DP + presenter model (**P6e-CC**); `IUIElement` Content = single child |
 | **`W_Paint`** | Button draws chrome + presenter caption; ContentControl draws presenter caption only |
-| **Inheritance** | No VB6 `Button : ContentControl` — shared semantics only |
+| **Inheritance** | No VB6 `Button : ContentControl` — both **`Implements IContentControl`** and compose **`ContentHost`** (**3.1.0**) |
 
 ### 2.10.3 Recommended design (VCF team)
 

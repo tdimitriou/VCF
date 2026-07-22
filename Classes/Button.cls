@@ -16,6 +16,7 @@ Option Explicit
 Implements IDependencyObject
 Implements IControl
 Implements IUIElement
+Implements IContentControl
 
 Private WithEvents W                            As cWidgetBase
 Attribute W.VB_VarHelpID = -1
@@ -41,11 +42,9 @@ Private m_Bindings                              As VCF.List
 Private m_BaseUIElement                         As UIElementBase
 Private m_OverlayWidget                         As OverlayWidget
 Private m_Layout                                As FrameworkElement
-Private m_ContentPresenter                      As ContentPresenter
+Private m_ContentHost                           As ContentHost
 ' Live lookless ControlTemplate root (cloned Border); not a public COM property.
 Private m_TemplateRoot                          As Object
-' Live lookless content slot (cloned paint-only ContentPresenter); TemplateBinding target.
-Private m_TemplatePresenter                     As ContentPresenter
 
 Private Const OVERLAY_ALPHA                     As Single = 0.25
 Private Const OVERLAY_COLOR                     As Long = vbBlack
@@ -60,10 +59,9 @@ Attribute TmrRelease.VB_VarHelpID = -1
         Set Bindings = m_Bindings
     End Property
 
-    ' ?2.11 paint-only presenter used for string Content (Phase0 P6e-PRES).
-    ' When a ControlTemplate content slot is live, returns that presenter (TemplateBinding).
+    ' Paint-only presenter for string Content; live ControlTemplate slot when attached.
     Public Property Get ContentPresenter() As ContentPresenter
-        Set ContentPresenter = ActiveContentPresenter()
+        Set ContentPresenter = m_ContentHost.ActivePresenter
     End Property
     
     Public Property Get Selected() As Boolean
@@ -129,6 +127,12 @@ Attribute TmrRelease.VB_VarHelpID = -1
     Public Property Set Content(ByVal Value As Object)
         Call m_DependencyProperties.SetValue("Content", Value)
     End Property
+
+    Public Sub SyncContentPresenter()
+        m_ContentHost.SyncContent m_DependencyProperties
+        m_ContentHost.SyncSuppress ContentIsUIElement() Or (NonTemplateChildCount() > 0)
+        m_ContentHost.SyncAlignment HorizontalContentAlignment, VerticalContentAlignment
+    End Sub
 
     Public Property Get HorizontalContentAlignment() As Long
         Dim V As Variant
@@ -279,7 +283,7 @@ Attribute TmrRelease.VB_VarHelpID = -1
         Set m_Bindings = New List
         Set m_Children = NewUIElementCollection(Me)
         Set m_DependencyProperties = NewDependencyProperties(Me)
-        Set m_ContentPresenter = New ContentPresenter
+        Set m_ContentHost = New ContentHost
                 
         ' Initialize the WidgetBase (W) just in case we want to use it as
         ' the source or target for the dependency properties
@@ -396,6 +400,28 @@ Attribute TmrRelease.VB_VarHelpID = -1
     End Property
 '#End Region
 
+'#Region IContentControl Interface Implementation
+    Private Property Get IContentControl_Content() As Variant
+        Call API.CopyVariable(Content, IContentControl_Content)
+    End Property
+
+    Private Property Let IContentControl_Content(ByVal Value As Variant)
+        Content = Value
+    End Property
+
+    Private Property Set IContentControl_Content(ByVal Value As Object)
+        Set Content = Value
+    End Property
+
+    Private Property Get IContentControl_ContentPresenter() As ContentPresenter
+        Set IContentControl_ContentPresenter = ContentPresenter
+    End Property
+
+    Private Sub IContentControl_SyncContentPresenter()
+        SyncContentPresenter
+    End Sub
+'#End Region
+
 '#Region IDependencyObject Inheritance
     Public Property Get DependencyProperties() As DependencyProperties
         Set DependencyProperties = m_DependencyProperties
@@ -461,7 +487,7 @@ Try:
             Next
         End If
 
-        SyncContentPresenterSuppress
+        SyncContentPresenter
         W.Refresh
         
         Exit Sub
@@ -559,9 +585,9 @@ Catch:
             Case "BorderColor":     W.BorderColor = Property.GetValue
             Case "ToolTip":         W.ToolTip = Property.GetValue
             Case "Style":           ApplyStyle
-            Case "Content":         SyncContentPresenterContent: modRenderCoalescer.RequestWidgetRefresh W
+            Case "Content":         SyncContentPresenter: modRenderCoalescer.RequestWidgetRefresh W
             Case "HorizontalContentAlignment", "VerticalContentAlignment": _
-                                    SyncContentPresenterAlignment: modRenderCoalescer.RequestWidgetRefresh W
+                                    SyncContentPresenter: modRenderCoalescer.RequestWidgetRefresh W
             Case "Padding":         Call W_Resize: modRenderCoalescer.RequestWidgetRefresh W
             Case "Command":         AttachCommandCanExecuteListener: SyncCommandEnabled
             Case "CommandParameter": SyncCommandEnabled
@@ -701,28 +727,6 @@ End Sub
 '#End Region
 
 '#Region Drawing Functions
-    Private Function ActiveContentPresenter() As ContentPresenter
-        If Not m_TemplatePresenter Is Nothing Then
-            Set ActiveContentPresenter = m_TemplatePresenter
-        Else
-            Set ActiveContentPresenter = m_ContentPresenter
-        End If
-    End Function
-
-    Private Sub SyncContentPresenterContent()
-        Dim V As Variant
-        Dim CP As ContentPresenter
-
-        Set CP = ActiveContentPresenter()
-        If CP Is Nothing Then Exit Sub
-        Call API.CopyVariable(m_DependencyProperties.GetValue("Content"), V)
-        If IsObject(V) Then
-            Set CP.Content = V
-        Else
-            CP.Content = V
-        End If
-    End Sub
-
     Private Function ContentIsUIElement() As Boolean
         Dim V As Variant
         Dim UI As IUIElement
@@ -754,17 +758,7 @@ End Sub
         NonTemplateChildCount = N
     End Function
 
-    Private Sub SyncContentPresenterSuppress()
-        Dim CP As ContentPresenter
-
-        Set CP = ActiveContentPresenter()
-        If CP Is Nothing Then Exit Sub
-        ' Suppress string Content only for element Content or non-template children.
-        ' Live template chrome alone must not hide the caption (WPF lookless).
-        CP.SuppressContent = ContentIsUIElement() Or (NonTemplateChildCount() > 0)
-    End Sub
-
-    ' Called from modControlTemplateEngine ? clear previous live template Border.
+    ' Called from modControlTemplateEngine - clear previous live template Border.
     Friend Sub ClearTemplateChrome()
         Dim WKey As String
         Dim ChromeClear As Border
@@ -782,10 +776,8 @@ End Sub
             End If
             Set m_TemplateRoot = Nothing
         End If
-        Set m_TemplatePresenter = Nothing
-        SyncContentPresenterContent
-        SyncContentPresenterSuppress
-        SyncContentPresenterAlignment
+        Set m_ContentHost.TemplatePresenter = Nothing
+        SyncContentPresenter
         Err.Clear
     End Sub
 
@@ -802,7 +794,7 @@ End Sub
         B.Height = m_Layout.Height
         Set m_TemplateRoot = B
         m_Children.Add B
-        SyncContentPresenterSuppress
+        SyncContentPresenter
         Exit Sub
 Handler:
         Set m_TemplateRoot = Nothing
@@ -814,7 +806,7 @@ Handler:
 
         If Presenter Is Nothing Then Exit Sub
         Presenter.SyncTypographyFromWidget W
-        Set m_TemplatePresenter = Presenter
+        Set m_ContentHost.TemplatePresenter = Presenter
         If NestUnderChrome Then
             If Not m_TemplateRoot Is Nothing Then
                 If TypeOf m_TemplateRoot Is Border Then
@@ -823,31 +815,7 @@ Handler:
                 End If
             End If
         End If
-        SyncContentPresenterContent
-        SyncContentPresenterSuppress
-        SyncContentPresenterAlignment
-    End Sub
-
-    Private Function IsNestedTemplatePresenter() As Boolean
-        If m_TemplatePresenter Is Nothing Then Exit Function
-        If m_TemplatePresenter.Parent Is Nothing Then Exit Function
-        IsNestedTemplatePresenter = True
-    End Function
-
-    Private Sub SyncContentPresenterAlignment()
-        Dim CP As ContentPresenter
-
-        Set CP = ActiveContentPresenter()
-        If CP Is Nothing Then Exit Sub
-        CP.HorizontalContentAlignment = HorizontalContentAlignment
-        CP.VerticalContentAlignment = VerticalContentAlignment
-    End Sub
-
-    ' Keep presenter flags current for Phase0 / diagnostics without painting.
-    Public Sub SyncContentPresenter()
-        SyncContentPresenterContent
-        SyncContentPresenterSuppress
-        SyncContentPresenterAlignment
+        SyncContentPresenter
     End Sub
 
     Private Sub DrawContent(CC As cCairoContext, dx As Double, dy As Double)
@@ -860,12 +828,10 @@ Handler:
         Dim PadL As Single, PadT As Single, PadR As Single, PadB As Single
         Dim CP As ContentPresenter
 
-        SyncContentPresenterContent
-        SyncContentPresenterSuppress
-        SyncContentPresenterAlignment
+        SyncContentPresenter
         ' WPF lookless: nested ContentPresenter paints in the visual tree.
-        If IsNestedTemplatePresenter() Then Exit Sub
-        Set CP = ActiveContentPresenter()
+        If m_ContentHost.IsNestedTemplatePresenter() Then Exit Sub
+        Set CP = m_ContentHost.ActivePresenter
         If CP Is Nothing Then Exit Sub
         If Not CP.WouldDrawCaption Then Exit Sub
 
