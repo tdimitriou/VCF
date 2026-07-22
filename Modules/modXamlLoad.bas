@@ -1,7 +1,7 @@
 Attribute VB_Name = "modXamlLoad"
 Option Explicit
 
-' vbObjectError Or &H2000 â€” XAML load failures (catch via Err.Number)
+' vbObjectError Or &H2000 — XAML load failures (catch via Err.Number)
 Public Const vbXamlLoadError As Long = vbObjectError Or &H2000&
 
 Public Sub RaiseXamlLoad( _

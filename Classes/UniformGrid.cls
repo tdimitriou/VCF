@@ -32,10 +32,6 @@ Private m_Arranging As Boolean
 Private WithEvents ActiveStyle As Style
 Attribute ActiveStyle.VB_VarHelpID = -1
 
-Private m_DesignLeft As Single
-Private m_DesignTop As Single
-Private m_DesignWidth As Single
-Private m_DesignHeight As Single
 Private m_ParentPtr As Long
 Private m_Rows As Long
 Private m_Columns As Long
@@ -95,7 +91,35 @@ Public Name As String
         Call MoveChildren
     End Property
 
-    ' ItemsPanelTemplate clone — set metrics without MoveChildren (grid not hosted yet).
+    Public Property Get Width() As Double
+        If m_DependencyProperties.Exists("Width") Then
+            Width = CDbl(m_DependencyProperties.GetValue("Width"))
+        End If
+    End Property
+
+    Public Property Let Width(ByVal Value As Double)
+        Call m_DependencyProperties.SetValue("Width", Value)
+    End Property
+
+    Public Property Get Height() As Double
+        If m_DependencyProperties.Exists("Height") Then
+            Height = CDbl(m_DependencyProperties.GetValue("Height"))
+        End If
+    End Property
+
+    Public Property Let Height(ByVal Value As Double)
+        Call m_DependencyProperties.SetValue("Height", Value)
+    End Property
+
+    Public Property Get Margin() As Thickness
+        Set Margin = m_DependencyProperties.GetValue("Margin")
+    End Property
+
+    Public Property Set Margin(ByVal Value As Thickness)
+        Call m_DependencyProperties.SetValue("Margin", Value)
+    End Property
+
+    ' ItemsPanelTemplate clone ? set metrics without MoveChildren (grid not hosted yet).
     Friend Sub ApplyItemsPanelMetrics(ByVal NewRows As Long, ByVal NewColumns As Long, ByVal Pad As Thickness)
         Dim PadCopy As Thickness
 
@@ -119,38 +143,13 @@ Public Name As String
         Set AttachedProperties = m_BaseUIElement.AttachedProperties
     End Property
     
-    Public Property Let DesignHeight(ByVal Value As Double)
-        m_DesignHeight = Value
-    End Property
     
-    Public Property Get DesignHeight() As Double
-        DesignHeight = m_DesignHeight
-    End Property
     
-    Public Property Let DesignLeft(ByVal Value As Double)
-        m_DesignLeft = Value
-    End Property
     
-    Public Property Get DesignLeft() As Double
-        DesignLeft = m_DesignLeft
-    End Property
     
-    Public Property Let DesignTop(ByVal Value As Double)
-        m_DesignTop = Value
-    End Property
     
-    Public Property Get DesignTop() As Double
-        DesignTop = m_DesignTop
-    End Property
     
-    Public Property Let DesignWidth(ByVal Value As Double)
-        m_DesignWidth = Value
-    End Property
     
-    Public Property Get DesignWidth() As Double
-        DesignWidth = m_DesignWidth
-    End Property
-
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
         
@@ -186,19 +185,21 @@ Public Name As String
             Call .Register("Visible", vbBoolean)
             .SetCurrentValue "Visible", True
             Call .Register("Padding", vbObject, "Thickness")
+            Call .Register("Width", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
+            Call .Register("Height", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
+            Call .Register("Margin", vbObject, "Thickness", , NewDependencyPropertyMetadata(True, False, False))
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
             .SetValue "Style", Nothing
+            .SetCurrentValue "Width", 300#
+            .SetCurrentValue "Height", 300#
+            .SetCurrentValue "Margin", NewThickness(0)
         End With
         
-        DesignLeft = 0
-        DesignTop = 0
-        DesignWidth = 300
-        DesignHeight = 300
             
         m_Columns = 3
         m_Rows = 3
         
-        ' Cell inset default — VCF UniformGrid (not WPF Panel). Keep 2; apps may set Padding="4".
+        ' Cell inset default ? VCF UniformGrid (not WPF Panel). Keep 2; apps may set Padding="4".
         Set Me.Padding = NewThickness(2)
         
         NewUIElementBase Me, m_BaseUIElement
@@ -285,37 +286,13 @@ Public Name As String
         '
     End Property
     
-    Private Property Let IUIElement_DesignHeight(ByVal RHS As Double)
-        DesignHeight = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignHeight() As Double
-        IUIElement_DesignHeight = DesignHeight
-    End Property
     
-    Private Property Let IUIElement_DesignLeft(ByVal RHS As Double)
-        DesignLeft = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignLeft() As Double
-        IUIElement_DesignLeft = DesignLeft
-    End Property
     
-    Private Property Let IUIElement_DesignTop(ByVal RHS As Double)
-        DesignTop = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignTop() As Double
-        IUIElement_DesignTop = DesignTop
-    End Property
     
-    Private Property Let IUIElement_DesignWidth(ByVal RHS As Double)
-        DesignWidth = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignWidth() As Double
-        IUIElement_DesignWidth = DesignWidth
-    End Property
     
     Private Sub IUIElement_Move(Left As Single, Optional Top As Single = 0#, Optional Width As Single, Optional Height As Single)
         Move Left, Top, Width, Height
@@ -348,7 +325,7 @@ Try:
             Next
         End If
 
-        ' Honor LockRefresh — ItemsControl batches AddSilent under lock then ArrangeChildren once.
+        ' Honor LockRefresh ? ItemsControl batches AddSilent under lock then ArrangeChildren once.
         If W.LockRefresh Then Exit Sub
         MoveChildren
         If Not W.LockRefresh Then W.Refresh
@@ -361,7 +338,7 @@ Catch:
 '#End Region
 
 '#Region Private Methods
-    ' ItemsControl post-rebuild arrange (Friend — same project).
+    ' ItemsControl post-rebuild arrange (Friend ? same project).
     Friend Sub ArrangeChildren()
         MoveChildren
     End Sub
@@ -384,7 +361,7 @@ Catch:
         If MAX_ITEMS < 1 Then GoTo Clean
         ReDim Cells(0 To MAX_ITEMS - 1) As Long
         
-        ' Single RemoveAll per arrange (not per child add) — avoids O(N^2) IDE hang.
+        ' Single RemoveAll per arrange (not per child add) ? avoids O(N^2) IDE hang.
         W.Widgets.RemoveAll
         ItemIndex = 0
         For Index = 0 To MAX_ITEMS - 1

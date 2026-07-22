@@ -5,6 +5,37 @@
 
 ---
 
+## [3.0.0] — 2026-07-22 — Remove Design* / LegacyScaleLayout
+
+### Breaking
+
+- **`DesignLeft` / `DesignTop` / `DesignWidth` / `DesignHeight` removed** from `IUIElement`, `IUserControl`, and all implementers.
+- **`LegacyScaleLayout` removed** from `FrameworkElement` — no host design-canvas scale (`left = DesignLeft × host/design`).
+- **Border Option B** (multi-child Design* detection → scale) removed.
+- **XAML:** `Design*` attributes are no longer accepted (no alias to Width/Height; no Margin→Design* shim).
+- **`ApplyLegacyLayoutProperty` / `LayoutRectFromDesign` / `MarginFromDesignWhenUnset` removed.**
+
+### Migration
+
+| Old | New |
+|-----|-----|
+| `DesignWidth` / `DesignHeight` | `Width` / `Height` |
+| `DesignLeft` / `DesignTop` | `Margin` (Left/Top) |
+| Absolute Design* canvas + scale | Prefer `Grid` / `StackPanel` / `Border` composition; resize via panel layout, not uniform X/Y scale |
+
+### Added / changed (supporting)
+
+- **`TextBlock` / `UniformGrid`** — `Width` / `Height` / `Margin` DPs (required once Design* sizing was removed).
+- Phase0 fixtures and **P7c-LAY** / **P7d-LAY-RESIZE** rewritten for Margin/Width absolute layout (no Design* scale).
+
+### Notes
+
+- Paint/rendering paths unchanged; only positioning/sizing contract.
+- Option C (parent-scale propagate) cancelled — not needed without Design*.
+- DLL version **3.0.0**.
+
+---
+
 ## [2.43.0] — 2026-07-22 — Phase 2a ({TemplateBinding} markup)
 
 ### Added

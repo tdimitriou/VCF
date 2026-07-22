@@ -22,10 +22,6 @@ Implements IUIElement
 Private WithEvents W As cWidgetBase
 Attribute W.VB_VarHelpID = -1
 
-Private m_DesignLeft As Single
-Private m_DesignTop As Single
-Private m_DesignWidth As Single
-Private m_DesignHeight As Single
 Private m_ParentPtr As Long
 Private m_BaseUIElement As UIElementBase
 
@@ -49,10 +45,6 @@ Public Name As String
         W.ImplementsHitTest = True
         W.Visible = True
         
-        m_DesignLeft = 0
-        m_DesignTop = 0
-        m_DesignWidth = 30
-        m_DesignHeight = 30
         m_KeepAspectRatio = True
         
         NewUIElementBase Me, m_BaseUIElement
@@ -124,37 +116,13 @@ Public Name As String
         Set IUIElement_DataContext = DataContext
     End Property
     
-    Private Property Let IUIElement_DesignHeight(ByVal RHS As Double)
-        DesignHeight = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignHeight() As Double
-        IUIElement_DesignHeight = DesignHeight
-    End Property
     
-    Private Property Let IUIElement_DesignLeft(ByVal RHS As Double)
-        DesignLeft = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignLeft() As Double
-        IUIElement_DesignLeft = DesignLeft
-    End Property
     
-    Private Property Let IUIElement_DesignTop(ByVal RHS As Double)
-        DesignTop = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignTop() As Double
-        IUIElement_DesignTop = DesignTop
-    End Property
     
-    Private Property Let IUIElement_DesignWidth(ByVal RHS As Double)
-        DesignWidth = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignWidth() As Double
-        IUIElement_DesignWidth = DesignWidth
-    End Property
     
     Private Sub IUIElement_Move(Left As Single, Optional Top As Single = 0#, Optional Width As Single, Optional Height As Single)
         Move Left, Top, Width, Height
@@ -184,38 +152,13 @@ Public Name As String
         Call API.CopyVariable(m_DependencyProperties.GetValue("DataContext"), DataContext)
     End Property
     
-    Public Property Let DesignHeight(ByVal Value As Double)
-        m_DesignHeight = Value
-    End Property
     
-    Public Property Get DesignHeight() As Double
-        DesignHeight = m_DesignHeight
-    End Property
     
-    Public Property Let DesignLeft(ByVal Value As Double)
-        m_DesignLeft = Value
-    End Property
     
-    Public Property Get DesignLeft() As Double
-        DesignLeft = m_DesignLeft
-    End Property
     
-    Public Property Let DesignTop(ByVal Value As Double)
-        m_DesignTop = Value
-    End Property
     
-    Public Property Get DesignTop() As Double
-        DesignTop = m_DesignTop
-    End Property
     
-    Public Property Let DesignWidth(ByVal Value As Double)
-        m_DesignWidth = Value
-    End Property
     
-    Public Property Get DesignWidth() As Double
-        DesignWidth = m_DesignWidth
-    End Property
-
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         
         If Parent Is Nothing Then Exit Sub
@@ -290,24 +233,20 @@ Public Name As String
         HH = W.Height
     
         If m_KeepAspectRatio Then
-                    
-            'Scale to the smallest (x or y) scale factor
-            
+            Dim NatW As Double, NatH As Double
             Dim xFactor As Double, yFactor As Double
-    
-            xFactor = W.Width / DesignWidth
-            yFactor = W.Height / DesignHeight
-    
             Dim ScaleFactor As Double
-            ' Choose the smallest Scale Factor
+            NatW = Cairo.ImageList(m_ImageKey).Width
+            NatH = Cairo.ImageList(m_ImageKey).Height
+            If NatW <= 0 Then NatW = W.Width
+            If NatH <= 0 Then NatH = W.Height
+            xFactor = W.Width / NatW
+            yFactor = W.Height / NatH
             ScaleFactor = IIf(xFactor > yFactor, yFactor, xFactor)
-            
-            ' Center the image inside the widget area
-            WW = DesignWidth * ScaleFactor
-            HH = DesignHeight * ScaleFactor
+            WW = NatW * ScaleFactor
+            HH = NatH * ScaleFactor
             LL = (W.Width - WW) / 2
             TT = (W.Height - HH) / 2
-        
         End If
         
         CC.RenderSurfaceContent Cairo.ImageList(m_ImageKey), LL, TT, WW, HH

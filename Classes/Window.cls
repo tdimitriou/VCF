@@ -27,8 +27,6 @@ Attribute ActiveStyle.VB_VarHelpID = -1
 Private WithEvents m_Children As UIElementCollection
 Attribute m_Children.VB_VarHelpID = -1
 
-Private m_DesignLeft As Single
-Private m_DesignTop As Single
 Private m_NamedChildren As ObservableDictionary
 Private m_Bindings As List
 Private m_DialogResult As Boolean
@@ -133,37 +131,13 @@ Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long,
         Set IUIElement_DataContext = DataContext
     End Property
     
-    Private Property Let IUIElement_DesignHeight(ByVal RHS As Double)
-        DesignHeight = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignHeight() As Double
-        IUIElement_DesignHeight = DesignHeight
-    End Property
     
-    Private Property Let IUIElement_DesignLeft(ByVal RHS As Double)
-        DesignLeft = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignLeft() As Double
-        IUIElement_DesignLeft = DesignLeft
-    End Property
     
-    Private Property Let IUIElement_DesignTop(ByVal RHS As Double)
-        DesignTop = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignTop() As Double
-        IUIElement_DesignTop = DesignTop
-    End Property
     
-    Private Property Let IUIElement_DesignWidth(ByVal RHS As Double)
-        DesignWidth = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignWidth() As Double
-        IUIElement_DesignWidth = DesignWidth
-    End Property
     
     Private Sub IUIElement_Move(Left As Single, Optional Top As Single = 0#, Optional Width As Single, Optional Height As Single)
         Move Left, Top, Width, Height
@@ -193,46 +167,13 @@ Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long,
         Call API.CopyVariable(m_DependencyProperties.GetValue("DataContext"), DataContext)
     End Property
     
-    Public Property Let DesignHeight(ByVal Value As Double)
-        m_Layout.Height = Value
-        If m_H = 0 Then
-            m_H = DesignHeight
-            If Not Form Is Nothing Then Form.Height = m_H
-        End If
-    End Property
     
-    Public Property Get DesignHeight() As Double
-        DesignHeight = m_Layout.Height
-    End Property
     
-    Public Property Let DesignLeft(ByVal Value As Double)
-        m_DesignLeft = Value
-    End Property
     
-    Public Property Get DesignLeft() As Double
-        DesignLeft = m_DesignLeft
-    End Property
     
-    Public Property Let DesignTop(ByVal Value As Double)
-        m_DesignTop = Value
-    End Property
     
-    Public Property Get DesignTop() As Double
-        DesignTop = m_DesignTop
-    End Property
     
-    Public Property Let DesignWidth(ByVal Value As Double)
-        m_Layout.Width = Value
-        If m_W = 0 Then
-            m_W = DesignWidth
-            If Not Form Is Nothing Then Form.Width = m_W
-        End If
-    End Property
     
-    Public Property Get DesignWidth() As Double
-        DesignWidth = m_Layout.Width
-    End Property
-
     Public Property Get Width() As Double
         Width = m_Layout.Width
     End Property
@@ -447,7 +388,7 @@ Catch:
         BuildNamedItemsList
     End Sub
     
-    ' Phase 2a.1 — Visibility swap on a direct Window child (view host) should not require
+    ' Phase 2a.1 ? Visibility swap on a direct Window child (view host) should not require
     ' the app to call RelayoutChildren / RebuildNamedItemsList manually.
     Friend Sub OnChildVisibilityChanged()
         On Error Resume Next

@@ -70,14 +70,14 @@ Private AccentedCharacters As cSortedDictionary
                 
         Set AccentedCharacters = New_c.SortedDictionary
         With AccentedCharacters
-            .Add "¢", "Á"       ' 'A
-            .Add "¸", "Å"       ' 'E
-            .Add "¹", "Ç"       ' 'H
-            .Add "º", "É"       ' 'I
-            .Add "¼", "Ï"       ' 'O
-            .Add "¾", "Õ"       ' 'Y
-            .Add "¿", "Ù"       ' Capital 'Omega' with accent
-            .Add "ò", "Ó"       ' Final 'Sigma' (put in accented characters as an exception
+            .Add "?", "?"       ' 'A
+            .Add "?", "?"       ' 'E
+            .Add "?", "?"       ' 'H
+            .Add "?", "?"       ' 'I
+            .Add "?", "?"       ' 'O
+            .Add "?", "?"       ' 'Y
+            .Add "?", "?"       ' Capital 'Omega' with accent
+            .Add "?", "?"       ' Final 'Sigma' (put in accented characters as an exception
                                 ' because it must always been replaced in Uppercase,
                                 ' (the same rule as accented chars in Uppercase)
         End With

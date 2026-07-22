@@ -62,7 +62,7 @@ Handler:
     End If
 End Sub
 
-' Lookless-prep: ControlTemplate alignment slot → target DPs via SetCurrentValue
+' Lookless-prep: ControlTemplate alignment slot ? target DPs via SetCurrentValue
 Private Sub PushTemplateContentAlignment(ByVal St As Style, ByVal Target As Object)
     Dim Tmpl As ControlTemplate
     Dim Dep As IDependencyObject
@@ -183,7 +183,7 @@ Handler:
     modStyleApplyLog.LogErrorAndReraise "StyleManager", "SetDependencyProperty"
 End Sub
 
-' Intentional soft probe for non-DP property names — keep Resume Next (not part of fail-fast chain).
+' Intentional soft probe for non-DP property names � keep Resume Next (not part of fail-fast chain).
 Private Function SetProperty(ByVal Obj As Object, ByVal Name As String, ByVal Value As String, Optional ByVal Recursive As Boolean = True) As Boolean
     On Error Resume Next
 

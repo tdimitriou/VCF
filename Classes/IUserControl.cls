@@ -17,14 +17,6 @@ Public Property Get DependencyProperties() As DependencyProperties: End Property
 
 Public Property Set DataContext(ByVal Value As Object): End Property
 Public Property Get DataContext() As Object: End Property
-Public Property Let DesignHeight(ByVal Value As Double): End Property
-Public Property Get DesignHeight() As Double: End Property
-Public Property Let DesignLeft(ByVal Value As Double): End Property
-Public Property Get DesignLeft() As Double: End Property
-Public Property Let DesignTop(ByVal Value As Double): End Property
-Public Property Get DesignTop() As Double: End Property
-Public Property Let DesignWidth(ByVal Value As Double): End Property
-Public Property Get DesignWidth() As Double: End Property
 Public Property Let Visibility(ByVal Value As Visibility): End Property
 Public Property Get Visibility() As Visibility: End Property
 Public Property Set Parent(ByVal Value As IControl): End Property

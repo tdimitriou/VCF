@@ -199,7 +199,7 @@ Public Function CreateInstance(ByVal Namespace As String, ByVal Class As String)
     End If
 
     If Obj Is Nothing And StrictXamlLoad Then
-        RaiseXamlLoad "Unknown type '" & ElementName & "' â€” not registered and CreateObject failed.", ElementName
+        RaiseXamlLoad "Unknown type '" & ElementName & "' — not registered and CreateObject failed.", ElementName
     End If
 
     Set CreateInstance = Obj

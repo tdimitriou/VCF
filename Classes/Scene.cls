@@ -24,10 +24,6 @@ Attribute m_Children.VB_VarHelpID = -1
 Private WithEvents ActiveStyle As Style
 Attribute ActiveStyle.VB_VarHelpID = -1
 
-Private m_DesignLeft As Single
-Private m_DesignTop As Single
-Private m_DesignWidth As Single
-Private m_DesignHeight As Single
 Private m_ParentPtr As Long
 Private WithEvents m_DependencyProperties As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
@@ -66,38 +62,13 @@ Public Name As String
         Call API.CopyVariable(m_DependencyProperties.GetValue("DataContext"), DataContext)
     End Property
     
-    Public Property Let DesignHeight(ByVal Value As Double)
-        m_DesignHeight = Value
-    End Property
     
-    Public Property Get DesignHeight() As Double
-        DesignHeight = m_DesignHeight
-    End Property
     
-    Public Property Let DesignLeft(ByVal Value As Double)
-        m_DesignLeft = Value
-    End Property
     
-    Public Property Get DesignLeft() As Double
-        DesignLeft = m_DesignLeft
-    End Property
     
-    Public Property Let DesignTop(ByVal Value As Double)
-        m_DesignTop = Value
-    End Property
     
-    Public Property Get DesignTop() As Double
-        DesignTop = m_DesignTop
-    End Property
     
-    Public Property Let DesignWidth(ByVal Value As Double)
-        m_DesignWidth = Value
-    End Property
     
-    Public Property Get DesignWidth() As Double
-        DesignWidth = m_DesignWidth
-    End Property
-
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
         
@@ -129,10 +100,6 @@ Public Name As String
         Set W = Cairo.WidgetBase
         W.CanGetFocus = False
         
-        m_DesignLeft = 0
-        m_DesignTop = 0
-        m_DesignWidth = 1024
-        m_DesignHeight = 768
             
         
         Set m_Children = NewUIElementCollection(Me)
@@ -210,37 +177,13 @@ Public Name As String
         Set IUIElement_DataContext = DataContext
     End Property
     
-    Private Property Let IUIElement_DesignHeight(ByVal RHS As Double)
-        DesignHeight = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignHeight() As Double
-        IUIElement_DesignHeight = DesignHeight
-    End Property
     
-    Private Property Let IUIElement_DesignLeft(ByVal RHS As Double)
-        DesignLeft = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignLeft() As Double
-        IUIElement_DesignLeft = DesignLeft
-    End Property
     
-    Private Property Let IUIElement_DesignTop(ByVal RHS As Double)
-        DesignTop = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignTop() As Double
-        IUIElement_DesignTop = DesignTop
-    End Property
     
-    Private Property Let IUIElement_DesignWidth(ByVal RHS As Double)
-        DesignWidth = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignWidth() As Double
-        IUIElement_DesignWidth = DesignWidth
-    End Property
     
     Private Sub IUIElement_Move(Left As Single, Optional Top As Single = 0#, Optional Width As Single, Optional Height As Single)
         Move Left, Top, Width, Height
@@ -287,16 +230,19 @@ Catch:
 '#Region Private Methods
     Private Sub MoveChild(Child As Object)
         On Error Resume Next
-        
-        Dim xFactor As Double, yFactor As Double
-        xFactor = W.Width / DesignWidth
-        yFactor = W.Height / DesignHeight
-        
+
+        Dim R As LayoutRect
+        Dim Marg As Thickness
+        Dim CW As Double
+        Dim CH As Double
+
+        Set Marg = ReadElementMargin(Child)
+        CW = ReadElementWidth(Child)
+        CH = ReadElementHeight(Child)
+        R = LayoutRectFromMargin(Marg, CW, CH)
+
         If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove Child.Widget.Key
-        
-        With Child
-            .Move .DesignLeft * xFactor, .DesignTop * yFactor, .DesignWidth * xFactor, .DesignHeight * yFactor
-        End With
+        Child.Move R.Left, R.Top, R.Width, R.Height
     End Sub
 '#End Region
 

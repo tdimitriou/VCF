@@ -131,7 +131,7 @@ ReturnStored:
             Call API.CopyVariable(m_Value, GetValue)
         End If
         
-        ' Phase 8b â€” WPF-style lazy inherit: walk parent when no explicit local/current value.
+        ' Phase 8b — WPF-style lazy inherit: walk parent when no explicit local/current value.
         If m_InGetValue = 0 Then
             If Not m_Metadata Is Nothing Then
                 If m_Metadata.IsInheritable Then

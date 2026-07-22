@@ -1,23 +1,23 @@
-<UniformGrid Name="Outer" Rows="2" Columns="2" DesignWidth="400" DesignHeight="300" Width="400" Height="300" Padding="0">
-	<UniformGrid Rows="2" Columns="2" DesignWidth="200" DesignHeight="150" Padding="0">
+<UniformGrid Name="Outer" Rows="2" Columns="2" Width="400" Height="300" Padding="0">
+	<UniformGrid Rows="2" Columns="2" Width="200" Height="150" Padding="0">
 		<TextBlock Text="A1"/>
 		<TextBlock Text="A2"/>
 		<TextBlock Text="A3"/>
 		<TextBlock Text="A4"/>
 	</UniformGrid>
-	<UniformGrid Rows="2" Columns="2" DesignWidth="200" DesignHeight="150" Padding="0">
+	<UniformGrid Rows="2" Columns="2" Width="200" Height="150" Padding="0">
 		<TextBlock Text="B1"/>
 		<TextBlock Text="B2"/>
 		<TextBlock Text="B3"/>
 		<TextBlock Text="B4"/>
 	</UniformGrid>
-	<UniformGrid Rows="2" Columns="2" DesignWidth="200" DesignHeight="150" Padding="0">
+	<UniformGrid Rows="2" Columns="2" Width="200" Height="150" Padding="0">
 		<TextBlock Text="C1"/>
 		<TextBlock Text="C2"/>
 		<TextBlock Text="C3"/>
 		<TextBlock Text="C4"/>
 	</UniformGrid>
-	<UniformGrid Rows="2" Columns="2" DesignWidth="200" DesignHeight="150" Padding="0">
+	<UniformGrid Rows="2" Columns="2" Width="200" Height="150" Padding="0">
 		<TextBlock Text="D1"/>
 		<TextBlock Text="D2"/>
 		<TextBlock Text="D3"/>

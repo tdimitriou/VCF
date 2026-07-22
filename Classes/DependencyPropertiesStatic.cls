@@ -29,17 +29,17 @@ Public Property Get InheritPropertyValuesCalls() As Long
     InheritPropertyValuesCalls = m_InheritCalls
 End Property
 
-' Phase 8b â€” push disabled. Call sites remain for compatibility.
+' Phase 8b — push disabled. Call sites remain for compatibility.
 Public Sub PassPropertyValue(ByVal Children As UIElementCollection, ByVal Source As DependencyProperty)
     If Source Is Nothing Then Exit Sub
     If Not Source.Metadata.IsInheritable Then Exit Sub
-    ' Do not MarkInheritanceDirty here â€” every container DP handler calls Pass;
+    ' Do not MarkInheritanceDirty here — every container DP handler calls Pass;
     ' dirty is set only when an inheritable value actually changes or attach is deferred.
 End Sub
 
 ' On Parent attach: bindings were created before Parent existed, so refresh
 ' callbacks for unset inheritable DPs (no SetCurrentValue copy).
-' During InheritanceBatch, defer to End â†’ PropagateInheritableFrom (one tree wave).
+' During InheritanceBatch, defer to End ? PropagateInheritableFrom (one tree wave).
 Public Sub InheritPropertyValues(ByVal Target As IDependencyObject)
     Dim Prop As DependencyProperty
     Dim Inheritable As VCF.List

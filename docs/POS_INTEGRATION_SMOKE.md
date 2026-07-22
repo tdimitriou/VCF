@@ -25,7 +25,7 @@
 
 | Check | Command / location | Pass |
 |-------|-------------------|------|
-| Phase0 suite | `.Tests/Phase0` → `RunAll` | **58/58** (includes **P6k-TBMK**, **P4-CCMD**, **P4-CARET**, …) |
+| Phase0 suite | `.Tests/Phase0` → `RunAll` | **58/58** (post–**3.0.0** Design* removal — rebuild + re-run) |
 | Strict XAML | `VCF.StrictXamlLoad = True` in test bootstrap | B-STRICT-* pass |
 | DeNovoSmoke harness | `.Tests/DeNovoSmoke` (when scaffold lands) | Milestone screens per [README](../.Tests/DeNovoSmoke/README.md) |
 

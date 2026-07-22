@@ -109,7 +109,7 @@ Public Sub LoadSuperclassData(Superclass As Object, XML As String)
             Exit Sub
         End If
         
-        ' Phase 7f: coalesce per-node refresh storms during tree build (§2.7.4 P0 #1).
+        ' Phase 7f: coalesce per-node refresh storms during tree build (?2.7.4 P0 #1).
         ' Phase 8a: suppress PassPropertyValue fan-out; propagate once at End.
         Set RootWidget = TryGetLoadRootWidget(Superclass)
         HadWidget = Not RootWidget Is Nothing
@@ -717,13 +717,6 @@ Private Sub SetProperty(ByVal Obj As Object, ByVal Name As String, ByVal Value A
     If Err.Number = 0 Then Exit Sub
     
     Err.Clear
-    
-    If TypeOf Obj Is IUIElement Then
-        Dim UIElement As IUIElement
-        Set UIElement = Obj
-        If ApplyLegacyLayoutProperty(UIElement, Name, PropertyValue) Then Exit Sub
-        Err.Clear
-    End If
     
     ' Pass the final property value, (PropertyValue) directly to the inner object
     ' to avoid the extra call to the MarkupExtensions.GetMarkupValue

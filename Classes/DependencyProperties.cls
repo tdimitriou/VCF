@@ -90,7 +90,7 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
             modBindingExpressions.OnDataContextChanged Me.Target
         End If
         
-        ' Phase 8b â€” push model removed; notify descendant bindings that pull this DP.
+        ' Phase 8b — push model removed; notify descendant bindings that pull this DP.
         If Not Property.Metadata Is Nothing Then
             If Property.Metadata.IsInheritable Then
                 DependencyPropertiesStatic.NotifyInheritableToDescendants Me.Target, Property

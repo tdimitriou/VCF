@@ -1,6 +1,6 @@
 <Scene Name="SalesOrder">
-	<UniformGrid ShowGridLines="1" DesignLeft="0" DesignTop="0" DesignWidth="1024" DesignHeight="768" Rows="1" Columns="2" Padding="0">
-		<Panel Name="LeftColumn" DesignWidth="512" DesignHeight="768"/>
-		<Panel Name="RightColumn" DesignWidth="512" DesignHeight="768"/>
+	<UniformGrid ShowGridLines="1" Width="1024" Height="768" Rows="1" Columns="2" Padding="0">
+		<Panel Name="LeftColumn" Width="512" Height="768"/>
+		<Panel Name="RightColumn" Width="512" Height="768"/>
 	</UniformGrid>
 </Scene>

@@ -47,7 +47,7 @@ Handler:
     modStyleApplyLog.LogErrorAndReraise "modStyleTriggerEngine", "IsPropertyTriggerActive"
 End Function
 
-' Soft property probe â€” intentional Resume Next.
+' Soft property probe — intentional Resume Next.
 Public Function ReadTriggerPropertyValue(ByVal Target As Object, ByVal PropertyName As String) As Variant
     On Error Resume Next
 

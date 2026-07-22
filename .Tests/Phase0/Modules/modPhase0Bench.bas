@@ -2368,6 +2368,7 @@ Public Function Phase7cBench_LegacyLayoutShim() As Boolean
     Dim Reader As XAMLReader
     Dim Root As Panel
     Dim Tb As TextBlock
+    Dim Marg As Thickness
 
     On Error GoTo Fail
 
@@ -2379,19 +2380,21 @@ Public Function Phase7cBench_LegacyLayoutShim() As Boolean
 
     Set Tb = Root.Children(0)
     If TypeName(Tb) <> "TextBlock" Then Err.Raise vbObjectError, , "Expected TextBlock, got " & TypeName(Tb)
-    If Tb.DesignLeft <> 10# Then Err.Raise vbObjectError, , "Expected DesignLeft=10, got " & Tb.DesignLeft
-    If Tb.DesignTop <> 20# Then Err.Raise vbObjectError, , "Expected DesignTop=20, got " & Tb.DesignTop
-    If Tb.DesignWidth <> 200# Then Err.Raise vbObjectError, , "Expected DesignWidth=200, got " & Tb.DesignWidth
-    If Tb.DesignHeight <> 30# Then Err.Raise vbObjectError, , "Expected DesignHeight=30, got " & Tb.DesignHeight
+    Set Marg = Tb.Margin
+    If Marg Is Nothing Then Err.Raise vbObjectError, , "Expected Margin"
+    If Marg.Left <> 10# Then Err.Raise vbObjectError, , "Expected Margin.Left=10, got " & Marg.Left
+    If Marg.Top <> 20# Then Err.Raise vbObjectError, , "Expected Margin.Top=20, got " & Marg.Top
+    If Tb.Width <> 200# Then Err.Raise vbObjectError, , "Expected Width=200, got " & Tb.Width
+    If Tb.Height <> 30# Then Err.Raise vbObjectError, , "Expected Height=30, got " & Tb.Height
 
-    LogResult "P7c-LAY", 0, "OK Margin/Width/Height on TextBlock -> Design*"
-    Debug.Print "PASS  P7c-LAY legacy layout shim (migrated TextBlock)"
+    LogResult "P7c-LAY", 0, "OK TextBlock Margin/Width/Height (no Design*)"
+    Debug.Print "PASS  P7c-LAY TextBlock Margin/Width/Height (WPF layout)"
     Phase7cBench_LegacyLayoutShim = True
     Exit Function
 
 Fail:
     LogResult "P7c-LAY", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P7c-LAY ? " & Err.Description
+    Debug.Print "FAIL  P7c-LAY - " & Err.Description
     Phase7cBench_LegacyLayoutShim = False
 End Function
 
@@ -2412,26 +2415,25 @@ Public Function Phase7dBench_BorderDesignResize() As Boolean
     Set A = Root.Children(0)
     Set B = Root.Children(1)
 
-    ' Border.Move requires Parent; Widget.Move raises W_Resize -> ArrangeBorderChild (Option B).
+    ' WPF absolute Margin/Width ? positions do not scale with host (Design* scale removed).
     Root.Widget.Move 0, 0, 400, 300
-    If Abs(A.Widget.Left - 40!) > 2! Then Err.Raise vbObjectError, , "Full A.Left expected ~40, got " & A.Widget.Left
-    If Abs(A.Widget.Width - 200!) > 2! Then Err.Raise vbObjectError, , "Full A.Width expected ~200, got " & A.Widget.Width
-    If Abs(B.Widget.Left - 100!) > 2! Then Err.Raise vbObjectError, , "Full B.Left expected ~100, got " & B.Widget.Left
+    If Abs(A.Widget.Left - 40!) > 2! Then Err.Raise vbObjectError, , "A.Left expected ~40, got " & A.Widget.Left
+    If Abs(A.Widget.Width - 200!) > 2! Then Err.Raise vbObjectError, , "A.Width expected ~200, got " & A.Widget.Width
+    If Abs(B.Widget.Left - 100!) > 2! Then Err.Raise vbObjectError, , "B.Left expected ~100, got " & B.Widget.Left
 
     Root.Widget.Move 0, 0, 200, 150
-    If Abs(A.Widget.Left - 20!) > 2! Then Err.Raise vbObjectError, , "Half A.Left expected ~20, got " & A.Widget.Left
-    If Abs(A.Widget.Width - 100!) > 2! Then Err.Raise vbObjectError, , "Half A.Width expected ~100, got " & A.Widget.Width
-    If Abs(B.Widget.Left - 50!) > 2! Then Err.Raise vbObjectError, , "Half B.Left expected ~50, got " & B.Widget.Left
-    If Abs(B.Widget.Width - 40!) > 2! Then Err.Raise vbObjectError, , "Half B.Width expected ~40, got " & B.Widget.Width
+    If Abs(A.Widget.Left - 40!) > 2! Then Err.Raise vbObjectError, , "A.Left must stay ~40 after resize, got " & A.Widget.Left
+    If Abs(A.Widget.Width - 200!) > 2! Then Err.Raise vbObjectError, , "A.Width must stay ~200 after resize, got " & A.Widget.Width
+    If Abs(B.Widget.Left - 100!) > 2! Then Err.Raise vbObjectError, , "B.Left must stay ~100 after resize, got " & B.Widget.Left
 
-    LogResult "P7d-LAY-RESIZE", 0, "OK Design* scale 400x300 -> 200x150"
-    Debug.Print "PASS  P7d-LAY-RESIZE Border Design* children scale with host"
+    LogResult "P7d-LAY-RESIZE", 0, "OK Margin absolute layout (no Design* scale)"
+    Debug.Print "PASS  P7d-LAY-RESIZE Border Margin/Width absolute (no Design* scale)"
     Phase7dBench_BorderDesignResize = True
     Exit Function
 
 Fail:
     LogResult "P7d-LAY-RESIZE", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P7d-LAY-RESIZE ? " & Err.Description
+    Debug.Print "FAIL  P7d-LAY-RESIZE - " & Err.Description
     Phase7dBench_BorderDesignResize = False
 End Function
 
@@ -3005,8 +3007,8 @@ Public Function Phase7cBench_DialogDataTemplate() As Boolean
     Coll.Add CancelItem
 
     Set BtnTmpl = New Button
-    BtnTmpl.DesignWidth = 80
-    BtnTmpl.DesignHeight = 28
+    BtnTmpl.Width = 80
+    BtnTmpl.Height = 28
     AttachDialogButtonTemplateBindings BtnTmpl
 
     Set Tmpl = New DataTemplate
@@ -3201,8 +3203,8 @@ Public Function Phase7cBench_ItemsPanelUniformGrid() As Boolean
 
     ' --- B: UniformGrid ItemsHost + Button ItemTemplate ---
     Set BtnTmpl = New Button
-    BtnTmpl.DesignWidth = 80
-    BtnTmpl.DesignHeight = 28
+    BtnTmpl.Width = 80
+    BtnTmpl.Height = 28
     Set B = New Binding
     Set B.TargetProperty = BtnTmpl.DependencyProperties.GetProperty("Content")
     Set B.Source = BtnTmpl.DependencyProperties.GetProperty("DataContext")

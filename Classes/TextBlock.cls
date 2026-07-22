@@ -25,10 +25,6 @@ Attribute W.VB_VarHelpID = -1
 Private WithEvents ActiveStyle As Style
 Attribute ActiveStyle.VB_VarHelpID = -1
 
-Private m_DesignLeft As Single
-Private m_DesignTop As Single
-Private m_DesignWidth As Single
-Private m_DesignHeight As Single
 Private m_ParentPtr As Long
 Private m_Bindings As List
 Private m_BaseUIElement As UIElementBase
@@ -65,8 +61,14 @@ Public Name As String
             Call .Register("VerticalAlignment", vbLong, , , , NewDependencyPropertyMetadata(, True))
             Call .Register("Text", vbString, , , , NewDependencyPropertyMetadata(, True))
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
+            Call .Register("Width", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
+            Call .Register("Height", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
+            Call .Register("Margin", vbObject, "Thickness", , NewDependencyPropertyMetadata(True, False, False))
             
             .SetValue "Style", Nothing
+            .SetCurrentValue "Width", 0#
+            .SetCurrentValue "Height", 0#
+            .SetCurrentValue "Margin", NewThickness(0)
         
             ' Initialize the default CurrentValues of the Dependency Properties
             ' just in case the default style is not present.
@@ -87,10 +89,6 @@ Public Name As String
         ' Initialize the Default metrics
         ' Important for any resize operations
         ' especially in the inner widgets
-        m_DesignLeft = 0
-        m_DesignTop = 0
-        m_DesignWidth = 100
-        m_DesignHeight = 30
         
         NewUIElementBase Me, m_BaseUIElement
 
@@ -170,37 +168,13 @@ End Function
         Set IUIElement_DataContext = DataContext
     End Property
 
-    Private Property Let IUIElement_DesignHeight(ByVal RHS As Double)
-        DesignHeight = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignHeight() As Double
-        IUIElement_DesignHeight = DesignHeight
-    End Property
     
-    Private Property Let IUIElement_DesignLeft(ByVal RHS As Double)
-        DesignLeft = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignLeft() As Double
-        IUIElement_DesignLeft = DesignLeft
-    End Property
     
-    Private Property Let IUIElement_DesignTop(ByVal RHS As Double)
-        DesignTop = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignTop() As Double
-        IUIElement_DesignTop = DesignTop
-    End Property
     
-    Private Property Let IUIElement_DesignWidth(ByVal RHS As Double)
-        DesignWidth = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignWidth() As Double
-        IUIElement_DesignWidth = DesignWidth
-    End Property
     
     Private Sub IUIElement_Move(Left As Single, Optional Top As Single = 0#, Optional Width As Single, Optional Height As Single)
         Move Left, Top, Width, Height
@@ -230,44 +204,21 @@ End Function
         Call API.CopyVariable(m_DependencyProperties.GetValue("DataContext"), DataContext)
     End Property
     
-    Public Property Let DesignHeight(ByVal Value As Double)
-        m_DesignHeight = Value
-    End Property
     
-    Public Property Get DesignHeight() As Double
-        DesignHeight = m_DesignHeight
-    End Property
     
-    Public Property Let DesignLeft(ByVal Value As Double)
-        m_DesignLeft = Value
-    End Property
     
-    Public Property Get DesignLeft() As Double
-        DesignLeft = m_DesignLeft
-    End Property
     
-    Public Property Let DesignTop(ByVal Value As Double)
-        m_DesignTop = Value
-    End Property
     
-    Public Property Get DesignTop() As Double
-        DesignTop = m_DesignTop
-    End Property
     
-    Public Property Let DesignWidth(ByVal Value As Double)
-        m_DesignWidth = Value
-    End Property
     
-    Public Property Get DesignWidth() As Double
-        DesignWidth = m_DesignWidth
-    End Property
-
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         
         m_Left = 0 'Left
         m_Top = 0 'Top
         m_Width = Width
         m_Height = Height
+        If m_DependencyProperties.Exists("Width") Then m_DependencyProperties.SetCurrentValue "Width", CDbl(Width)
+        If m_DependencyProperties.Exists("Height") Then m_DependencyProperties.SetCurrentValue "Height", CDbl(Height)
         
         If W Is Nothing Then Exit Sub
         W.Move Left, Top, Width, Height
@@ -300,6 +251,30 @@ End Function
 
     Public Property Set Style(ByVal Value As Style)
         Call m_DependencyProperties.SetValue("Style", Value)
+    End Property
+
+    Public Property Get Width() As Double
+        Width = CDbl(m_DependencyProperties.GetValue("Width"))
+    End Property
+
+    Public Property Let Width(ByVal Value As Double)
+        Call m_DependencyProperties.SetValue("Width", Value)
+    End Property
+
+    Public Property Get Height() As Double
+        Height = CDbl(m_DependencyProperties.GetValue("Height"))
+    End Property
+
+    Public Property Let Height(ByVal Value As Double)
+        Call m_DependencyProperties.SetValue("Height", Value)
+    End Property
+
+    Public Property Get Margin() As Thickness
+        Set Margin = m_DependencyProperties.GetValue("Margin")
+    End Property
+
+    Public Property Set Margin(ByVal Value As Thickness)
+        Call m_DependencyProperties.SetValue("Margin", Value)
     End Property
     
     Public Property Get ForeColor() As Long
@@ -469,10 +444,6 @@ Private Sub DrawOn(CC As cCairoContext, Optional ForeColor As Long = -1)
 
 '#Region Helper Functions
     Private Function GetScaleFactor() As Double
-        Dim Root As IDependencyObject
-        Dim RootElement As IUIElement
-        Dim RootControl As IControl
-        
 Try:
         On Error GoTo Catch
         
@@ -480,17 +451,8 @@ Try:
         
         If ScaleFont = False Then Exit Function
         
-        Set Root = GetRoot(Me)
-        Set RootElement = Root
-        Set RootControl = Root
-        
-        Dim xF As Double, yF As Double
-        
-        xF = RootControl.Widget.Width / RootElement.DesignWidth
-        yF = RootControl.Widget.Height / RootElement.DesignHeight
-        
-        GetScaleFactor = IIf(yF < xF, yF, xF)
-        
+        ' Design-canvas font scaling removed with Design*; ScaleFont is currently a no-op.
+        GetScaleFactor = 1
         Exit Function
         
 Catch:
@@ -547,6 +509,8 @@ Catch:
         
         Select Case Property.Name
             Case "Style":           ApplyStyle
+            Case "Width":           m_Width = CDbl(Property.GetValue)
+            Case "Height":          m_Height = CDbl(Property.GetValue)
         End Select
         
         If Parent Is Nothing Then Exit Sub

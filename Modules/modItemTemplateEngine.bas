@@ -38,12 +38,12 @@ Private Function CloneTemplateChild(ByVal Child As Object) As Object
 
     If TypeOf Child Is TextBlock Then
         Set TbSrc = Child
-        ' Never use TextBlock.Clone here â€” cProperties.BindTo copies the full COM surface and
+        ' Never use TextBlock.Clone here — cProperties.BindTo copies the full COM surface and
         ' destabilizes the IDE under dense ItemTemplate clones. Copy paint props + Bindings only.
         Set CloneTemplateChild = CloneTextBlockWithBindings(TbSrc)
     ElseIf TypeOf Child Is Button Then
         Set BtnSrc = Child
-        ' Same rule as TextBlock â€” no full COM Clone; paint + Bindings only (7c-dialog).
+        ' Same rule as TextBlock — no full COM Clone; paint + Bindings only (7c-dialog).
         Set CloneTemplateChild = CloneButtonWithBindings(BtnSrc)
     ElseIf TypeOf Child Is ICloneable Then
         Set Cloner = Child
@@ -197,8 +197,8 @@ Private Function CloneButtonQuick(ByVal Source As Button) As Button
     End If
     Target.BorderWidth = Source.BorderWidth
     Target.CornerRadius = Source.CornerRadius
-    Target.DesignWidth = Source.DesignWidth
-    Target.DesignHeight = Source.DesignHeight
+    Target.Width = Source.Width
+    Target.Height = Source.Height
 
     Set CloneButtonQuick = Target
 End Function
@@ -275,11 +275,11 @@ Public Function CloneItemsPanelRoot(ByVal Source As Object) As Object
     If TypeOf Source Is UniformGrid Then
         Set UgSrc = Source
         Set Ug = New UniformGrid
-        ' Avoid Rows/Columns/Padding setters here â€” they call MoveChildren on an unhosted grid.
+        ' Avoid Rows/Columns/Padding setters here — they call MoveChildren on an unhosted grid.
         Ug.Widget.LockRefresh = True
         Call Ug.ApplyItemsPanelMetrics(UgSrc.Rows, UgSrc.Columns, UgSrc.Padding)
-        Ug.DesignWidth = UgSrc.DesignWidth
-        Ug.DesignHeight = UgSrc.DesignHeight
+        Ug.Width = UgSrc.Width
+        Ug.Height = UgSrc.Height
         On Error Resume Next
         Ug.DependencyProperties.SetCurrentValue "ShowGridLines", UgSrc.DependencyProperties.GetValue("ShowGridLines")
         On Error GoTo 0
@@ -292,8 +292,8 @@ Public Function CloneItemsPanelRoot(ByVal Source As Object) As Object
         Set SpSrc = Source
         Set Sp = New StackPanel
         Sp.Orientation = SpSrc.Orientation
-        Sp.DesignWidth = SpSrc.DesignWidth
-        Sp.DesignHeight = SpSrc.DesignHeight
+        Sp.Width = SpSrc.Width
+        Sp.Height = SpSrc.Height
         Set CloneItemsPanelRoot = Sp
         Exit Function
     End If

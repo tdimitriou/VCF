@@ -332,7 +332,7 @@ Handler:
         Err.Clear
     End Function
 
-    ' Map ActiveThemeName to a concrete bag key. "System" → OS Light/Dark preference.
+    ' Map ActiveThemeName to a concrete bag key. "System" ? OS Light/Dark preference.
     Private Function ResolveEffectiveThemeKey() As String
         Dim Preferred As String
 

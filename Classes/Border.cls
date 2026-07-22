@@ -24,8 +24,6 @@ Attribute m_Children.VB_VarHelpID = -1
 Private WithEvents ActiveStyle As Style
 Attribute ActiveStyle.VB_VarHelpID = -1
 
-Private m_DesignLeft As Single
-Private m_DesignTop As Single
 Private m_ParentPtr As Long
 Private m_TemplatedParentPtr As Long
 Private WithEvents m_DependencyProperties As DependencyProperties
@@ -108,38 +106,13 @@ Public Name As String
         Call API.CopyVariable(m_DependencyProperties.GetValue("DataContext"), DataContext)
     End Property
     
-    Public Property Let DesignHeight(ByVal Value As Double)
-        m_Layout.Height = Value
-    End Property
     
-    Public Property Get DesignHeight() As Double
-        DesignHeight = m_Layout.Height
-    End Property
     
-    Public Property Let DesignLeft(ByVal Value As Double)
-        m_DesignLeft = Value
-    End Property
     
-    Public Property Get DesignLeft() As Double
-        DesignLeft = m_DesignLeft
-    End Property
     
-    Public Property Let DesignTop(ByVal Value As Double)
-        m_DesignTop = Value
-    End Property
     
-    Public Property Get DesignTop() As Double
-        DesignTop = m_DesignTop
-    End Property
     
-    Public Property Let DesignWidth(ByVal Value As Double)
-        m_Layout.Width = Value
-    End Property
     
-    Public Property Get DesignWidth() As Double
-        DesignWidth = m_Layout.Width
-    End Property
-
     Public Property Get Width() As Double
         Width = m_Layout.Width
     End Property
@@ -221,10 +194,7 @@ Public Name As String
         Set m_Layout = New FrameworkElement
         m_Layout.Initialize Me, Me, W
         m_Layout.RegisterLayoutProperties "Border"
-        m_Layout.LegacyScaleLayout = False
         
-        DesignLeft = 0
-        DesignTop = 0
         m_Layout.Width = 300
         m_Layout.Height = 300
             
@@ -281,37 +251,13 @@ Public Name As String
         Set IUIElement_DataContext = DataContext
     End Property
         
-    Private Property Let IUIElement_DesignHeight(ByVal RHS As Double)
-        DesignHeight = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignHeight() As Double
-        IUIElement_DesignHeight = DesignHeight
-    End Property
     
-    Private Property Let IUIElement_DesignLeft(ByVal RHS As Double)
-        DesignLeft = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignLeft() As Double
-        IUIElement_DesignLeft = DesignLeft
-    End Property
     
-    Private Property Let IUIElement_DesignTop(ByVal RHS As Double)
-        DesignTop = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignTop() As Double
-        IUIElement_DesignTop = DesignTop
-    End Property
     
-    Private Property Let IUIElement_DesignWidth(ByVal RHS As Double)
-        DesignWidth = RHS
-    End Property
     
-    Private Property Get IUIElement_DesignWidth() As Double
-        IUIElement_DesignWidth = DesignWidth
-    End Property
     
     Private Sub IUIElement_Move(Left As Single, Optional Top As Single = 0#, Optional Width As Single, Optional Height As Single)
         Move Left, Top, Width, Height
@@ -361,7 +307,6 @@ Catch:
     End Sub
 
     Private Sub ArrangeBorderChild()
-        Dim UseDesign As Boolean
         Dim Marg As Thickness
         Dim InsetL As Single
         Dim InsetT As Single
@@ -371,11 +316,8 @@ Catch:
         If m_Children Is Nothing Then Exit Sub
         If m_Children.Count = 0 Then Exit Sub
 
-        ' Single child = WPF Border.Child fill (LoginViewWpf ListWrapper?ListView, InnerBorder?Grid).
-        ' Honor child Margin (WPF arrange). Margin="4" on ListView may only shim DesignLeft/Top —
-        ' ReadElementMargin reconstructs Thickness from Design* when Margin DP is absent.
+        ' Single child = WPF Border.Child fill (decorator).
         If m_Children.Count = 1 Then
-            m_Layout.LegacyScaleLayout = False
             Set Marg = ReadElementMargin(m_Children(0))
             InsetL = 0!: InsetT = 0!: InsetR = 0!: InsetB = 0!
             If Not Marg Is Nothing Then
@@ -386,36 +328,14 @@ Catch:
                 InsetB = CSng(CallByName(Marg, "Bottom", VbGet))
                 Err.Clear
                 On Error GoTo 0
-                ' Uniform Margin="4" on types without Margin DP only sets DesignLeft/Top —
-                ' mirror to Right/Bottom so inset is even.
-                If InsetL > 0! And InsetR = 0! And InsetB = 0! Then InsetR = InsetL
-                If InsetT > 0! And InsetB = 0! And InsetL = InsetR Then InsetB = InsetT
             End If
             ArrangeDecoratorChild m_Children(0), W, InsetL, InsetT, InsetR, InsetB
             Exit Sub
         End If
 
-        ' Multi-child POS Borders (brand title, legacy InnerBorder with Design* siblings).
-        UseDesign = ChildrenUseDesignLayout()
-        m_Layout.LegacyScaleLayout = UseDesign
+        ' Multi-child: Margin + Width/Height absolute arrange (no Design* scale).
         m_Layout.ArrangeChildren m_Children, W
     End Sub
-
-    ' Option B: POS multi-child Design* siblings scale with Border host.
-    ' Detect DesignLeft/Top only — DesignWidth/Height defaults are not a POS signal.
-    Private Function ChildrenUseDesignLayout() As Boolean
-        Dim Child As Object
-        Dim ChildUI As IUIElement
-
-        On Error Resume Next
-        For Each Child In m_Children
-            If TypeOf Child Is IUIElement Then
-                Set ChildUI = Child
-                If ChildUI.DesignLeft <> 0# Then ChildrenUseDesignLayout = True: Exit Function
-                If ChildUI.DesignTop <> 0# Then ChildrenUseDesignLayout = True: Exit Function
-            End If
-        Next
-    End Function
 '#End Region
 
 '#Region DependencyProperties Events

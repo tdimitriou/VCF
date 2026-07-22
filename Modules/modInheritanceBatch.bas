@@ -1,7 +1,7 @@
 Attribute VB_Name = "modInheritanceBatch"
 Option Explicit
 
-' Phase 8a â€” suppress PassPropertyValue fan-out during XAML load / style apply,
+' Phase 8a — suppress PassPropertyValue fan-out during XAML load / style apply,
 ' then optionally propagate once from the batch root (DataContext coalesce).
 
 Private m_Depth As Long
@@ -58,7 +58,7 @@ End Sub
 
 Public Sub SetInheritanceBatchRoot(ByVal Root As Object)
     ' Only the outermost batch owns the propagate root. Nested XAMLReader.Load
-    ' (res: fragments) must not steal it â€” otherwise End notifies the wrong tree
+    ' (res: fragments) must not steal it — otherwise End notifies the wrong tree
     ' and screen-level DataContext bindings/commands never attach.
     If m_Depth <> 1 Then Exit Sub
     If Root Is Nothing Then

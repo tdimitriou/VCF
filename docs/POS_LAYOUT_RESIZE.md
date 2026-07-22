@@ -109,7 +109,7 @@ LoginView (UserControl, legacy scale)
 | **C** | Propagate parent scale into Border child arrange | Medium | POS parity without Design* detection |
 | **D** | Migrate inner XAML to Grid/Margin; `LegacyScaleLayout = False` | High per screen | WPF-aligned; correct long-term |
 
-**Recommendation:** **B shipped** for legacy POS trees; continue **D** screen-by-screen (`LoginViewWpf.xml`). **Option C deferred (2026-07-21)** — no open edge cases after B + WPF Login; revisit only if DesignLeft/Top=0 multi-child Borders fail resize.
+**Recommendation (2026-07-22):** **Design* and LegacyScaleLayout removed in VCF 3.0.0.** Options B/C cancelled. Use Width/Height/Margin + Grid/StackPanel/Border only.
 
 **Test:** **P7d-LAY-RESIZE** (Phase0) — Border with Design* children at 400×300 → 200×150; assert scaled positions.
 

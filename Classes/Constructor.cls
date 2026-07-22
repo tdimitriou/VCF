@@ -182,7 +182,7 @@ Public Sub DetachBindingsTree(ByVal Root As Object)
     modBindingExpressions.DetachBindingsTree Root
 End Sub
 
-' Phase 2a / B-BIND-DENSE â€” expose item template clone for Phase0 (module is not in typelib).
+' Phase 2a / B-BIND-DENSE — expose item template clone for Phase0 (module is not in typelib).
 Public Function CloneDataTemplateForItem( _
     ByVal ItemTemplate As DataTemplate, _
     ByVal Item As Variant, _

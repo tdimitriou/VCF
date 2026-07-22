@@ -27,10 +27,6 @@ Private m_SuppressContent As Boolean
 Private m_HorizontalContentAlignment As Long
 Private m_VerticalContentAlignment As Long
 
-Private m_DesignLeft As Single
-Private m_DesignTop As Single
-Private m_DesignWidth As Single
-Private m_DesignHeight As Single
 Private m_ParentPtr As Long
 Private m_TemplatedParentPtr As Long
 Private m_Bindings As List
@@ -60,10 +56,6 @@ Private Sub Class_Initialize()
     m_HorizontalContentAlignment = AlignmentConstants.vbCenter
     m_VerticalContentAlignment = 2
 
-    m_DesignLeft = 0
-    m_DesignTop = 0
-    m_DesignWidth = 100
-    m_DesignHeight = 30
 
     NewUIElementBase Me, m_BaseUIElement
     W.LockRefresh = False
@@ -215,38 +207,6 @@ Private Property Get IUIElement_DataContext() As Object
     Set IUIElement_DataContext = DataContext
 End Property
 
-Private Property Let IUIElement_DesignHeight(ByVal RHS As Double)
-    DesignHeight = RHS
-End Property
-
-Private Property Get IUIElement_DesignHeight() As Double
-    IUIElement_DesignHeight = DesignHeight
-End Property
-
-Private Property Let IUIElement_DesignLeft(ByVal RHS As Double)
-    DesignLeft = RHS
-End Property
-
-Private Property Get IUIElement_DesignLeft() As Double
-    IUIElement_DesignLeft = DesignLeft
-End Property
-
-Private Property Let IUIElement_DesignTop(ByVal RHS As Double)
-    DesignTop = RHS
-End Property
-
-Private Property Get IUIElement_DesignTop() As Double
-    IUIElement_DesignTop = DesignTop
-End Property
-
-Private Property Let IUIElement_DesignWidth(ByVal RHS As Double)
-    DesignWidth = RHS
-End Property
-
-Private Property Get IUIElement_DesignWidth() As Double
-    IUIElement_DesignWidth = DesignWidth
-End Property
-
 Private Sub IUIElement_Move(Left As Single, Optional Top As Single = 0#, Optional Width As Single, Optional Height As Single)
     Move Left, Top, Width, Height
 End Sub
@@ -269,38 +229,6 @@ End Property
 
 Public Property Get DataContext() As Object
     Call API.CopyVariable(m_DependencyProperties.GetValue("DataContext"), DataContext)
-End Property
-
-Public Property Let DesignHeight(ByVal Value As Double)
-    m_DesignHeight = Value
-End Property
-
-Public Property Get DesignHeight() As Double
-    DesignHeight = m_DesignHeight
-End Property
-
-Public Property Let DesignLeft(ByVal Value As Double)
-    m_DesignLeft = Value
-End Property
-
-Public Property Get DesignLeft() As Double
-    DesignLeft = m_DesignLeft
-End Property
-
-Public Property Let DesignTop(ByVal Value As Double)
-    m_DesignTop = Value
-End Property
-
-Public Property Get DesignTop() As Double
-    DesignTop = m_DesignTop
-End Property
-
-Public Property Let DesignWidth(ByVal Value As Double)
-    m_DesignWidth = Value
-End Property
-
-Public Property Get DesignWidth() As Double
-    DesignWidth = m_DesignWidth
 End Property
 
 Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)

@@ -30,7 +30,7 @@ Event ScrollIndexChange()
 Event HScrollChange()
 Event MouseUpClick()
 Event MouseMoveOnListItem(ByVal HoverIndex As Long, ByVal RelX As Single, ByVal RelY As Single)
-Event SelectedAll() 'Jùrgen
+Event SelectedAll() 'J?rgen
 Event DimensionsAdjusted()
 Event ListIndexChanged()
 Event MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
@@ -256,7 +256,7 @@ Public Function GetListIndexFromMouseXY(ByVal x As Long, ByVal y As Long) As Lon
 Dim CurYvirt As Long, TotalYvirt As Long
 Dim Posx As Long, PosY As Long, Index As Long
 
-  'Klick auùerhalb der Spalten?
+  'Klick au?erhalb der Spalten?
   If x > mVisibleCols * mColWidth Then
     GetListIndexFromMouseXY = -1
     Exit Function
@@ -1045,7 +1045,7 @@ FinalizeSelection:
   W.RaiseBubblingEvent Me, "Click"
   RaiseEvent MouseUpClick
   W.RaiseBubblingEvent Me, "MouseUpClick"
-  If mImageView = True Then EnsureVisibleSelection 'Aus MouseDown hierhin verlegt, damit bei halbverdeckten Items nicht mehrere Items ausgewùhlt werden JS 29.11.2016
+  If mImageView = True Then EnsureVisibleSelection 'Aus MouseDown hierhin verlegt, damit bei halbverdeckten Items nicht mehrere Items ausgew?hlt werden JS 29.11.2016
 End Sub
 
 Private Sub W_MouseWheel(ByVal MouseKeys As Long, ByVal Rotation As Long, ByVal LineOffset As Long, ByVal xAbs As Single, ByVal yAbs As Single)
@@ -1065,7 +1065,7 @@ End Sub
 
 Private Sub W_DblClick()
   If bDblClick Then
-    mSelFirstState = True 'Fùr Lùschen ùber DBL_Click
+    mSelFirstState = True 'F?r L?schen ?ber DBL_Click
     RaiseEvent DblClick
     W.RaiseBubblingEvent Me, "DblClick"
   End If
@@ -1312,7 +1312,7 @@ Dim PreviousColumnIdx%, OldColIdx%, LastState As ColumnSortState
   If mColDeltaStart > 0 Then mColDeltaStart = 0: AdjustDimensions ': Exit Sub
 End Sub
 
-'#Region Row layout ù variable height (5b) + hierarchy indent (5c)
+'#Region Row layout ? variable height (5b) + hierarchy indent (5c)
 Private Sub MarkRowMetricsDirty()
   mRowMetricsDirty = True
 End Sub
