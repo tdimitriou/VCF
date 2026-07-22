@@ -72,6 +72,7 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P6g-LIVE | Live template Border | `Phase6gBench_LiveTemplateChrome` | pass | Cloned Border in Children; caption not suppressed |
 | P6h-CP | Live ContentPresenter | `Phase6hBench_LiveContentPresenter` | pass | Paint/slot TemplateBinding Content+align |
 | P6i-NEST | Nested Border.Child CP | `Phase6iBench_NestedContentPresenter` | pass | Live CP under Border.Child visual tree |
+| P2a-THEME-SWAP | Theme dictionary merge | `Phase2aBench_ThemeDictionarySwap` | pass | ActiveThemeName swaps MergedDictionaries |
 
 ---
 

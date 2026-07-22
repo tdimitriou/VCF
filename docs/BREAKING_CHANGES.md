@@ -5,6 +5,23 @@
 
 ---
 
+## [2.34.0] — 2026-07-22 — Phase 2a (theme dictionary merge/swap)
+
+### Changed
+
+- **`ThemesManager`** — on `ActiveThemeName` change, publishes the active theme into the host `ResourceDictionary.MergedDictionaries` (WPF-style swap). Supports theme bags as `ObservableDictionary` (copied into a transient RD) or `ResourceDictionary` (merged directly). `AttachToResources` wires the host (Application or test).
+- **`Application`** — when a `ThemesManager` is added to `Resources`, calls `AttachToResources` so the active theme is merged immediately.
+
+### Added
+
+- Phase0 **P2a-THEME-SWAP** — gate **47/47**.
+
+### Notes
+
+- OS Light/Dark detection is still deferred; it can set `ActiveThemeName` once merge/swap is in place. `{ThemeResource}` markup already aliases `{DynamicResource}`.
+
+---
+
 ## [2.33.0] — 2026-07-22 — Phase 2a (nested Border.Child ContentPresenter)
 
 ### Changed

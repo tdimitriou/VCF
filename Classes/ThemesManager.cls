@@ -21,6 +21,10 @@ Event ThemeCkanged()
 Private WithEvents Base As ObservableDictionary
 Attribute Base.VB_VarHelpID = -1
 Private m_ActiveThemeName As String
+' Host Application.Resources (or test host) that receives the active theme merge.
+Private m_HostResources As ResourceDictionary
+' Currently merged theme ResourceDictionary instance (for unmerge on swap).
+Private m_PublishedTheme As ResourceDictionary
 
 '#Region ObservableDictionary Implementation & Inheritance
 
@@ -178,20 +182,107 @@ Attribute Item.VB_UserMemId = 0
     End Property
 
     Public Property Let ActiveThemeName(ByVal Value As String)
+        Dim Host As ResourceDictionary
+
         If m_ActiveThemeName = Value Then Exit Property
-        
+
         m_ActiveThemeName = Value
-        
+
+        Set Host = ResolveHostResources()
+        If Not Host Is Nothing Then PublishActiveThemeTo Host
+
         RaiseEvent ThemeCkanged
     End Property
 
     Public Property Get ActiveTheme() As ObservableDictionary
+        Dim ThemeObj As Object
+
         If Base.ContainsKey(m_ActiveThemeName) Then
-            Set ActiveTheme = Base(m_ActiveThemeName)
-        Else
-            If Base.Count > 0 Then Set ActiveTheme = Base.ItemAt(0)
+            Set ThemeObj = Base(m_ActiveThemeName)
+        ElseIf Base.Count > 0 Then
+            Set ThemeObj = Base.ItemAt(0)
+        End If
+
+        ' POS / legacy: theme bags are ObservableDictionary.
+        ' ResourceDictionary themes resolve via merged Application.Resources.
+        If ThemeObj Is Nothing Then Exit Property
+        If TypeOf ThemeObj Is ObservableDictionary Then
+            Set ActiveTheme = ThemeObj
         End If
     End Property
+
+    ' Wire ThemesManager to Application.Resources (or a Phase0 host dictionary).
+    Public Sub AttachToResources(ByVal Resources As ResourceDictionary)
+        Set m_HostResources = Resources
+        If Not m_HostResources Is Nothing Then PublishActiveThemeTo m_HostResources
+    End Sub
+
+    ' WPF-aligned: merge active theme ResourceDictionary into host MergedDictionaries.
+    Public Sub PublishActiveThemeTo(ByVal Resources As ResourceDictionary)
+        Dim ThemeObj As Object
+        Dim ThemeRD As ResourceDictionary
+        Dim ThemeOD As ObservableDictionary
+        Dim i As Long
+        Dim K As Variant
+        Dim V As Variant
+
+        On Error GoTo Handler
+
+        If Resources Is Nothing Then Exit Sub
+
+        ' Unmerge previous published theme bag.
+        If Not m_PublishedTheme Is Nothing Then
+            If Resources.MergedDictionaries.Contains(m_PublishedTheme) Then
+                Resources.MergedDictionaries.Remove m_PublishedTheme
+            End If
+            Set m_PublishedTheme = Nothing
+        End If
+
+        If Len(m_ActiveThemeName) = 0 Then Exit Sub
+        If Not Base.ContainsKey(m_ActiveThemeName) Then Exit Sub
+
+        Set ThemeObj = Base(m_ActiveThemeName)
+        If ThemeObj Is Nothing Then Exit Sub
+
+        If TypeOf ThemeObj Is ResourceDictionary Then
+            Set ThemeRD = ThemeObj
+        ElseIf TypeOf ThemeObj Is ObservableDictionary Then
+            Set ThemeOD = ThemeObj
+            Set ThemeRD = New ResourceDictionary
+            For i = 0 To ThemeOD.Count - 1
+                API.CopyVariable ThemeOD.KeyOfIndex(i), K
+                API.CopyVariable ThemeOD.ItemAt(i), V
+                If IsObject(V) Then
+                    ThemeRD.Add K, V
+                Else
+                    ThemeRD.Add K, V
+                End If
+            Next
+        Else
+            Exit Sub
+        End If
+
+        Resources.Merge ThemeRD
+        Set m_PublishedTheme = ThemeRD
+        Exit Sub
+
+Handler:
+        On Error Resume Next
+        Set m_PublishedTheme = Nothing
+        Err.Clear
+    End Sub
+
+    Private Function ResolveHostResources() As ResourceDictionary
+        On Error Resume Next
+        If Not m_HostResources Is Nothing Then
+            Set ResolveHostResources = m_HostResources
+            Exit Function
+        End If
+        If Not Application.Current Is Nothing Then
+            Set ResolveHostResources = Application.Current.Base.Resources
+        End If
+        Err.Clear
+    End Function
 
     Private Sub Class_Initialize()
         Set Base = New ObservableDictionary

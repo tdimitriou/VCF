@@ -118,6 +118,7 @@ Private Sub m_Resources_CollectionChanged(Sender As Object, e As CollectionChang
             If IsObject(o) Then
                 If TypeOf o Is ThemesManager Then
                     Set m_ThemesManager = o
+                    m_ThemesManager.AttachToResources m_Resources
                     Exit For
                 End If
             End If

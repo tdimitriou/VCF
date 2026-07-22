@@ -57,6 +57,7 @@ Public Sub RunAll()
     If Not Phase6gBench_LiveTemplateChrome() Then Failed = Failed + 1
     If Not Phase6hBench_LiveContentPresenter() Then Failed = Failed + 1
     If Not Phase6iBench_NestedContentPresenter() Then Failed = Failed + 1
+    If Not Phase2aBench_ThemeDictionarySwap() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
     If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
     If Not Phase7dBench_BorderDesignResize() Then Failed = Failed + 1
@@ -72,7 +73,7 @@ Public Sub RunAll()
 
     ' Report only  do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (46 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (47 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1675,6 +1676,50 @@ Fail:
     On Error Resume Next
     KeepAlive Btn
     Err.Clear
+End Function
+
+' Phase 2a: ThemesManager merges active theme into host ResourceDictionary (WPF swap).
+Public Function Phase2aBench_ThemeDictionarySwap() As Boolean
+    Dim TM As ThemesManager
+    Dim Host As ResourceDictionary
+    Dim Light As ObservableDictionary
+    Dim Dark As ObservableDictionary
+    Dim V As Variant
+
+    On Error GoTo Fail
+
+    Set Light = New ObservableDictionary
+    Light.Add "AccentToken", "LightAccent"
+    Set Dark = New ObservableDictionary
+    Dark.Add "AccentToken", "DarkAccent"
+
+    Set TM = New ThemesManager
+    TM.Add "Light", Light
+    TM.Add "Dark", Dark
+
+    Set Host = New ResourceDictionary
+    TM.AttachToResources Host
+
+    TM.ActiveThemeName = "Light"
+    If Not Host.TryGetResource("AccentToken", V) Then Err.Raise vbObjectError, , "Light AccentToken missing after merge"
+    If CStr(V) <> "LightAccent" Then Err.Raise vbObjectError, , "Expected LightAccent, got " & CStr(V)
+
+    TM.ActiveThemeName = "Dark"
+    If Not Host.TryGetResource("AccentToken", V) Then Err.Raise vbObjectError, , "Dark AccentToken missing after swap"
+    If CStr(V) <> "DarkAccent" Then Err.Raise vbObjectError, , "Expected DarkAccent, got " & CStr(V)
+
+    ' Prior theme bag unmerged — only active theme contributes AccentToken.
+    If Host.MergedDictionaries.Count <> 1 Then Err.Raise vbObjectError, , "Expected 1 merged theme dict, got " & Host.MergedDictionaries.Count
+
+    LogResult "P2a-THEME-SWAP", 0, "OK ThemesManager ActiveThemeName merges ResourceDictionary"
+    Debug.Print "PASS  P2a-THEME-SWAP theme dictionary merge/swap"
+    Phase2aBench_ThemeDictionarySwap = True
+    Exit Function
+
+Fail:
+    LogResult "P2a-THEME-SWAP", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2a-THEME-SWAP - " & Err.Description
+    Phase2aBench_ThemeDictionarySwap = False
 End Function
 
 Public Function Phase7aBench_PosSalesOrderShell() As Boolean
