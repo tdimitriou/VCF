@@ -27,6 +27,7 @@ Attribute ActiveStyle.VB_VarHelpID = -1
 Private m_DesignLeft As Single
 Private m_DesignTop As Single
 Private m_ParentPtr As Long
+Private m_TemplatedParentPtr As Long
 Private WithEvents m_DependencyProperties As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As VCF.List
@@ -177,6 +178,14 @@ Public Name As String
     
     Public Property Get Parent() As IControl
         Call API.CopyVariable(API.ObjFromPtr(m_ParentPtr), Parent)
+    End Property
+
+    Public Property Set TemplatedParent(ByVal Value As Object)
+        m_TemplatedParentPtr = ObjPtr(Value)
+    End Property
+
+    Public Property Get TemplatedParent() As Object
+        Call API.CopyVariable(API.ObjFromPtr(m_TemplatedParentPtr), TemplatedParent)
     End Property
 '#End Region
 
@@ -362,8 +371,8 @@ Catch:
         If m_Children Is Nothing Then Exit Sub
         If m_Children.Count = 0 Then Exit Sub
 
-        ' Single child = WPF Border.Child fill (LoginViewWpf ListWrapperâ†’ListView, InnerBorderâ†’Grid).
-        ' Honor child Margin (WPF arrange). Margin="4" on ListView may only shim DesignLeft/Top â€”
+        ' Single child = WPF Border.Child fill (LoginViewWpf ListWrapper?ListView, InnerBorder?Grid).
+        ' Honor child Margin (WPF arrange). Margin="4" on ListView may only shim DesignLeft/Top —
         ' ReadElementMargin reconstructs Thickness from Design* when Margin DP is absent.
         If m_Children.Count = 1 Then
             m_Layout.LegacyScaleLayout = False
@@ -377,7 +386,7 @@ Catch:
                 InsetB = CSng(CallByName(Marg, "Bottom", VbGet))
                 Err.Clear
                 On Error GoTo 0
-                ' Uniform Margin="4" on types without Margin DP only sets DesignLeft/Top â€”
+                ' Uniform Margin="4" on types without Margin DP only sets DesignLeft/Top —
                 ' mirror to Right/Bottom so inset is even.
                 If InsetL > 0! And InsetR = 0! And InsetB = 0! Then InsetR = InsetL
                 If InsetT > 0! And InsetB = 0! And InsetL = InsetR Then InsetB = InsetT
@@ -393,7 +402,7 @@ Catch:
     End Sub
 
     ' Option B: POS multi-child Design* siblings scale with Border host.
-    ' Detect DesignLeft/Top only â€” DesignWidth/Height defaults are not a POS signal.
+    ' Detect DesignLeft/Top only — DesignWidth/Height defaults are not a POS signal.
     Private Function ChildrenUseDesignLayout() As Boolean
         Dim Child As Object
         Dim ChildUI As IUIElement

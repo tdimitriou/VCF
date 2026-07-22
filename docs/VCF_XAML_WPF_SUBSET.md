@@ -179,7 +179,8 @@ See [VCF_PROPERTY_REGISTRY.md](./VCF_PROPERTY_REGISTRY.md).
 | **Binding** | `{Binding Path=Prop Mode=TwoWay Converter=MyConv StringFormat={}{0:C}}` | `BindingsManager` → `Binding` |
 | **StaticResource** | `{StaticResource ResourceKey=ButtonStyle}` | `StaticResourceExtension` |
 | **ThemeResource** | `{ThemeResource Key=BrushPrimary}` | `ThemeResource` → **deprecate** |
-| **Self** | `{SelfBinding}` | `SelfBinding` |
+| **RelativeSource** | `{RelativeSource Self}` / `TemplatedParent` / `FindAncestor` | `RelativeSource` + `modBindingSourceResolve` |
+| **Self** | `{Self}` | `SelfBinding` |
 
 **Binding subset:**
 
@@ -191,9 +192,9 @@ See [VCF_PROPERTY_REGISTRY.md](./VCF_PROPERTY_REGISTRY.md).
 | `Converter` | Type name → CreateInstance |
 | `ConverterParameter` | Yes |
 | `StringFormat` | Limited |
-| `RelativeSource` | **No** |
-| `ElementName` | **No** |
-| `UpdateSourceTrigger` | **No** (target: Default/LostFocus/PropertyChanged) |
+| `RelativeSource` | Yes (`Self`, `TemplatedParent`, `FindAncestor`) |
+| `ElementName` | Yes (namescope via `NamingManager`) |
+| `UpdateSourceTrigger` | Yes (`ustPropertyChanged`, `ustLostFocus`, `ustExplicit`; Default ≡ PropertyChanged; markup aliases `LostFocus` / `PropertyChanged` / `Explicit`) |
 
 ### 7.2 Target
 

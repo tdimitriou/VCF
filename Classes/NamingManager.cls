@@ -24,6 +24,11 @@ Option Explicit
             AddNamedItem Obj, GetNamedChildren
         Next
     End Function
+
+    ' ElementName binding source: walk namescope from Target (or optional Root).
+    Public Function ResolveElementName(ByVal Target As Object, ByVal ElementName As String, Optional ByVal Root As IControl = Nothing) As Object
+        Set ResolveElementName = modBindingSourceResolve.ResolveElementName(Target, ElementName, Root)
+    End Function
 '#End Region
 
 '#Region Private Members

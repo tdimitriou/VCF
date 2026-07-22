@@ -5,6 +5,68 @@
 
 ---
 
+## [2.39.0] — 2026-07-22 — Phase 2a (UpdateSourceTrigger)
+
+### Added
+
+- **`Binding.UpdateSourceTrigger`** — `ustPropertyChanged` / `ustLostFocus` / `ustExplicit` / `UpdateSourceTriggerDefault` (Default ≡ PropertyChanged; non-breaking). Markup still accepts `LostFocus` / `PropertyChanged` / `Explicit`.
+- **`Binding.FlushUpdateSource`** / **`BindingExpression.UpdateSource`** — push Target→Source on demand.
+- **`FlushLostFocusBindings`** — TextBox LostFocus flushes TwoWay bindings with `LostFocus` trigger.
+- Markup: `{Binding … UpdateSourceTrigger=LostFocus}`.
+- Phase0 **P4-UST** — gate **54/54**.
+
+### Notes
+
+- `UpdateSourceDelay` (barcode debounce) remains a follow-up; this slice is trigger modes + flush only.
+
+---
+
+## [2.38.0] — 2026-07-22 — Phase 2a (ElementName → Command)
+
+### Added
+
+- Phase0 **P4-ECMD** — named host `ICommand` bound to `Button.Command` via ElementName (window-level Command pattern). Gate **53/53**.
+
+### Notes
+
+- Uses existing `NamingManager.ResolveElementName` + `BindingExpression`; no new framework API beyond the RelativeSource/ElementName slice.
+
+---
+
+## [2.37.0] — 2026-07-22 — Phase 2a (RelativeSource / ElementName)
+
+### Added
+
+- **`RelativeSource`** — markup extension + modes `Self`, `TemplatedParent`, `FindAncestor` (`AncestorType` / `AncestorLevel`).
+- **`modBindingSourceResolve`** — `ResolveRelativeSource` / `ResolveElementName` / `FindTemplatedParent` / `FindAncestor`.
+- **`BindingsManager`** — honors `RelativeSource=` and `ElementName=` in `{Binding}` markup (alongside `Source` / DataContext).
+- **`TemplatedParent`** — stamped on live template clones (`Border` / `Grid` / `StackPanel` / `ContentPresenter`).
+- Phase0 **P4-RSELF**, **P4-ENAME**, **P4-RTP** — gate **52/52**.
+
+### Notes
+
+- `{Self}` remains the existing `SelfBinding` shortcut; `{RelativeSource Self}` is the WPF-aligned form for binding Source resolution.
+- Window-level Command via ElementName is now unblocked for app markup; Phase 2b POS pin still deferred.
+
+---
+
+## [2.36.0] — 2026-07-22 — Phase 2a (multi-node ControlTemplate tree)
+
+### Changed
+
+- **`ApplyButtonTemplate`** — recursively clones template visuals: `Border.Child` may be `ContentPresenter`, `Grid`, or `StackPanel` with a deeper presenter. Flat Border+CP siblings remain supported.
+- **`Button.AttachTemplatePresenter`** — optional `NestUnderChrome`; when False, presenter is already in the cloned subtree (do not overwrite `Border.Child`).
+
+### Added
+
+- Phase0 **P6j-MULTI** — gate **49/49**.
+
+### Notes
+
+- RelativeSource / ElementName shipped in **2.37.0**.
+
+---
+
 ## [2.35.0] — 2026-07-22 — Phase 2a (OS System theme → Light/Dark)
 
 ### Changed

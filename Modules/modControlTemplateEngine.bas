@@ -36,8 +36,8 @@ Handler:
     modStyleApplyLog.LogErrorAndReraise "modControlTemplateEngine", "ApplyControlTemplate"
 End Sub
 
-' Lookless (P6g/P6h/P6i): clone Border into Button.Children; nest ContentPresenter
-' under Border.Child (WPF visual tree). Align marker via StyleManager push.
+' Lookless (P6g-P6j): clone template visual tree under Button.
+' Supports flat Border+CP siblings and deeper Border->Panel->ContentPresenter.
 Private Sub ApplyButtonTemplate(ByVal Btn As Button, ByVal Tmpl As ControlTemplate)
     Dim i As Long
     Dim Node As Object
@@ -48,6 +48,7 @@ Private Sub ApplyButtonTemplate(ByVal Btn As Button, ByVal Tmpl As ControlTempla
     Dim Rad As VCF.CornerRadius
     Dim BackColor As Variant
     Dim Tn As String
+    Dim NestUnderChrome As Boolean
 
     On Error GoTo Handler
 
@@ -84,32 +85,47 @@ NextNode:
 304     Exit Sub
     End If
 
-310 Call API.CopyVariable(B.DependencyProperties.GetValue("CornerRadius"), Rad)
-320 If Rad.TopLeft > 0# Then Btn.CornerRadius = Rad.TopLeft
+    ' Deeper tree: ContentPresenter under Border.Child / panel children.
+310 If CPSrc Is Nothing Then Set CPSrc = FindContentPresenterInSubtree(B)
 
-330 If B.DependencyProperties.Exists("BackColor") Then
-340     Call API.CopyVariable(B.DependencyProperties.GetValue("BackColor"), BackColor)
-350     If Not IsEmpty(BackColor) And Not IsNull(BackColor) Then
-360         Btn.DependencyProperties.SetCurrentValue "BackColor", BackColor
+320 Call API.CopyVariable(B.DependencyProperties.GetValue("CornerRadius"), Rad)
+330 If Rad.TopLeft > 0# Then Btn.CornerRadius = Rad.TopLeft
+
+340 If B.DependencyProperties.Exists("BackColor") Then
+350     Call API.CopyVariable(B.DependencyProperties.GetValue("BackColor"), BackColor)
+360     If Not IsEmpty(BackColor) And Not IsNull(BackColor) Then
+370         Btn.DependencyProperties.SetCurrentValue "BackColor", BackColor
         End If
     End If
 
-370 Set Clone = New Border
-380 Clone.Widget.BackColor = Btn.Widget.BackColor
-390 Clone.BorderColor = B.BorderColor
-400 Btn.AttachTemplateChrome Clone
-410 Call ApplyCloneCornerRadius(Clone, Rad)
+380 Set CPClone = Nothing
+390 NestUnderChrome = True
+400 Set Clone = CloneBorderSubtree(B, Btn, CPClone, NestUnderChrome)
+410 If Clone Is Nothing Then
+412     Btn.ClearTemplateChrome
+414     Exit Sub
+    End If
 
-420 If Not CPSrc Is Nothing Or Tmpl.HasContentAlignmentMarker Then
-430     Set CPClone = New ContentPresenter
-440     If Not CPSrc Is Nothing Then
-450         CPClone.HorizontalContentAlignment = CPSrc.HorizontalContentAlignment
-460         CPClone.VerticalContentAlignment = CPSrc.VerticalContentAlignment
-470     ElseIf Tmpl.HasContentAlignmentMarker Then
-480         CPClone.HorizontalContentAlignment = Tmpl.ContentHorizontalAlignment
-490         CPClone.VerticalContentAlignment = Tmpl.ContentVerticalAlignment
+420 Btn.AttachTemplateChrome Clone
+430 Call ApplyCloneCornerRadius(Clone, Rad)
+
+440 If CPClone Is Nothing Then
+450     If Not CPSrc Is Nothing Or Tmpl.HasContentAlignmentMarker Then
+460         Set CPClone = New ContentPresenter
+462         Set CPClone.TemplatedParent = Btn
+470         If Not CPSrc Is Nothing Then
+480             CPClone.HorizontalContentAlignment = CPSrc.HorizontalContentAlignment
+490             CPClone.VerticalContentAlignment = CPSrc.VerticalContentAlignment
+500         ElseIf Tmpl.HasContentAlignmentMarker Then
+510             CPClone.HorizontalContentAlignment = Tmpl.ContentHorizontalAlignment
+520             CPClone.VerticalContentAlignment = Tmpl.ContentVerticalAlignment
+            End If
+530         NestUnderChrome = True
         End If
-500     Btn.AttachTemplatePresenter CPClone
+    End If
+
+540 If Not CPClone Is Nothing Then
+550     Btn.AttachTemplatePresenter CPClone, NestUnderChrome
     End If
 
     Exit Sub
@@ -117,6 +133,143 @@ NextNode:
 Handler:
     modStyleApplyLog.LogErrorAndReraise "modControlTemplateEngine", "ApplyButtonTemplate"
 End Sub
+
+Private Function FindContentPresenterInSubtree(ByVal Node As Object) As ContentPresenter
+    Dim Tn As String
+    Dim B As Border
+    Dim Child As Object
+    Dim Found As ContentPresenter
+    Dim Kids As Object
+
+    On Error Resume Next
+
+    If Node Is Nothing Then Exit Function
+    Tn = TypeName(Node)
+    If StrComp(Tn, "ContentPresenter", vbTextCompare) = 0 Then
+        Set FindContentPresenterInSubtree = Node
+        Exit Function
+    End If
+
+    If StrComp(Tn, "Border", vbTextCompare) = 0 Then
+        Set B = Node
+        If Not B.Child Is Nothing Then
+            Set Found = FindContentPresenterInSubtree(B.Child)
+            If Not Found Is Nothing Then
+                Set FindContentPresenterInSubtree = Found
+                Exit Function
+            End If
+        End If
+    End If
+
+    Set Kids = Nothing
+    Set Kids = Node.Children
+    If Kids Is Nothing Then Exit Function
+    For Each Child In Kids
+        Set Found = FindContentPresenterInSubtree(Child)
+        If Not Found Is Nothing Then
+            Set FindContentPresenterInSubtree = Found
+            Exit Function
+        End If
+    Next
+End Function
+
+' Clone Border chrome + optional Child/Children subtree. OutCP receives live ContentPresenter.
+Private Function CloneBorderSubtree(ByVal Src As Border, ByVal Btn As Button, ByRef OutCP As ContentPresenter, ByRef NestUnderChrome As Boolean) As Border
+    Dim Clone As Border
+    Dim ChildClone As Object
+
+    On Error GoTo Handler
+
+    Set Clone = New Border
+    Clone.Widget.BackColor = Btn.Widget.BackColor
+    Clone.BorderColor = Src.BorderColor
+    Set Clone.TemplatedParent = Btn
+
+    If Not Src.Child Is Nothing Then
+        Set ChildClone = CloneTemplateNode(Src.Child, Btn, OutCP)
+        If Not ChildClone Is Nothing Then
+            If TypeOf ChildClone Is IUIElement Then
+                Set Clone.Child = ChildClone
+                ' CP already placed in subtree ? do not overwrite Border.Child in AttachTemplatePresenter.
+                If Not OutCP Is Nothing Then NestUnderChrome = False
+            End If
+        End If
+    End If
+
+    Set CloneBorderSubtree = Clone
+    Exit Function
+
+Handler:
+    Set CloneBorderSubtree = Nothing
+End Function
+
+Private Function CloneTemplateNode(ByVal Src As Object, ByVal Btn As Button, ByRef OutCP As ContentPresenter) As Object
+    Dim Tn As String
+    Dim CPSrc As ContentPresenter
+    Dim CPClone As ContentPresenter
+    Dim GridClone As Grid
+    Dim StackClone As StackPanel
+    Dim Child As Object
+    Dim ChildClone As Object
+
+    On Error GoTo Handler
+
+    If Src Is Nothing Then Exit Function
+    Tn = TypeName(Src)
+
+    If StrComp(Tn, "ContentPresenter", vbTextCompare) = 0 Then
+        Set CPSrc = Src
+        Set CPClone = New ContentPresenter
+        CPClone.HorizontalContentAlignment = CPSrc.HorizontalContentAlignment
+        CPClone.VerticalContentAlignment = CPSrc.VerticalContentAlignment
+        Set CPClone.TemplatedParent = Btn
+        Set OutCP = CPClone
+        Set CloneTemplateNode = CPClone
+        Exit Function
+    End If
+
+    If StrComp(Tn, "Grid", vbTextCompare) = 0 Then
+        Set GridClone = New Grid
+        Set GridClone.TemplatedParent = Btn
+        For Each Child In Src.Children
+            Set ChildClone = CloneTemplateNode(Child, Btn, OutCP)
+            If Not ChildClone Is Nothing Then
+                If TypeOf ChildClone Is IUIElement Then GridClone.Children.Add ChildClone
+            End If
+        Next
+        Set CloneTemplateNode = GridClone
+        Exit Function
+    End If
+
+    If StrComp(Tn, "StackPanel", vbTextCompare) = 0 Then
+        Set StackClone = New StackPanel
+        Set StackClone.TemplatedParent = Btn
+        For Each Child In Src.Children
+            Set ChildClone = CloneTemplateNode(Child, Btn, OutCP)
+            If Not ChildClone Is Nothing Then
+                If TypeOf ChildClone Is IUIElement Then StackClone.Children.Add ChildClone
+            End If
+        Next
+        Set CloneTemplateNode = StackClone
+        Exit Function
+    End If
+
+    If StrComp(Tn, "Border", vbTextCompare) = 0 Then
+        Dim NestedBorder As Border
+        Dim NestedClone As Border
+        Dim NestedNest As Boolean
+        Set NestedBorder = Src
+        NestedNest = True
+        Set NestedClone = CloneBorderSubtree(NestedBorder, Btn, OutCP, NestedNest)
+        Set CloneTemplateNode = NestedClone
+        Exit Function
+    End If
+
+    Exit Function
+
+Handler:
+    Set CloneTemplateNode = Nothing
+End Function
 
 Private Sub ApplyCloneCornerRadius(ByVal Clone As Border, ByRef Src As VCF.CornerRadius)
     Dim OutRad As VCF.CornerRadius

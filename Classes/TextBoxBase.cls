@@ -41,6 +41,7 @@ Event MaxLengthViolation() ' An insert operation was cancelled because it would 
 Event BeforePaste(TextToPaste As String, Cancel As Boolean)
 Event BeforeSelChange(NewSelStart As Long, NewSelLength As Long, SelBackwards As Boolean, Cancel As Boolean)
 Event SelChanged(ByVal OldSelStart As Long, ByVal OldSelLength As Long, ByVal OldCaretPosition As Long)
+Event LostFocus()
 
 Private dx As Single, dy As Single, Alpha As Single, Zoom As Single, dxx As Single, dyy As Single
 Private mText$, mPassWordChar$, mMultiLine As Boolean, mMaxRowWidth As Single, mVisibleRows&, mCueBannerText As String
@@ -140,7 +141,7 @@ Public Property Let UndoDepth(ByVal NewValue As Byte)
 End Property
 
 Public Property Get InnerSpace() As Long
-    ' Legacy uniform inset â€” returns Left padding.
+    ' Legacy uniform inset — returns Left padding.
     InnerSpace = mPadL
 End Property
 
@@ -908,6 +909,7 @@ End Sub
 Private Sub W_LostFocus()
     Set tCaret = Nothing
     CaretInvertCounter = 1 'somewhere above 0
+    RaiseEvent LostFocus
 End Sub
 
 Private Sub W_MouseEnter(ByVal MouseLeaveWidget As cWidgetBase)

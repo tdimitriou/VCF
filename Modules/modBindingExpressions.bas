@@ -5,7 +5,7 @@ Private m_RefreshBindings As Boolean
 
 Public Sub OnDataContextChanged(ByVal Target As IDependencyObject)
     ' Binding SrcDepObj callbacks already push target updates when DataContext
-    ' (DependencyProperty) changes. Avoid RefreshTargetBindings here â€” re-entrant
+    ' (DependencyProperty) changes. Avoid RefreshTargetBindings here — re-entrant
     ' SetValue during DataContext change can recurse through layout/render paths.
 End Sub
 
@@ -74,7 +74,7 @@ Public Sub DetachBindingsTree(ByVal Root As Object)
         Dim Child As Object
         Dim Kids As UIElementCollection
         Set Ctrl = Root
-        ' TextBlock/Image etc. return Children = Nothing â€” For Each Nothing AVs in VB6/Cairo.
+        ' TextBlock/Image etc. return Children = Nothing — For Each Nothing AVs in VB6/Cairo.
         Set Kids = Ctrl.Children
         If Kids Is Nothing Then Exit Sub
         For Each Child In Kids
@@ -99,3 +99,30 @@ Private Function GetTargetBindings(ByVal Target As IDependencyObject) As List
     On Error Resume Next
     Set GetTargetBindings = API.CObj(Target).Bindings
 End Function
+
+' Flush TwoWay/OneWayToSource bindings with UpdateSourceTrigger=LostFocus (e.g. TextBox LostFocus).
+Public Sub FlushLostFocusBindings(ByVal Target As IDependencyObject)
+    Dim Bindings As List
+    Dim Item As Variant
+    Dim Expr As BindingExpression
+    Dim B As Binding
+
+    On Error Resume Next
+
+    Set Bindings = GetTargetBindings(Target)
+    If Bindings Is Nothing Then Exit Sub
+
+    For Each Item In Bindings
+        Set Expr = Nothing
+        Set B = Nothing
+        If TypeOf Item Is BindingExpression Then
+            Set Expr = Item
+            If Not Expr.Binding Is Nothing Then
+                If Expr.Binding.NeedsLostFocusFlush Then Expr.Binding.FlushUpdateSource
+            End If
+        ElseIf TypeOf Item Is Binding Then
+            Set B = Item
+            If B.NeedsLostFocusFlush Then B.FlushUpdateSource
+        End If
+    Next
+End Sub

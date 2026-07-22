@@ -75,7 +75,7 @@ See [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md).
 | Phase | Acceptance |
 |-------|------------|
 | **Phase 1 (UI/XAML)** | **Phase0 31/31** + **DeNovoSmoke harness** green for agreed screens (Splash → Login → MainMenu → Sales **layout-only**) with stub VMs |
-| **Phase 2a (VCF parallel)** | Continue framework + harness work; every tag: Phase0 (**48/48** incl. P2a-THEME-OS + P2a-THEME-SWAP + P6i-NEST + prior 2a gates) + DeNovoSmoke (stubs only — **no** KernelLib / Data / DB) |
+| **Phase 2a (VCF parallel)** | Continue framework + harness work; every tag: Phase0 (**49/49** incl. P6j-MULTI + P2a-THEME-OS + P2a-THEME-SWAP + P6i-NEST + prior 2a gates) + DeNovoSmoke (stubs only — **no** KernelLib / Data / DB) |
 | **Phase 2b (POS integration)** | When Data + Kernel + UI are ready together: re-attach KernelLib / Data / DB; pin latest VCF tag in `DeNovo.vbp`; full `DeNovo.exe` smoke per [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) §3 |
 
 **Status (2026-07-21):** **Phase 1 complete** — tag **`v2.23.0-wpf-alignment-phase1-complete`**. **Phase 2a in progress** (VCF-local). **Phase 2b deferred** until Data/Kernel (and UI) finish — do **not** rebuild full `DeNovo.exe` for VCF validation.

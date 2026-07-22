@@ -852,16 +852,18 @@ Handler:
     End Sub
 
     ' Attach ContentPresenter as lookless content slot nested under template Border.Child (WPF).
-    Friend Sub AttachTemplatePresenter(ByVal Presenter As ContentPresenter)
+    Friend Sub AttachTemplatePresenter(ByVal Presenter As ContentPresenter, Optional ByVal NestUnderChrome As Boolean = True)
         Dim Chrome As Border
 
         If Presenter Is Nothing Then Exit Sub
         Presenter.SyncTypographyFromWidget W
         Set m_TemplatePresenter = Presenter
-        If Not m_TemplateRoot Is Nothing Then
-            If TypeOf m_TemplateRoot Is Border Then
-                Set Chrome = m_TemplateRoot
-                Set Chrome.Child = Presenter
+        If NestUnderChrome Then
+            If Not m_TemplateRoot Is Nothing Then
+                If TypeOf m_TemplateRoot Is Border Then
+                    Set Chrome = m_TemplateRoot
+                    Set Chrome.Child = Presenter
+                End If
             End If
         End If
         SyncContentPresenterContent

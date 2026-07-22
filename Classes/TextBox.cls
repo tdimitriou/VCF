@@ -363,7 +363,7 @@ Public Property Let Border(ByVal Value As Boolean)
     m_Base.Border = Value
 End Property
 
-' Legacy TextBoxBase inset â€” Left of Padding after ApplyContentPadding.
+' Legacy TextBoxBase inset — Left of Padding after ApplyContentPadding.
 Public Property Get InnerSpace() As Long
     InnerSpace = m_Base.InnerSpace
 End Property
@@ -435,6 +435,10 @@ End Sub
 
 Private Sub m_Base_Validate(Cancel As Boolean)
     RaiseEvent Validate(Cancel)
+End Sub
+
+Private Sub m_Base_LostFocus()
+    FlushLostFocusBindings Me
 End Sub
 
 Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)

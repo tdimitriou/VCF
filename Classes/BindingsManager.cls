@@ -47,6 +47,7 @@ Private Function CreateBinding(ArgList As Variant, _
     
     Dim Obj As Binding
     Dim Source As Object
+    Dim RS As RelativeSource
     
     Set Obj = New Binding
         
@@ -56,6 +57,13 @@ Private Function CreateBinding(ArgList As Variant, _
         
     If Properties.Exists("Source") Then
         Set Source = Properties("Source")
+    ElseIf Properties.Exists("RelativeSource") Then
+        Set RS = Properties("RelativeSource")
+        Set Source = ResolveRelativeSource(Target, RS)
+        If Source Is Nothing Then Exit Function
+    ElseIf Properties.Exists("ElementName") Then
+        Set Source = ResolveElementName(Target, CStr(Properties("ElementName")))
+        If Source Is Nothing Then Exit Function
     Else
         'Not going to happen for the objects currently provided by the VCF Library
         If Not Target.DependencyProperties.Exists("DataContext") Then Exit Function
@@ -76,11 +84,37 @@ Private Function CreateBinding(ArgList As Variant, _
     If Properties.Exists("ConverterParameter") Then Obj.ConverterParameter = Properties("ConverterParameter")
     If Properties.Exists("StringFormat") Then Obj.StringFormat = Properties("StringFormat")
     If Properties.Exists("Mode") Then Obj.Mode = Properties("Mode")
+    If Properties.Exists("UpdateSourceTrigger") Then
+        Obj.UpdateSourceTrigger = ParseUpdateSourceTrigger(Properties("UpdateSourceTrigger"))
+    End If
     
     Set Obj.Target = Target
     API.CObj(Target).Bindings.Add Obj
         
     Set CreateBinding = Obj
+End Function
+
+Private Function ParseUpdateSourceTrigger(ByVal Value As Variant) As UpdateSourceTriggerMode
+    Dim S As String
+
+    If IsNumeric(Value) Then
+        ParseUpdateSourceTrigger = CLng(Value)
+        Exit Function
+    End If
+
+    S = LCase$(Trim$(CStr(Value)))
+    Select Case S
+        Case "propertychanged", "0", "ustpropertychanged"
+            ParseUpdateSourceTrigger = ustPropertyChanged
+        Case "lostfocus", "1", "ustlostfocus"
+            ParseUpdateSourceTrigger = ustLostFocus
+        Case "explicit", "2", "ustexplicit"
+            ParseUpdateSourceTrigger = ustExplicit
+        Case "default", "3", "updatesourcetriggerdefault"
+            ParseUpdateSourceTrigger = UpdateSourceTriggerDefault
+        Case Else
+            ParseUpdateSourceTrigger = UpdateSourceTriggerDefault
+    End Select
 End Function
 
 Private Function ParseMarkupPropertiesString(ByVal MarkupProperties As String, _

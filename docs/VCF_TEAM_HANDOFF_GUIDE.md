@@ -229,8 +229,12 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **Nested Border.Child ContentPresenter** — ~~visual-tree widget~~ (**P6i-NEST**)
   **Theme dictionary merge/swap** — ~~ActiveThemeName → MergedDictionaries~~ (**P2a-THEME-SWAP**)
   **OS System theme** — ~~System → Light/Dark~~ (**P2a-THEME-OS**)
-  later  deeper multi-node templates
-  deferred RelativeSource / ElementName for window-level Command (item-level Command works)
+  **Multi-node ControlTemplate** — ~~Border→Grid→ContentPresenter~~ (**P6j-MULTI**)
+  **RelativeSource / ElementName** — ~~Self / TemplatedParent / FindAncestor / ElementName~~ (**P4-RSELF**, **P4-ENAME**, **P4-RTP**)
+  **ElementName → Command** — ~~named host ICommand → Button.Command~~ (**P4-ECMD**)
+  **UpdateSourceTrigger** — ~~PropertyChanged / LostFocus / Explicit~~ (**P4-UST**)
+  later  (Phase 2a queue clear — Phase 2b POS pin when ready)
+  deferred Phase 2b full `DeNovo.vbp` pin
   ~~deferred UniformGrid ItemsHost with generated items~~ (**P7c-PANEL** TextBlock+Button inflate)
 
 Phase 2b — POS integration (deferred)

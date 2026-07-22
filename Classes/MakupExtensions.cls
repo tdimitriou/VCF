@@ -86,6 +86,11 @@ Private Function CreateExtObject(ByVal Classname As String, _
 
             Set DynExt = New DynamicResourceExtension
             Set CreateExtObject = DynExt.InitializeFromMarkup(Target, MarkupProperties)
+
+        Case "RelativeSource"
+            Dim RelSrc As RelativeSource
+            Set RelSrc = New RelativeSource
+            Set CreateExtObject = RelSrc.InitializeFromMarkup(MarkupProperties)
         
         Case Else:
         

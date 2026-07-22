@@ -35,7 +35,8 @@ Public Function Attach( _
     ByVal TargetPropertyName As String, _
     ByVal Source As Object, _
     ByVal Path As String, _
-    Optional ByVal Mode As BindingMode = BindingMode.Default) As BindingExpression
+    Optional ByVal Mode As BindingMode = BindingMode.Default, _
+    Optional ByVal SourceTrigger As UpdateSourceTriggerMode = UpdateSourceTriggerDefault) As BindingExpression
 
     Dim TargetProp As DependencyProperty
 
@@ -45,6 +46,7 @@ Public Function Attach( _
     Set TargetProp = Target.DependencyProperties.GetProperty(TargetPropertyName)
     Set m_Binding = New Binding
     m_Binding.Mode = Mode
+    m_Binding.UpdateSourceTrigger = SourceTrigger
     m_TargetPtr = ObjPtr(Target)
     m_Binding.Initialize Source, Path, Target, TargetProp
 
@@ -83,8 +85,7 @@ End Sub
 
 Public Sub UpdateSource()
     If m_Binding Is Nothing Then Exit Sub
-    If m_Binding.Mode = OneWay Then Exit Sub
-    ' TwoWay / OneWayToSource handled by existing Binding listener graph
+    m_Binding.FlushUpdateSource True
 End Sub
 
 Private Sub Class_Terminate()

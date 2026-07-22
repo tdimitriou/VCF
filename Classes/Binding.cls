@@ -24,7 +24,15 @@ Public Enum BindingMode
     Default = 4
 End Enum
 
+Public Enum UpdateSourceTriggerMode
+    ustPropertyChanged = 0
+    ustLostFocus = 1
+    ustExplicit = 2
+    UpdateSourceTriggerDefault = 3
+End Enum
+
 Private m_Mode                                  As BindingMode
+Private m_UpdateSourceTrigger                   As UpdateSourceTriggerMode
 Private m_SourcePtr                             As Long             'Holds the pointer of the 'Source' (Object)
 Private m_TargetPtr                             As Long             'Holds the pointer of the 'Target' (DependencyObject)
 Private m_Path                                  As String           'Holds the value of the Path to the Source Property(String)
@@ -43,6 +51,7 @@ Private WithEvents TargetPropertyChangedEvent   As PropertyChangedEvent
 Attribute TargetPropertyChangedEvent.VB_VarHelpID = -1
 
 Private m_SourceInpcConnected                   As Boolean
+Private m_SourceUpdatePending                   As Boolean
 
 ' Use this to control the target update if Mode = OneTime (2)
 Private IsTargetValueSet As Boolean
@@ -120,6 +129,14 @@ End Property
 
 Public Property Let Mode(ByVal Value As BindingMode)
     m_Mode = Value
+End Property
+
+Public Property Get UpdateSourceTrigger() As UpdateSourceTriggerMode
+    UpdateSourceTrigger = m_UpdateSourceTrigger
+End Property
+
+Public Property Let UpdateSourceTrigger(ByVal Value As UpdateSourceTriggerMode)
+    m_UpdateSourceTrigger = Value
 End Property
 
 Public Property Get Source() As Object
@@ -236,6 +253,7 @@ End Property
 
 Private Sub Class_Initialize()
     m_Mode = VCF.BindingMode.Default
+    m_UpdateSourceTrigger = UpdateSourceTriggerDefault
     m_ConverterParameter = vbEmpty
 End Sub
 
@@ -346,12 +364,20 @@ End Sub
 Private Sub TargetPropertyChangedEvent_PropertyChanged(ByVal Sender As Object, e As Variant)
     If m_Detached Then Exit Sub
     Dim myMode As BindingMode
+    Dim Trig As UpdateSourceTriggerMode
     
     myMode = GetEffectiveMode
         
     If Not ((myMode = TwoWay) Or (myMode = OneWayToSource)) Then Exit Sub
-    
-    m_SourceProperty.SetValue Me.TargetProperty.GetValue
+    If m_SourceProperty Is Nothing Then Exit Sub
+
+    Trig = GetEffectiveUpdateSourceTrigger
+    If Trig = ustLostFocus Or Trig = ustExplicit Then
+        m_SourceUpdatePending = True
+        Exit Sub
+    End If
+
+    PushSourceFromTarget
 End Sub
 
 Private Function GetEffectiveMode() As VCF.BindingMode
@@ -360,6 +386,41 @@ Private Function GetEffectiveMode() As VCF.BindingMode
     If Me.Target Is Nothing Then Exit Function
     
     If GetEffectiveMode = BindingMode.Default Then GetEffectiveMode = Me.TargetProperty.Metadata.BindingMode
+End Function
+
+Private Function GetEffectiveUpdateSourceTrigger() As UpdateSourceTriggerMode
+    GetEffectiveUpdateSourceTrigger = m_UpdateSourceTrigger
+    If GetEffectiveUpdateSourceTrigger = UpdateSourceTriggerDefault Then
+        GetEffectiveUpdateSourceTrigger = ustPropertyChanged
+    End If
+End Function
+
+Private Sub PushSourceFromTarget()
+    If m_Detached Then Exit Sub
+    If m_SourceProperty Is Nothing Then Exit Sub
+    If Me.TargetProperty Is Nothing Then Exit Sub
+    m_SourceProperty.SetValue Me.TargetProperty.GetValue
+    m_SourceUpdatePending = False
+End Sub
+
+' Push Target -> Source when pending, or when Force (BindingExpression.UpdateSource).
+Friend Sub FlushUpdateSource(Optional ByVal Force As Boolean = False)
+    Dim myMode As BindingMode
+
+    If m_Detached Then Exit Sub
+    myMode = GetEffectiveMode
+    If Not ((myMode = TwoWay) Or (myMode = OneWayToSource)) Then Exit Sub
+
+    If Force Or m_SourceUpdatePending Then PushSourceFromTarget
+End Sub
+
+Friend Function NeedsLostFocusFlush() As Boolean
+    Dim myMode As BindingMode
+
+    If m_Detached Then Exit Function
+    myMode = GetEffectiveMode
+    If Not ((myMode = TwoWay) Or (myMode = OneWayToSource)) Then Exit Function
+    NeedsLostFocusFlush = (GetEffectiveUpdateSourceTrigger() = ustLostFocus)
 End Function
 
 Friend Sub RefreshTarget()
@@ -400,6 +461,7 @@ Friend Sub DetachBinding()
     m_SrcDepObjPtr = 0
     m_Path = vbNullString
     IsTargetValueSet = False
+    m_SourceUpdatePending = False
 End Sub
 
 Friend Property Get IsListenerActive() As Boolean

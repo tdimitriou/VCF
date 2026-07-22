@@ -27,6 +27,7 @@ Attribute ActiveStyle.VB_VarHelpID = -1
 Private m_DesignLeft As Single
 Private m_DesignTop As Single
 Private m_ParentPtr As Long
+Private m_TemplatedParentPtr As Long
 Private WithEvents m_DependencyProperties As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As List
@@ -175,6 +176,14 @@ End Property
     
     Public Property Get Parent() As IControl
         Call API.CopyVariable(API.ObjFromPtr(m_ParentPtr), Parent)
+    End Property
+
+    Public Property Set TemplatedParent(ByVal Value As Object)
+        m_TemplatedParentPtr = ObjPtr(Value)
+    End Property
+
+    Public Property Get TemplatedParent() As Object
+        Call API.CopyVariable(API.ObjFromPtr(m_TemplatedParentPtr), TemplatedParent)
     End Property
 '#End Region
 

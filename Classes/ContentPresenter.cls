@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-' Â§2.11 / P6i â€” ContentPresenter as visual-tree element (WPF-aligned).
+' §2.11 / P6i — ContentPresenter as visual-tree element (WPF-aligned).
 ' Still exposes Draw() for host paint path when not parented in a template tree.
 
 Implements IDependencyObject
@@ -33,6 +33,7 @@ Private m_DesignTop As Single
 Private m_DesignWidth As Single
 Private m_DesignHeight As Single
 Private m_ParentPtr As Long
+Private m_TemplatedParentPtr As Long
 Private m_Bindings As List
 Private m_BaseUIElement As UIElementBase
 Private WithEvents m_DependencyProperties As DependencyProperties
@@ -322,6 +323,14 @@ End Property
 
 Public Property Get Parent() As IControl
     Call API.CopyVariable(API.ObjFromPtr(m_ParentPtr), Parent)
+End Property
+
+Public Property Set TemplatedParent(ByVal Value As Object)
+    m_TemplatedParentPtr = ObjPtr(Value)
+End Property
+
+Public Property Get TemplatedParent() As Object
+    Call API.CopyVariable(API.ObjFromPtr(m_TemplatedParentPtr), TemplatedParent)
 End Property
 '#End Region
 
