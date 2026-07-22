@@ -534,7 +534,7 @@ Scanner char → TextBoxBase.W_KeyPress → InsertText
 
 **Caret reset (aggravates “unresponsive” feel):** `TextBoxBase.Text` Let clears selection on any text change (`mSelStart = 0`, `mSelLength = 0`, `CalcRows`, `W.Refresh`). If a **stale** value round-trips from the VM during the burst, the caret jumps to the start and wedge input lands in the wrong place.
 
-**VCF has no `UpdateSourceTrigger` / delay** — TwoWay pushes to source on **every** target change (`Binding.cls` `TargetPropertyChangedEvent_PropertyChanged`).
+**VCF has `UpdateSourceTrigger` + optional `UpdateSourceDelay`** — TwoWay can defer Target→Source (`ustLostFocus` / `ustExplicit` / delay ms) and flush on TextBox Enter/LostFocus or `BindingExpression.UpdateSource`.
 
 **Text DP metadata:** default **`BindingMode.TwoWay`** on register (`TextBox.cls`).
 

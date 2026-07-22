@@ -5,6 +5,67 @@
 
 ---
 
+## [2.43.0] — 2026-07-22 — Phase 2a ({TemplateBinding} markup)
+
+### Added
+
+- **`TemplateBinding`** — WPF shorthand for `{Binding Path, RelativeSource=TemplatedParent, Mode=OneWay}`; markup `{TemplateBinding Content}` + imperative `Attach`.
+- **`ContentPresenter.Content`** — registered as `vbVariant` DP (enables Binding/`TemplateBinding` onto the content slot).
+- Phase0 **P6k-TBMK** — gate **58/58**.
+
+### Fixed
+
+- **`ResolveRelativeSource`** — `API.CObj` widen so `TemplatedParent`/`Parent` resolve when the target is passed as `IDependencyObject`.
+
+---
+
+## [2.42.0] — 2026-07-22 — Phase 2a (CanExecuteChanged → Button.Enabled)
+
+### Added
+
+- **`INotifyCanExecuteChanged`** — optional companion to `ICommand` exposing `CanExecuteChangedEvent` (non-breaking for existing `ICommand` implementers).
+- **`Button`** — when `Command` implements `INotifyCanExecuteChanged`, listens and syncs `Widget.Enabled` from `CanExecute` (also on Command/CommandParameter change).
+- Phase0 **P4-CCMD** — gate **57/57**.
+
+### Changed
+
+- **`Phase0DialogCommand`** — mutable `CanExecute` + raises CanExecuteChanged (still defaults True for P7c-DLG).
+
+---
+
+## [2.41.0] — 2026-07-22 — Phase 2a (TextBox caret preserve)
+
+### Changed
+
+- **`TextBoxBase.Text` Let** — when the new value is a pure extension of the old text, preserve caret (end stays at end; mid caret kept). Unrelated replaces still reset selection to 0 (prior behavior).
+- **`TextBox.SelStart` / `SelLength`** — exposed wrappers over `TextBoxBase` (were commented out).
+
+### Added
+
+- Phase0 **P4-CARET** — gate **56/56**.
+
+### Notes
+
+- Completes the barcode/typing hardening arc with **P4-UDELAY** (debounce) + caret-safe write-back.
+
+---
+
+## [2.40.0] — 2026-07-22 — Phase 2a (UpdateSourceDelay debounce)
+
+### Added
+
+- **`Binding.UpdateSourceDelay`** (ms) — `0` = immediate PropertyChanged push (default); `>0` debounce Target→Source only.
+- Debounce timer + **`FlushUpdateSource`** / **`FlushSourceBindings`** — TextBox **Enter** and **LostFocus** force-flush pending TwoWay bindings before app handlers.
+- Round-trip guards **`IsUpdatingSource` / `IsUpdatingTarget`** to reduce caret write-back loops.
+- Markup: `{Binding … UpdateSourceDelay=50}`.
+- Phase0 **P4-UDELAY** — gate **55/55**.
+
+### Notes
+
+- Opt-in only (no Text metadata default delay) — non-breaking for POS. Barcode guidance: 30–80 ms + Enter flush.
+
+---
+
 ## [2.39.0] — 2026-07-22 — Phase 2a (UpdateSourceTrigger)
 
 ### Added

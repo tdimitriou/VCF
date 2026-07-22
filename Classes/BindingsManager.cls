@@ -87,6 +87,11 @@ Private Function CreateBinding(ArgList As Variant, _
     If Properties.Exists("UpdateSourceTrigger") Then
         Obj.UpdateSourceTrigger = ParseUpdateSourceTrigger(Properties("UpdateSourceTrigger"))
     End If
+    If Properties.Exists("UpdateSourceDelay") Then
+        If IsNumeric(Properties("UpdateSourceDelay")) Then
+            Obj.UpdateSourceDelay = CLng(Properties("UpdateSourceDelay"))
+        End If
+    End If
     
     Set Obj.Target = Target
     API.CObj(Target).Bindings.Add Obj

@@ -52,6 +52,11 @@ Attribute TargetPropertyChangedEvent.VB_VarHelpID = -1
 
 Private m_SourceInpcConnected                   As Boolean
 Private m_SourceUpdatePending                   As Boolean
+Private m_UpdateSourceDelay                     As Long
+Private m_IsUpdatingSource                      As Boolean
+Private m_IsUpdatingTarget                      As Boolean
+Private WithEvents m_DelayTimer                 As cTimer
+Attribute m_DelayTimer.VB_VarHelpID = -1
 
 ' Use this to control the target update if Mode = OneTime (2)
 Private IsTargetValueSet As Boolean
@@ -137,6 +142,16 @@ End Property
 
 Public Property Let UpdateSourceTrigger(ByVal Value As UpdateSourceTriggerMode)
     m_UpdateSourceTrigger = Value
+End Property
+
+Public Property Get UpdateSourceDelay() As Long
+    UpdateSourceDelay = m_UpdateSourceDelay
+End Property
+
+Public Property Let UpdateSourceDelay(ByVal Value As Long)
+    If Value < 0 Then Value = 0
+    m_UpdateSourceDelay = Value
+    If m_UpdateSourceDelay = 0 Then StopDelayTimer
 End Property
 
 Public Property Get Source() As Object
@@ -254,6 +269,7 @@ End Property
 Private Sub Class_Initialize()
     m_Mode = VCF.BindingMode.Default
     m_UpdateSourceTrigger = UpdateSourceTriggerDefault
+    m_UpdateSourceDelay = 0
     m_ConverterParameter = vbEmpty
 End Sub
 
@@ -321,6 +337,7 @@ End Function
 
 Private Sub SetTargetPropertyValue()
     If m_Detached Then Exit Sub
+    If m_IsUpdatingSource Then Exit Sub
     Dim myMode As BindingMode
     
     If TargetProperty Is Nothing Then Exit Sub
@@ -338,17 +355,23 @@ Private Sub SetTargetPropertyValue()
         modItemTemplateEngine.ValidateItemsSourceValue ProvideValue, TypeName(API.CObj(Me.Target))
     End If
     
+    m_IsUpdatingTarget = True
+    On Error GoTo FinallyTarget
     Call TargetProperty.SetValue(ProvideValue)
+FinallyTarget:
+    m_IsUpdatingTarget = False
 End Sub
 
 Private Sub SourcePropertyChangedEvent_PropertyChanged(ByVal Sender As Object, e As Variant)
     If m_Detached Then Exit Sub
+    If m_IsUpdatingSource Then Exit Sub
     If m_SourceProperty Is Nothing Then Exit Sub
     m_SourceProperty.OnPropertyChanged e
 End Sub
 
 Private Sub m_SourceProperty_ValueChanged(ByVal Sender As Object, e As Variant)
     If m_Detached Then Exit Sub
+    If m_IsUpdatingSource Then Exit Sub
     SetTargetPropertyValue
 End Sub
 
@@ -363,6 +386,7 @@ End Sub
 
 Private Sub TargetPropertyChangedEvent_PropertyChanged(ByVal Sender As Object, e As Variant)
     If m_Detached Then Exit Sub
+    If m_IsUpdatingTarget Then Exit Sub
     Dim myMode As BindingMode
     Dim Trig As UpdateSourceTriggerMode
     
@@ -374,6 +398,12 @@ Private Sub TargetPropertyChangedEvent_PropertyChanged(ByVal Sender As Object, e
     Trig = GetEffectiveUpdateSourceTrigger
     If Trig = ustLostFocus Or Trig = ustExplicit Then
         m_SourceUpdatePending = True
+        StopDelayTimer
+        Exit Sub
+    End If
+
+    If m_UpdateSourceDelay > 0 Then
+        ScheduleDelayedSourceUpdate
         Exit Sub
     End If
 
@@ -399,11 +429,43 @@ Private Sub PushSourceFromTarget()
     If m_Detached Then Exit Sub
     If m_SourceProperty Is Nothing Then Exit Sub
     If Me.TargetProperty Is Nothing Then Exit Sub
+
+    StopDelayTimer
+    m_IsUpdatingSource = True
+    On Error GoTo FinallyPush
     m_SourceProperty.SetValue Me.TargetProperty.GetValue
+FinallyPush:
+    m_IsUpdatingSource = False
     m_SourceUpdatePending = False
 End Sub
 
-' Push Target -> Source when pending, or when Force (BindingExpression.UpdateSource).
+Private Sub ScheduleDelayedSourceUpdate()
+    m_SourceUpdatePending = True
+    On Error GoTo Handler
+
+    If m_DelayTimer Is Nothing Then Set m_DelayTimer = New_c.Timer(m_UpdateSourceDelay, False)
+    m_DelayTimer.Enabled = False
+    m_DelayTimer.Interval = m_UpdateSourceDelay
+    m_DelayTimer.Enabled = True
+    Exit Sub
+
+Handler:
+    PushSourceFromTarget
+End Sub
+
+Private Sub StopDelayTimer()
+    On Error Resume Next
+    If Not m_DelayTimer Is Nothing Then m_DelayTimer.Enabled = False
+End Sub
+
+Private Sub m_DelayTimer_Timer()
+    On Error Resume Next
+    StopDelayTimer
+    If m_Detached Then Exit Sub
+    FlushUpdateSource True
+End Sub
+
+' Push Target -> Source when pending, or when Force (BindingExpression.UpdateSource / TextBox Enter).
 Friend Sub FlushUpdateSource(Optional ByVal Force As Boolean = False)
     Dim myMode As BindingMode
 
@@ -420,7 +482,7 @@ Friend Function NeedsLostFocusFlush() As Boolean
     If m_Detached Then Exit Function
     myMode = GetEffectiveMode
     If Not ((myMode = TwoWay) Or (myMode = OneWayToSource)) Then Exit Function
-    NeedsLostFocusFlush = (GetEffectiveUpdateSourceTrigger() = ustLostFocus)
+    NeedsLostFocusFlush = (GetEffectiveUpdateSourceTrigger() = ustLostFocus) Or (m_UpdateSourceDelay > 0 And m_SourceUpdatePending)
 End Function
 
 Friend Sub RefreshTarget()
@@ -436,6 +498,9 @@ Friend Sub DetachBinding()
 
     Dim TargetProp As DependencyProperty
     Dim SrcDp As DependencyProperty
+
+    StopDelayTimer
+    Set m_DelayTimer = Nothing
 
     If m_TargetPropertyPtr <> 0 Then
         Set TargetProp = API.ObjFromPtr(m_TargetPropertyPtr)
@@ -462,6 +527,8 @@ Friend Sub DetachBinding()
     m_Path = vbNullString
     IsTargetValueSet = False
     m_SourceUpdatePending = False
+    m_IsUpdatingSource = False
+    m_IsUpdatingTarget = False
 End Sub
 
 Friend Property Get IsListenerActive() As Boolean

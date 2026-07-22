@@ -44,6 +44,9 @@ Public Sub RunAll()
     If Not Phase4Bench_RelativeSourceTemplatedParent() Then Failed = Failed + 1
     If Not Phase4Bench_ElementNameCommand() Then Failed = Failed + 1
     If Not Phase4Bench_UpdateSourceTrigger() Then Failed = Failed + 1
+    If Not Phase4Bench_UpdateSourceDelay() Then Failed = Failed + 1
+    If Not Phase4Bench_TextCaretPreserve() Then Failed = Failed + 1
+    If Not Phase4Bench_CanExecuteChanged() Then Failed = Failed + 1
     If Not Phase4bBench_BeginUpdateDefer() Then Failed = Failed + 1
     If Not Phase4bBench_Move() Then Failed = Failed + 1
     If Not Phase4bBench_ItemsControl() Then Failed = Failed + 1
@@ -63,6 +66,7 @@ Public Sub RunAll()
     If Not Phase6hBench_LiveContentPresenter() Then Failed = Failed + 1
     If Not Phase6iBench_NestedContentPresenter() Then Failed = Failed + 1
     If Not Phase6jBench_MultiNodeTemplate() Then Failed = Failed + 1
+    If Not Phase6kBench_TemplateBindingMarkup() Then Failed = Failed + 1
     If Not Phase2aBench_ThemeDictionarySwap() Then Failed = Failed + 1
     If Not Phase2aBench_SystemThemeResolve() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
@@ -80,7 +84,7 @@ Public Sub RunAll()
 
     ' Report only ? do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (54 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (58 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -912,6 +916,136 @@ Fail:
     Debug.Print "FAIL  P4-UST - " & FailMsg
     KeepAlive Tb
     Phase4Bench_UpdateSourceTrigger = False
+End Function
+
+Public Function Phase4Bench_UpdateSourceDelay() As Boolean
+    Dim Vm As Phase0ViewModel
+    Dim Tb As VCF.TextBox
+    Dim Expr As BindingExpression
+    Dim B As Binding
+    Dim FailMsg As String
+
+    On Error GoTo Fail
+
+    Set Vm = New Phase0ViewModel
+    Vm.Title = "Initial"
+    Set Tb = New VCF.TextBox
+    Tb.Text = "Initial"
+    Set Expr = New BindingExpression
+    Expr.Attach Tb, "Text", Vm, "Title", TwoWay
+    Set B = Expr.Binding
+    ' Long delay so timer cannot fire during the gate; assert debounce + Flush.
+    B.UpdateSourceDelay = 60000
+
+    Tb.Text = "Deferred"
+    If Vm.Title <> "Initial" Then Err.Raise vbObjectError, , "Delay: VM updated too early, got " & Vm.Title
+    If Tb.Text <> "Deferred" Then Err.Raise vbObjectError, , "Delay: TextBox.Text expected Deferred"
+
+    Expr.UpdateSource
+    If Vm.Title <> "Deferred" Then Err.Raise vbObjectError, , "Delay: VM expected Deferred after UpdateSource, got " & Vm.Title
+
+    Tb.Text = "Again"
+    If Vm.Title <> "Deferred" Then Err.Raise vbObjectError, , "Delay: VM should stay Deferred until flush, got " & Vm.Title
+    Expr.UpdateSource
+    If Vm.Title <> "Again" Then Err.Raise vbObjectError, , "Delay: VM expected Again after UpdateSource, got " & Vm.Title
+
+    KeepAlive Tb
+    LogResult "P4-UDELAY", 0, "OK UpdateSourceDelay debounce + Flush"
+    Debug.Print "PASS  P4-UDELAY UpdateSourceDelay debounce + Flush"
+    Expr.Detach
+    Set Expr = Nothing
+    Phase4Bench_UpdateSourceDelay = True
+    Exit Function
+
+Fail:
+    FailMsg = Err.Description
+    If Len(FailMsg) = 0 Then FailMsg = "Error " & CStr(Err.Number)
+    On Error Resume Next
+    If Not Expr Is Nothing Then Expr.Detach
+    LogResult "P4-UDELAY", 0, "FAIL: " & FailMsg
+    Debug.Print "FAIL  P4-UDELAY - " & FailMsg
+    KeepAlive Tb
+    Phase4Bench_UpdateSourceDelay = False
+End Function
+
+Public Function Phase4Bench_TextCaretPreserve() As Boolean
+    Dim Tb As VCF.TextBox
+    Dim FailMsg As String
+
+    On Error GoTo Fail
+
+    Set Tb = New VCF.TextBox
+    Tb.Text = "AB"
+    Tb.SelStart = 2
+    Tb.SelLength = 0
+
+    ' Prefix extension (binding echo): caret at end must move to new end, not 0.
+    Tb.Text = "ABC"
+    If Tb.Text <> "ABC" Then Err.Raise vbObjectError, , "Text expected ABC"
+    If Tb.SelStart <> 3 Then Err.Raise vbObjectError, , "Caret expected 3 after append, got " & CStr(Tb.SelStart)
+
+    Tb.Text = "AB"
+    Tb.SelStart = 1
+    Tb.Text = "ABX"
+    ' Not a pure extension of "AB" -> "ABX" wait - "ABX" Left 2 = "AB", Len >=, OldStart=1 < Len(Old)=2
+    ' So NewStart = OldStart = 1 ? preserve mid caret on extension
+    If Tb.SelStart <> 1 Then Err.Raise vbObjectError, , "Mid caret expected 1 on extension, got " & CStr(Tb.SelStart)
+
+    Tb.Text = "ZZ"
+    ' Unrelated replace ? caret resets to 0
+    If Tb.SelStart <> 0 Then Err.Raise vbObjectError, , "Unrelated replace expected caret 0, got " & CStr(Tb.SelStart)
+
+    KeepAlive Tb
+    LogResult "P4-CARET", 0, "OK TextBox caret preserve on prefix extension"
+    Debug.Print "PASS  P4-CARET TextBox caret preserve on prefix extension"
+    Phase4Bench_TextCaretPreserve = True
+    Exit Function
+
+Fail:
+    FailMsg = Err.Description
+    If Len(FailMsg) = 0 Then FailMsg = "Error " & CStr(Err.Number)
+    On Error Resume Next
+    LogResult "P4-CARET", 0, "FAIL: " & FailMsg
+    Debug.Print "FAIL  P4-CARET - " & FailMsg
+    KeepAlive Tb
+    Phase4Bench_TextCaretPreserve = False
+End Function
+
+Public Function Phase4Bench_CanExecuteChanged() As Boolean
+    Dim Btn As Button
+    Dim Cmd As Phase0DialogCommand
+    Dim FailMsg As String
+
+    On Error GoTo Fail
+
+    Set Cmd = New Phase0DialogCommand
+    Cmd.Reset
+    Cmd.CanExecute = True
+
+    Set Btn = New Button
+    Set Btn.Command = Cmd
+    If Not Btn.Widget.Enabled Then Err.Raise vbObjectError, , "Expected Enabled=True when CanExecute=True"
+
+    Cmd.CanExecute = False
+    If Btn.Widget.Enabled Then Err.Raise vbObjectError, , "Expected Enabled=False after CanExecuteChanged"
+
+    Cmd.CanExecute = True
+    If Not Btn.Widget.Enabled Then Err.Raise vbObjectError, , "Expected Enabled=True after re-enable"
+
+    KeepAlive Btn
+    LogResult "P4-CCMD", 0, "OK CanExecuteChanged syncs Button.Enabled"
+    Debug.Print "PASS  P4-CCMD CanExecuteChanged syncs Button.Enabled"
+    Phase4Bench_CanExecuteChanged = True
+    Exit Function
+
+Fail:
+    FailMsg = Err.Description
+    If Len(FailMsg) = 0 Then FailMsg = "Error " & CStr(Err.Number)
+    On Error Resume Next
+    LogResult "P4-CCMD", 0, "FAIL: " & FailMsg
+    Debug.Print "FAIL  P4-CCMD - " & FailMsg
+    KeepAlive Btn
+    Phase4Bench_CanExecuteChanged = False
 End Function
 
 Public Function Phase4bBench_BeginUpdateDefer() As Boolean
@@ -2063,6 +2197,50 @@ Fail:
     Err.Clear
 End Function
 
+' {TemplateBinding} shorthand: OneWay from TemplatedParent Path (P6k).
+Public Function Phase6kBench_TemplateBindingMarkup() As Boolean
+    Dim Btn As Button
+    Dim Nested As ContentPresenter
+    Dim TB As TemplateBinding
+    Dim Expr As BindingExpression
+    Dim FailMsg As String
+
+    On Error GoTo Fail
+
+    Set Btn = New Button
+    Btn.Content = "TB-OK"
+
+    ' Stamp TemplatedParent on a free CP (TextBlock has no TemplatedParent).
+    Set Nested = New ContentPresenter
+    Set Nested.TemplatedParent = Btn
+    If Nested.TemplatedParent Is Nothing Then Err.Raise vbObjectError, , "TemplatedParent stamp failed"
+    If Not Nested.TemplatedParent Is Btn Then Err.Raise vbObjectError, , "TemplatedParent must be Button"
+
+    Set TB = New TemplateBinding
+    Set Expr = TB.Attach(Nested, "Content", "Content")
+    If Expr Is Nothing Then Err.Raise vbObjectError, , "TemplateBinding.Attach failed"
+
+    If CStr(Nested.Content) <> "TB-OK" Then
+        Err.Raise vbObjectError, , "TemplateBinding expected Content=TB-OK, got " & CStr(Nested.Content)
+    End If
+
+    KeepAlive Btn
+    LogResult "P6k-TBMK", 0, "OK TemplateBinding Attach TemplatedParent Path"
+    Debug.Print "PASS  P6k-TBMK TemplateBinding markup/Attach"
+    If Not Expr Is Nothing Then Expr.Detach
+    Phase6kBench_TemplateBindingMarkup = True
+    Exit Function
+
+Fail:
+    FailMsg = Err.Description
+    If Len(FailMsg) = 0 Then FailMsg = "Error " & CStr(Err.Number)
+    On Error Resume Next
+    If Not Expr Is Nothing Then Expr.Detach
+    LogResult "P6k-TBMK", 0, "FAIL: " & FailMsg
+    Debug.Print "FAIL  P6k-TBMK - " & FailMsg
+    KeepAlive Btn
+    Phase6kBench_TemplateBindingMarkup = False
+End Function
 ' Phase 2a: ThemesManager merges active theme into host ResourceDictionary (WPF swap).
 Public Function Phase2aBench_ThemeDictionarySwap() As Boolean
     Dim TM As ThemesManager

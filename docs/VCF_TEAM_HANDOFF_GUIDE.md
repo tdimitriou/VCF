@@ -233,6 +233,10 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **RelativeSource / ElementName** — ~~Self / TemplatedParent / FindAncestor / ElementName~~ (**P4-RSELF**, **P4-ENAME**, **P4-RTP**)
   **ElementName → Command** — ~~named host ICommand → Button.Command~~ (**P4-ECMD**)
   **UpdateSourceTrigger** — ~~PropertyChanged / LostFocus / Explicit~~ (**P4-UST**)
+  **UpdateSourceDelay** — ~~debounce Target→Source + Enter/LostFocus flush~~ (**P4-UDELAY**)
+  **TextBox caret preserve** — ~~prefix-extension write-back keeps caret~~ (**P4-CARET**)
+  **CanExecuteChanged** — ~~INotifyCanExecuteChanged → Button.Enabled~~ (**P4-CCMD**)
+  **{TemplateBinding}** — ~~TemplatedParent OneWay shorthand~~ (**P6k-TBMK**)
   later  (Phase 2a queue clear — Phase 2b POS pin when ready)
   deferred Phase 2b full `DeNovo.vbp` pin
   ~~deferred UniformGrid ItemsHost with generated items~~ (**P7c-PANEL** TextBlock+Button inflate)

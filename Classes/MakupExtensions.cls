@@ -91,6 +91,11 @@ Private Function CreateExtObject(ByVal Classname As String, _
             Dim RelSrc As RelativeSource
             Set RelSrc = New RelativeSource
             Set CreateExtObject = RelSrc.InitializeFromMarkup(MarkupProperties)
+
+        Case "TemplateBinding"
+            Dim TmplBind As TemplateBinding
+            Set TmplBind = New TemplateBinding
+            Set CreateExtObject = TmplBind.InitializeFromMarkup(Target, TargetProperty, MarkupProperties)
         
         Case Else:
         

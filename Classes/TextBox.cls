@@ -363,7 +363,7 @@ Public Property Let Border(ByVal Value As Boolean)
     m_Base.Border = Value
 End Property
 
-' Legacy TextBoxBase inset — Left of Padding after ApplyContentPadding.
+' Legacy TextBoxBase inset ? Left of Padding after ApplyContentPadding.
 Public Property Get InnerSpace() As Long
     InnerSpace = m_Base.InnerSpace
 End Property
@@ -406,6 +406,7 @@ Private Sub m_Base_Click()
 End Sub
 
 Private Sub m_Base_KeyDown(KeyCode As Integer, Shift As Integer)
+    If KeyCode = vbKeyReturn Then FlushSourceBindings Me, True
     RaiseEvent KeyDown(KeyCode, Shift)
 End Sub
 
@@ -438,7 +439,7 @@ Private Sub m_Base_Validate(Cancel As Boolean)
 End Sub
 
 Private Sub m_Base_LostFocus()
-    FlushLostFocusBindings Me
+    FlushSourceBindings Me, True
 End Sub
 
 Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
@@ -490,44 +491,19 @@ End Sub
 
 
 '<TextBoxBase Properties>
-'Public Property Get SelStart() As Long
-'    SelStart = mSelStart
-'End Property
-'
-'Public Property Let SelStart(ByVal NewValue As Long)
-'    SetSelection NewValue, 0
-'End Property
-'
-'Public Property Get SelLength() As Long
-'    SelLength = mSelLength
-'End Property
-'
-'Public Property Let SelLength(ByVal NewValue As Long)
-'    SetSelection Me.SelStart, NewValue
-'End Property
-'
-'Public Property Get SelText() As String
-'    If mSelLength Then SelText = Mid$(mText, mSelStart + 1, mSelLength)
-'End Property
-'
-'Public Property Let SelText(ByVal NewValue As String)
-'    InsertText NewValue
-'    W.Refresh
-'End Property
-'
-'Public Property Get AutoSelectAll() As Boolean
-'    AutoSelectAll = mAutoSelectAll
-'End Property
-'
-'Public Property Let AutoSelectAll(ByVal AutoSelectAll As Boolean)
-'    mAutoSelectAll = AutoSelectAll
-'End Property
-'
-'Public Property Get HideSelection() As Boolean
-'    HideSelection = mHideSelection
-'End Property
-'
-'Public Property Let HideSelection(ByVal HideSelection As Boolean)
-'    mHideSelection = HideSelection
-'End Property
+Public Property Get SelStart() As Long
+    SelStart = m_Base.SelStart
+End Property
+
+Public Property Let SelStart(ByVal NewValue As Long)
+    m_Base.SelStart = NewValue
+End Property
+
+Public Property Get SelLength() As Long
+    SelLength = m_Base.SelLength
+End Property
+
+Public Property Let SelLength(ByVal NewValue As Long)
+    m_Base.SelLength = NewValue
+End Property
 '</TextBoxBase Properties>

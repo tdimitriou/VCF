@@ -104,10 +104,35 @@ Public Property Get Text() As String
 End Property
 
 Public Property Let Text(ByVal NewValue As String)
+    Dim OldText As String
+    Dim OldStart As Long
+    Dim OldSelLen As Long
+    Dim NewStart As Long
+
     If NewValue = mText Then Exit Property
+
+    OldText = mText
+    OldStart = mSelStart
+    OldSelLen = mSelLength
+
     mText = NewValue
-    mSelStart = 0
-    mSelLength = 0
+
+    ' Preserve caret when NewValue is a pure extension of OldText (binding write-back / echo).
+    If OldSelLen = 0 And Len(NewValue) >= Len(OldText) Then
+        If Len(OldText) = 0 Or StrComp(Left$(NewValue, Len(OldText)), OldText, vbBinaryCompare) = 0 Then
+            If OldStart >= Len(OldText) Then
+                NewStart = Len(NewValue)
+            Else
+                NewStart = OldStart
+            End If
+            SetSelection NewStart, 0, False, False, False
+            GoTo AfterSel
+        End If
+    End If
+
+    SetSelection 0, 0, False, False, False
+
+AfterSel:
     CalcRows
     W.Refresh
     RaiseEvent Change
@@ -141,7 +166,7 @@ Public Property Let UndoDepth(ByVal NewValue As Byte)
 End Property
 
 Public Property Get InnerSpace() As Long
-    ' Legacy uniform inset — returns Left padding.
+    ' Legacy uniform inset ? returns Left padding.
     InnerSpace = mPadL
 End Property
 

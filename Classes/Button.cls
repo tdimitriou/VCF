@@ -23,6 +23,8 @@ Private WithEvents m_Children                   As UIElementCollection
 Attribute m_Children.VB_VarHelpID = -1
 Private WithEvents ActiveStyle As Style
 Attribute ActiveStyle.VB_VarHelpID = -1
+Private WithEvents m_CmdCanExecuteEvent         As PropertyChangedEvent
+Attribute m_CmdCanExecuteEvent.VB_VarHelpID = -1
 
 Private m_DesignLeft                            As Single
 Private m_DesignTop                             As Single
@@ -60,7 +62,7 @@ Attribute TmrRelease.VB_VarHelpID = -1
         Set Bindings = m_Bindings
     End Property
 
-    ' ù2.11 paint-only presenter used for string Content (Phase0 P6e-PRES).
+    ' ?2.11 paint-only presenter used for string Content (Phase0 P6e-PRES).
     ' When a ControlTemplate content slot is live, returns that presenter (TemplateBinding).
     Public Property Get ContentPresenter() As ContentPresenter
         Set ContentPresenter = ActiveContentPresenter()
@@ -606,6 +608,8 @@ Catch:
             Case "HorizontalContentAlignment", "VerticalContentAlignment": _
                                     SyncContentPresenterAlignment: modRenderCoalescer.RequestWidgetRefresh W
             Case "Padding":         Call W_Resize: modRenderCoalescer.RequestWidgetRefresh W
+            Case "Command":         AttachCommandCanExecuteListener: SyncCommandEnabled
+            Case "CommandParameter": SyncCommandEnabled
         End Select
         
         ' Pass the new property value to the contained widgets
@@ -805,7 +809,7 @@ End Sub
         CP.SuppressContent = ContentIsUIElement() Or (NonTemplateChildCount() > 0)
     End Sub
 
-    ' Called from modControlTemplateEngine ù clear previous live template Border.
+    ' Called from modControlTemplateEngine ? clear previous live template Border.
     Friend Sub ClearTemplateChrome()
         Dim WKey As String
         Dim ChromeClear As Border
@@ -1008,8 +1012,43 @@ Private Sub OnClick()
     On Error Resume Next
         
     If Not Command Is Nothing Then
-        If Command.CanExecute Then Call Command.Execute(CommandParameter)
+        If Command.CanExecute(CommandParameter) Then Call Command.Execute(CommandParameter)
     End If
+End Sub
+
+Private Sub AttachCommandCanExecuteListener()
+    Dim Cmd As ICommand
+    Dim Notify As INotifyCanExecuteChanged
+
+    On Error Resume Next
+    Set m_CmdCanExecuteEvent = Nothing
+    Set Cmd = Command
+    If Cmd Is Nothing Then Exit Sub
+    If Not TypeOf Cmd Is INotifyCanExecuteChanged Then Exit Sub
+    Set Notify = Cmd
+    Set m_CmdCanExecuteEvent = Notify.CanExecuteChangedEvent
+End Sub
+
+Private Sub SyncCommandEnabled()
+    Dim Cmd As ICommand
+    Dim Ok As Boolean
+
+    On Error Resume Next
+    Set Cmd = Command
+    If Cmd Is Nothing Then
+        W.Enabled = True
+        Exit Sub
+    End If
+    Ok = Cmd.CanExecute(CommandParameter)
+    If Err.Number <> 0 Then
+        Err.Clear
+        Ok = True
+    End If
+    W.Enabled = Ok
+End Sub
+
+Private Sub m_CmdCanExecuteEvent_PropertyChanged(ByVal Sender As Object, e As Variant)
+    SyncCommandEnabled
 End Sub
 
 Private Function GetBaseStyle() As Style

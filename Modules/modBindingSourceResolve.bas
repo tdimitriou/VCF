@@ -4,18 +4,25 @@ Option Explicit
 ' Resolve RelativeSource / ElementName for BindingsManager and Phase0.
 
 Public Function ResolveRelativeSource(ByVal Target As Object, ByVal RS As RelativeSource) As Object
+    Dim Full As Object
+
     On Error GoTo Handler
 
     If Target Is Nothing Then Exit Function
     If RS Is Nothing Then Exit Function
 
+    ' Widen IDependencyObject / other iface ptrs to coclass so CallByName
+    ' can see TemplatedParent / Parent (VB6 interface narrowing).
+    Set Full = API.CObj(Target)
+    If Full Is Nothing Then Set Full = Target
+
     Select Case RS.Mode
         Case RelativeSourceSelf
-            Set ResolveRelativeSource = Target
+            Set ResolveRelativeSource = Full
         Case RelativeSourceTemplatedParent
-            Set ResolveRelativeSource = FindTemplatedParent(Target)
+            Set ResolveRelativeSource = FindTemplatedParent(Full)
         Case RelativeSourceFindAncestor
-            Set ResolveRelativeSource = FindAncestor(Target, RS.AncestorType, RS.AncestorLevel)
+            Set ResolveRelativeSource = FindAncestor(Full, RS.AncestorType, RS.AncestorLevel)
     End Select
     Exit Function
 

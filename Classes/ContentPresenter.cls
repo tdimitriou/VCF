@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-' §2.11 / P6i — ContentPresenter as visual-tree element (WPF-aligned).
+' ?2.11 / P6i ? ContentPresenter as visual-tree element (WPF-aligned).
 ' Still exposes Draw() for host paint path when not parented in a template tree.
 
 Implements IDependencyObject
@@ -23,7 +23,6 @@ Implements IControl
 Private WithEvents W As cWidgetBase
 Attribute W.VB_VarHelpID = -1
 
-Private m_Content As Variant
 Private m_SuppressContent As Boolean
 Private m_HorizontalContentAlignment As Long
 Private m_VerticalContentAlignment As Long
@@ -53,9 +52,10 @@ Private Sub Class_Initialize()
 
     With m_DependencyProperties
         Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
+        ' vbVariant so {TemplateBinding Content} / BindingExpression can push strings+objects.
+        Call .Register("Content", vbVariant, , , , NewDependencyPropertyMetadata(False, True, False))
     End With
 
-    m_Content = Empty
     m_SuppressContent = False
     m_HorizontalContentAlignment = AlignmentConstants.vbCenter
     m_VerticalContentAlignment = 2
@@ -72,21 +72,15 @@ End Sub
 
 '#Region Content API
 Public Property Get Content() As Variant
-    Call API.CopyVariable(m_Content, Content)
+    Call API.CopyVariable(m_DependencyProperties.GetValue("Content"), Content)
 End Property
 
 Public Property Let Content(ByVal Value As Variant)
-    If IsObject(Value) Then
-        Set m_Content = Value
-    Else
-        m_Content = Value
-    End If
-    RequestPaint
+    Call m_DependencyProperties.SetValue("Content", Value)
 End Property
 
 Public Property Set Content(ByVal Value As Object)
-    Set m_Content = Value
-    RequestPaint
+    Call m_DependencyProperties.SetValue("Content", Value)
 End Property
 
 Public Property Get SuppressContent() As Boolean
@@ -119,7 +113,7 @@ End Property
 Public Function ContentCaption() As String
     Dim V As Variant
 
-    Call API.CopyVariable(m_Content, V)
+    Call API.CopyVariable(m_DependencyProperties.GetValue("Content"), V)
     If IsObject(V) Then Exit Function
     If IsNull(V) Or IsEmpty(V) Then Exit Function
     ContentCaption = CStr(V)
@@ -366,6 +360,11 @@ Private Sub RequestPaint()
         If Not W.LockRefresh Then W.Refresh
     End If
     Err.Clear
+End Sub
+
+Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
+    If Property Is Nothing Then Exit Sub
+    If Property.Name = "Content" Then RequestPaint
 End Sub
 
 ' Copy typography from templated parent widget (Button) before nesting.

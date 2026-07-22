@@ -180,6 +180,7 @@ See [VCF_PROPERTY_REGISTRY.md](./VCF_PROPERTY_REGISTRY.md).
 | **StaticResource** | `{StaticResource ResourceKey=ButtonStyle}` | `StaticResourceExtension` |
 | **ThemeResource** | `{ThemeResource Key=BrushPrimary}` | `ThemeResource` → **deprecate** |
 | **RelativeSource** | `{RelativeSource Self}` / `TemplatedParent` / `FindAncestor` | `RelativeSource` + `modBindingSourceResolve` |
+| **TemplateBinding** | `{TemplateBinding Content}` | `TemplateBinding` → OneWay + TemplatedParent |
 | **Self** | `{Self}` | `SelfBinding` |
 
 **Binding subset:**
@@ -195,6 +196,7 @@ See [VCF_PROPERTY_REGISTRY.md](./VCF_PROPERTY_REGISTRY.md).
 | `RelativeSource` | Yes (`Self`, `TemplatedParent`, `FindAncestor`) |
 | `ElementName` | Yes (namescope via `NamingManager`) |
 | `UpdateSourceTrigger` | Yes (`ustPropertyChanged`, `ustLostFocus`, `ustExplicit`; Default ≡ PropertyChanged; markup aliases `LostFocus` / `PropertyChanged` / `Explicit`) |
+| `UpdateSourceDelay` | Yes (ms debounce Target→Source; `0` = immediate; Enter/LostFocus flush) |
 
 ### 7.2 Target
 

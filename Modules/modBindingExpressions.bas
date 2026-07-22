@@ -5,7 +5,7 @@ Private m_RefreshBindings As Boolean
 
 Public Sub OnDataContextChanged(ByVal Target As IDependencyObject)
     ' Binding SrcDepObj callbacks already push target updates when DataContext
-    ' (DependencyProperty) changes. Avoid RefreshTargetBindings here — re-entrant
+    ' (DependencyProperty) changes. Avoid RefreshTargetBindings here ? re-entrant
     ' SetValue during DataContext change can recurse through layout/render paths.
 End Sub
 
@@ -74,7 +74,7 @@ Public Sub DetachBindingsTree(ByVal Root As Object)
         Dim Child As Object
         Dim Kids As UIElementCollection
         Set Ctrl = Root
-        ' TextBlock/Image etc. return Children = Nothing — For Each Nothing AVs in VB6/Cairo.
+        ' TextBlock/Image etc. return Children = Nothing ? For Each Nothing AVs in VB6/Cairo.
         Set Kids = Ctrl.Children
         If Kids Is Nothing Then Exit Sub
         For Each Child In Kids
@@ -100,8 +100,13 @@ Private Function GetTargetBindings(ByVal Target As IDependencyObject) As List
     Set GetTargetBindings = API.CObj(Target).Bindings
 End Function
 
-' Flush TwoWay/OneWayToSource bindings with UpdateSourceTrigger=LostFocus (e.g. TextBox LostFocus).
+' Flush TwoWay/OneWayToSource bindings with UpdateSourceTrigger=LostFocus or pending delay.
 Public Sub FlushLostFocusBindings(ByVal Target As IDependencyObject)
+    FlushSourceBindings Target, False
+End Sub
+
+' Force-flush TwoWay/OneWayToSource bindings (TextBox Enter / LostFocus before app handlers).
+Public Sub FlushSourceBindings(ByVal Target As IDependencyObject, Optional ByVal ForceAll As Boolean = True)
     Dim Bindings As List
     Dim Item As Variant
     Dim Expr As BindingExpression
@@ -118,11 +123,15 @@ Public Sub FlushLostFocusBindings(ByVal Target As IDependencyObject)
         If TypeOf Item Is BindingExpression Then
             Set Expr = Item
             If Not Expr.Binding Is Nothing Then
-                If Expr.Binding.NeedsLostFocusFlush Then Expr.Binding.FlushUpdateSource
+                If ForceAll Or Expr.Binding.NeedsLostFocusFlush Then
+                    Expr.Binding.FlushUpdateSource True
+                End If
             End If
         ElseIf TypeOf Item Is Binding Then
             Set B = Item
-            If B.NeedsLostFocusFlush Then B.FlushUpdateSource
+            If ForceAll Or B.NeedsLostFocusFlush Then
+                B.FlushUpdateSource True
+            End If
         End If
     Next
 End Sub

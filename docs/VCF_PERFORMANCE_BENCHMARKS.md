@@ -73,11 +73,15 @@ Record on future runs: machine model, CPU, `Demac.VCF.dll` file date, and whethe
 | P6h-CP | Live ContentPresenter | `Phase6hBench_LiveContentPresenter` | pass | Paint/slot TemplateBinding Content+align |
 | P6i-NEST | Nested Border.Child CP | `Phase6iBench_NestedContentPresenter` | pass | Live CP under Border.Child visual tree |
 | P6j-MULTI | Multi-node template | `Phase6jBench_MultiNodeTemplate` | pass | Border→Grid→ContentPresenter clone |
+| P6k-TBMK | TemplateBinding | `Phase6kBench_TemplateBindingMarkup` | pass | Attach Path from TemplatedParent |
 | P4-RSELF | RelativeSource Self | `Phase4Bench_RelativeSourceSelf` | pass | Source=Target |
 | P4-ENAME | ElementName + FindAncestor | `Phase4Bench_ElementName` | pass | NamingManager namescope |
 | P4-RTP | RelativeSource TemplatedParent | `Phase4Bench_RelativeSourceTemplatedParent` | pass | stamped on template clones |
 | P4-ECMD | ElementName → Command | `Phase4Bench_ElementNameCommand` | pass | named host ICommand → Button.Command |
 | P4-UST | UpdateSourceTrigger | `Phase4Bench_UpdateSourceTrigger` | pass | LostFocus defers; PropertyChanged immediate |
+| P4-UDELAY | UpdateSourceDelay | `Phase4Bench_UpdateSourceDelay` | pass | debounce + UpdateSource flush |
+| P4-CARET | TextBox caret preserve | `Phase4Bench_TextCaretPreserve` | pass | prefix extension keeps SelStart |
+| P4-CCMD | CanExecuteChanged | `Phase4Bench_CanExecuteChanged` | pass | Button.Enabled tracks ICommand |
 | P2a-THEME-SWAP | Theme dictionary merge | `Phase2aBench_ThemeDictionarySwap` | pass | ActiveThemeName swaps MergedDictionaries |
 | P2a-THEME-OS | System→Light/Dark | `Phase2aBench_SystemThemeResolve` | pass | System theme + override resolves bag |
 
