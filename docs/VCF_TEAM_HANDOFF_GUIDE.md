@@ -23,6 +23,8 @@ This is the **single entry point** for the VCF rewrite program. Read in order fo
 | 7 | [VCF_INFRASTRUCTURE.md](./VCF_INFRASTRUCTURE.md) | Collections, views, events, resources, modules | Non-visual core |
 | 8 | [VCF_LISTVIEW_ARCHITECTURE.md](./VCF_LISTVIEW_ARCHITECTURE.md) | ListView stack, engine, binding, InvoiceGrid target | ListView phase |
 | 9 | [VCF_BREAKING_CHANGES_TEMPLATE.md](./VCF_BREAKING_CHANGES_TEMPLATE.md) | Breaking changes log (copy to VCF repo per release) | Release manager |
+| 9a | [BREAKING_CHANGES.md](./BREAKING_CHANGES.md) | Living breaking / release notes | Every release |
+| 9b | [../CHANGELOG.md](../CHANGELOG.md) | Short version/tag index | Quick lookup |
 | 10 | [VCF_MIGRATION_TEMPLATE.md](./VCF_MIGRATION_TEMPLATE.md) | Step-by-step consumer migration guide | Release manager |
 | 11 | [MIGRATION.md](./MIGRATION.md) | Living migration guide (Phases 0–7) | DeNovo pin |
 | 12 | [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) | DeNovo manual smoke checklist | Phase 7 |
@@ -241,8 +243,10 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **Path=(Attached.Prop)** — ~~source parentheses + P4-BIND-APATH~~ (**3.20.0** / suite **81**)
   **Canvas** — ~~Canvas.Left/Top + Measure/Arrange + P2-CANVAS-*~~ (**3.21.0** / suite **83**)
   **Attached layout invalidate** — ~~SetValue/binding → InvalidateParentLayout + P4-BIND-LAY~~ (**3.22.0** / suite **85**)
+  **TextBlock / Image Visibility** — ~~Hidden/Collapsed + Visible bool sync + P1-VIS-TB / P1-VIS-IMG~~ (**3.23.0** / suite **87**)
+  **Doc drift cleanup** — ~~stale “still deferred” notes + thin CHANGELOG~~ (**3.23.0** docs)
   **Full WPF DP precedence stack** — **deferred** roadmap epic (not now) — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) (~2–3 mo core)
-  **Overlaps next** — full DP precedence stack; or POS Phase 2b pin
+  **Overlaps next** — full DP precedence stack; or POS Phase 2b pin; or **B-CHROME** / **IsHitTestVisible**
   **B-RESZ** / **B-NAV** — ~~Phase0 benches~~
   **ListView bind hotspot** — ~~B-BIND-DENSE~~ (clone preserves bindings; 21×6 gate)
   **Margin/Padding family 1** — ~~ListView Margin=0 Padding=4,1,4,1~~ (**P2a-PAD**)

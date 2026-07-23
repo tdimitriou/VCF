@@ -5,6 +5,16 @@
 
 ---
 
+## [3.23.0] — 2026-07-24 — TextBlock / Image Visibility
+
+### Added
+- **`TextBlock`** / **`Image`** — `Visibility` DP (Visible / Hidden / Collapsed) + legacy **`Visible`** bool sync (`False` → Collapsed), matching Button / UniformGrid.
+- TextBlock change invalidates parent layout (Hidden reserves slot; Collapsed reclaims).
+- Phase0 **P1-VIS-TB**, **P1-VIS-IMG**. Suite **87**.
+- Docs: stale “still deferred” notes corrected; thin [CHANGELOG.md](../CHANGELOG.md).
+
+- DLL version **3.23.0**.
+
 ## [3.22.0] — 2026-07-24 — Attached layout DP invalidation
 
 ### Added
@@ -41,7 +51,7 @@
 - Phase0 **P4-BIND-ATTACH**. Suite **80**.
 
 ### Notes
-- OneWay **to** attached target DPs. Source `Path=(Grid.Row)` parentheses syntax still deferred.
+- OneWay **to** attached target DPs. ~~Source `Path=(Grid.Row)` parentheses syntax still deferred~~ → **3.20.0**.
 
 - DLL version **3.19.0**.
 
@@ -127,7 +137,7 @@
 - Phase0 **P6e-CC-MEAS**. Suite **74**.
 
 ### Not in this release
-- ~~UniformGrid MeasureLayout~~ → **3.13.0**; retiring UC/multi-child Border/Panel canvas-scale bridge still deferred.
+- ~~UniformGrid MeasureLayout~~ → **3.13.0**; ~~retiring UC/multi-child Border/Panel canvas-scale bridge~~ → **3.14.0**.
 
 - DLL version **3.12.0**.
 
@@ -139,7 +149,7 @@
 - Phase0 **P1-BORDER-MEAS**. Suite **73**.
 
 ### Not in this release
-- Retiring multi-child Border / UC / Panel canvas-scale bridge (`P7d-LAY-RESIZE` still requires it).
+- ~~Retiring multi-child Border / UC / Panel canvas-scale bridge~~ → **3.14.0** (`P7d-LAY-PANEL`).
 
 - DLL version **3.11.0**.
 
@@ -151,7 +161,7 @@
 - Phase0 **P2-GRID-MEAS** (Auto+Pixel+Star Desired/Actual). Suite **72**.
 
 ### Not in this release
-- Full WPF Auto multi-pass / span redistribution; retiring UC/Border/Panel canvas-scale bridge.
+- Full WPF Auto multi-pass / span redistribution; ~~retiring UC/Border/Panel canvas-scale bridge~~ → **3.14.0**.
 
 - DLL version **3.10.0**.
 
@@ -164,7 +174,7 @@
 - Phase0 **P2-STACK-MEAS** (Desired/Actual assertions). Suite **71**.
 
 ### Not in this release
-- ~~Grid MeasureOverride~~ → **3.10.0**; retiring the UC/Border/Panel canvas-scale bridge still deferred.
+- ~~Grid MeasureOverride~~ → **3.10.0**; ~~retiring the UC/Border/Panel canvas-scale bridge~~ → **3.14.0**.
 
 - DLL version **3.9.0**.
 
@@ -287,7 +297,7 @@
 
 ### Notes
 
-- Does **not** remove the `Visible` bool (compat). TextBlock / Image Visibility deferred.
+- Does **not** remove the `Visible` bool (compat). ~~TextBlock / Image Visibility deferred~~ → **3.23.0**.
 - DLL version **3.3.0**.
 
 ---
@@ -378,7 +388,7 @@ No separate binding / trigger / animation layers yet (B3+ deferred).
 ### Notes
 
 - Non-breaking for existing callers; new interface is additive.
-- **`ContentTemplate`** still deferred (next step on ContentHost / ContentControl).
+- ~~**`ContentTemplate`** still deferred~~ → **3.8.0** (`ContentControl` + `ContentHost.ApplyContentVisual`).
 - DLL version **3.1.0**.
 
 ### Follow-up decision (docs only — 2026-07-23)
@@ -553,7 +563,7 @@ No separate binding / trigger / animation layers yet (B3+ deferred).
 
 ### Notes
 
-- Deeper multi-node templates and RelativeSource/ElementName remain later/deferred.
+- ~~Deeper multi-node templates and RelativeSource/ElementName remain later/deferred~~ → **P6j-MULTI** / **P4-RSELF** / **P4-ENAME** / **P4-RTP** (2.x–3.x).
 
 ---
 
@@ -570,7 +580,7 @@ No separate binding / trigger / animation layers yet (B3+ deferred).
 
 ### Notes
 
-- OS Light/Dark detection is still deferred; it can set `ActiveThemeName` once merge/swap is in place. `{ThemeResource}` markup already aliases `{DynamicResource}`.
+- ~~OS Light/Dark detection is still deferred~~ → **2.35.0** / **P2a-THEME-OS**. `{ThemeResource}` markup already aliases `{DynamicResource}`.
 
 ---
 
@@ -587,7 +597,7 @@ No separate binding / trigger / animation layers yet (B3+ deferred).
 
 ### Notes
 
-- Flat template bags (`Border` + `ContentPresenter` siblings) are still accepted; apply-time nesting builds the WPF tree. System/OS theme still deferred.
+- Flat template bags (`Border` + `ContentPresenter` siblings) are still accepted; apply-time nesting builds the WPF tree. ~~System/OS theme still deferred~~ → **2.35.0** / **P2a-THEME-OS**.
 
 ---
 
@@ -604,7 +614,7 @@ No separate binding / trigger / animation layers yet (B3+ deferred).
 
 ### Notes
 
-- ContentPresenter remains paint-only (no `cWidgetBase` / Border.Child widget). System/OS theme still deferred.
+- ContentPresenter remains paint-only (no `cWidgetBase` / Border.Child widget). ~~System/OS theme still deferred~~ → **2.35.0** / **P2a-THEME-OS**.
 
 ---
 
@@ -639,7 +649,7 @@ No separate binding / trigger / animation layers yet (B3+ deferred).
 
 ### Notes
 
-- Live lookless visual tree (Border widget under Button) remains deferred.
+- ~~Live lookless visual tree (Border widget under Button) remains deferred~~ → **P6g-LIVE** / **P6h-CP** / **P6i-NEST**.
 
 ---
 
@@ -669,7 +679,7 @@ No separate binding / trigger / animation layers yet (B3+ deferred).
 
 ### Notes
 
-- VB6 does not inherit `Button` from `ContentControl`; shared semantics only. Lookless template trees still deferred.
+- VB6 does not inherit `Button` from `ContentControl`; shared semantics only. ~~Lookless template trees still deferred~~ → **P6g**–**P6k**.
 
 ---
 
@@ -693,7 +703,7 @@ No separate binding / trigger / animation layers yet (B3+ deferred).
 
 ### Notes
 
-- ControlTemplate visual-tree expansion (Border + live presenter widgets) remains deferred.
+- ~~ControlTemplate visual-tree expansion (Border + live presenter widgets) remains deferred~~ → **P6g**–**P6j**.
 - UniformGrid ItemsHost item inflate hardened in **2.29.0** (**P7c-PANEL**).
 
 ---

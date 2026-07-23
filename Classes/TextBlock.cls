@@ -31,6 +31,7 @@ Private m_BaseUIElement As UIElementBase
 
 Private WithEvents m_DependencyProperties As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
+Private m_SyncingVisibility As Boolean
 
 Public Name As String
 
@@ -44,7 +45,7 @@ Public Name As String
         Set W = Cairo.WidgetBase
         W.LockRefresh = True
         
-        ' Hit-test enabled + HitResultHit=False → events forward to parent (Button).
+        ' Hit-test enabled + HitResultHit=False -> events forward to parent (Button).
         W.ImplementsHitTest = True
         W.Visible = True
         
@@ -65,11 +66,15 @@ Public Name As String
             Call .Register("Width", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
             Call .Register("Height", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
             Call .Register("Margin", vbObject, "Thickness", , NewDependencyPropertyMetadata(True, False, False))
+            Call .Register("Visible", vbBoolean)
+            Call .Register("Visibility", vbLong, , , , NewDependencyPropertyMetadata(False, True, False))
             
             .SetValue "Style", Nothing
             .SetCurrentValue "Width", 0#
             .SetCurrentValue "Height", 0#
             .SetCurrentValue "Margin", NewThickness(0)
+            .SetCurrentValue "Visible", True
+            .SetCurrentValue "Visibility", CLng(VisibilityVisible)
         
             ' Initialize the default CurrentValues of the Dependency Properties
             ' just in case the default style is not present.
@@ -220,7 +225,7 @@ End Function
         m_Height = Height
         ' Do not write arranged size into Width/Height DPs (WPF: Actual* vs author size).
         ' Overwriting DPs made Grid treat text HorizontalAlignment=Left as layout Left
-        ' with a sticky narrow width (CalcTextRowsInfo → one glyph per row).
+        ' with a sticky narrow width (CalcTextRowsInfo -> one glyph per row).
         
         If W Is Nothing Then Exit Sub
         W.Move Left, Top, Width, Height
@@ -277,6 +282,23 @@ End Function
 
     Public Property Set Margin(ByVal Value As Thickness)
         Call m_DependencyProperties.SetValue("Margin", Value)
+    End Property
+
+    Public Property Get Visibility() As Visibility
+        Visibility = CLng(m_DependencyProperties.GetValue("Visibility"))
+    End Property
+
+    Public Property Let Visibility(ByVal Value As Visibility)
+        Call m_DependencyProperties.SetValue("Visibility", CLng(Value))
+    End Property
+
+    ' Compat facade: False -> VisibilityCollapsed (layout reclaim).
+    Public Property Get Visible() As Boolean
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Visible"), Visible)
+    End Property
+
+    Public Property Let Visible(ByVal Value As Boolean)
+        Call m_DependencyProperties.SetValue("Visible", Value)
     End Property
     
     Public Property Get ForeColor() As Long
@@ -513,6 +535,24 @@ Catch:
             Case "Style":           ApplyStyle
             Case "Width":           m_Width = CDbl(Property.GetValue)
             Case "Height":          m_Height = CDbl(Property.GetValue)
+            Case "Visible"
+                If Not m_SyncingVisibility Then
+                    m_SyncingVisibility = True
+                    If CBool(Property.GetValue) Then
+                        m_DependencyProperties.SetValue "Visibility", CLng(VisibilityVisible)
+                    Else
+                        m_DependencyProperties.SetValue "Visibility", CLng(VisibilityCollapsed)
+                    End If
+                    m_SyncingVisibility = False
+                End If
+            Case "Visibility"
+                If Not m_SyncingVisibility Then
+                    m_SyncingVisibility = True
+                    m_DependencyProperties.SetCurrentValue "Visible", (CLng(Property.GetValue) = VisibilityVisible)
+                    m_SyncingVisibility = False
+                End If
+                ApplyVisibility W, CLng(Property.GetValue)
+                InvalidateParentLayout Me
         End Select
         
         If Parent Is Nothing Then Exit Sub

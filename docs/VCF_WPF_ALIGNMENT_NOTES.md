@@ -1319,7 +1319,7 @@ Selector (§2.13)
 
 ## 2.15 Visibility / Collapsed and StackPanel
 
-**Status (2026-07-23 — 3.3.0):** WPF **Visible / Hidden / Collapsed** layout semantics are gated in Phase0 (`P1-VIS-HIDDEN`, `P1-VIS-COLLAPSE`, `P1-VIS-BOOL`). `IsLayoutCollapsed` / `IsWidgetVisible` + panel arrange skip Collapsed only; **Hidden** keeps the slot with `W.Visible=False`. **Button** / **UniformGrid** sync legacy **`Visible` bool** to **`Visibility`** (`False`→**Collapsed**). **`InvalidateParentLayout`** rearranges parents on child Visibility change. **Still open:** remove `Visible` bool entirely; TextBlock/Image Visibility; `IsHitTestVisible`. StackPanel **exists** (Phase 2).
+**Status (2026-07-23 — 3.3.0; TextBlock/Image **3.23.0**):** WPF **Visible / Hidden / Collapsed** layout semantics are gated in Phase0 (`P1-VIS-HIDDEN`, `P1-VIS-COLLAPSE`, `P1-VIS-BOOL`, **`P1-VIS-TB`**, **`P1-VIS-IMG`**). `IsLayoutCollapsed` / `IsWidgetVisible` + panel arrange skip Collapsed only; **Hidden** keeps the slot with `W.Visible=False`. **Button** / **UniformGrid** / **TextBlock** / **Image** sync legacy **`Visible` bool** to **`Visibility`** (`False`→**Collapsed**). **`InvalidateParentLayout`** rearranges parents on child Visibility change. **Still open:** remove `Visible` bool entirely; `IsHitTestVisible`. StackPanel **exists** (Phase 2).
 
 **Historical report (pre-3.3.0):** **`Visibility`** / **`Collapsed`** were **partially** implemented and **inconsistent** across controls.
 
@@ -1925,7 +1925,7 @@ Remove duplicate **`m_CornerRadius`** fields where a DP exists. **`PropertyChang
 
 **F. Attached properties — real registry**
 
-**Status (2026-07-23 — 3.4.0):** `RegisterAttached` metadata + **`Grid.GetRow`/`SetRow`** (and Column/spans) ship; storage remains **`AttachedProperties("Grid")`**. Full attached-in-DP-bag model still deferred.
+**Status (2026-07-23 — 3.4.0; bag migrate **3.16.0**):** `RegisterAttached` metadata + **`Grid.GetRow`/`SetRow`** (and Column/spans) ship; per-element DP bag via **`EnsureAttachedProperty`** (**3.16.0**); nested **`AttachedProperties("Grid")`** dict retained as shim.
 
 Replace ad-hoc **`AttachedProperties("Grid")`** dict with **`RegisterAttached("Grid.Column", …)`** + **`Grid.GetColumn(element)`** / **`SetColumn`** — WPF pattern for **`UniformGrid` → `Grid`** (API done; storage migration later).
 

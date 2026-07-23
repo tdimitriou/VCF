@@ -96,7 +96,7 @@ Confidence **±40%**. Big-bang single release: **not recommended**.
 - **Visibility/Hidden** — done **3.3.0**.
 - **RegisterAttached (Grid)** — done **3.4.0**.
 - **Min/Max layout** — done **3.5.0**.
-- **Attached storage → DP bag** — deferred (accepted 2026-07-23); see handoff / [VCF_PROPERTY_REGISTRY.md](./VCF_PROPERTY_REGISTRY.md) §1.3.
+- **Attached storage → DP bag** — ~~deferred~~ → **3.16.0** (dict shim retained); see handoff / [VCF_PROPERTY_REGISTRY.md](./VCF_PROPERTY_REGISTRY.md) §1.3.
 
 ---
 

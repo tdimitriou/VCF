@@ -30,6 +30,7 @@ Private m_KeepAspectRatio As Boolean
 Private WithEvents m_DependencyProperties As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As List
+Private m_SyncingVisibility As Boolean
 
 Public Name As String
 
@@ -37,14 +38,19 @@ Public Name As String
     Private Sub Class_Initialize()
         Set m_Bindings = New List
         Set m_DependencyProperties = NewDependencyProperties(Me)
-        With m_DependencyProperties
-            Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
-        End With
-    
+
         Set W = Cairo.WidgetBase
-        ' Hit-test enabled + HitResultHit=False → events forward to parent (Button).
+        ' Hit-test enabled + HitResultHit=False -> events forward to parent (Button).
         W.ImplementsHitTest = True
         W.Visible = True
+
+        With m_DependencyProperties
+            Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
+            Call .Register("Visible", vbBoolean)
+            Call .Register("Visibility", vbLong, , , , NewDependencyPropertyMetadata(False, True, False))
+            .SetCurrentValue "Visible", True
+            .SetCurrentValue "Visibility", CLng(VisibilityVisible)
+        End With
         
         m_KeepAspectRatio = True
         
@@ -212,6 +218,23 @@ Public Name As String
     Public Property Let KeepAspectRatio(ByVal Value As Boolean)
         m_KeepAspectRatio = Value
     End Property
+
+    Public Property Get Visibility() As Visibility
+        Visibility = CLng(m_DependencyProperties.GetValue("Visibility"))
+    End Property
+
+    Public Property Let Visibility(ByVal Value As Visibility)
+        Call m_DependencyProperties.SetValue("Visibility", CLng(Value))
+    End Property
+
+    ' Compat facade: False -> VisibilityCollapsed.
+    Public Property Get Visible() As Boolean
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Visible"), Visible)
+    End Property
+
+    Public Property Let Visible(ByVal Value As Boolean)
+        Call m_DependencyProperties.SetValue("Visible", Value)
+    End Property
 '#End Region
 
 '#Region IVIsualChild Interface Implementation
@@ -255,8 +278,31 @@ End Sub
 '#End Region
 
     Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
+        Select Case Property.Name
+            Case "Visible"
+                If Not m_SyncingVisibility Then
+                    m_SyncingVisibility = True
+                    If CBool(Property.GetValue) Then
+                        m_DependencyProperties.SetValue "Visibility", CLng(VisibilityVisible)
+                    Else
+                        m_DependencyProperties.SetValue "Visibility", CLng(VisibilityCollapsed)
+                    End If
+                    m_SyncingVisibility = False
+                End If
+            Case "Visibility"
+                If Not m_SyncingVisibility Then
+                    m_SyncingVisibility = True
+                    m_DependencyProperties.SetCurrentValue "Visible", (CLng(Property.GetValue) = VisibilityVisible)
+                    m_SyncingVisibility = False
+                End If
+                ApplyVisibility W, CLng(Property.GetValue)
+                InvalidateParentLayout Me
+        End Select
+
         If Parent Is Nothing Then Exit Sub
-        If Property.Metadata.AffectsRender Then W.Refresh ' Parent.Widget.Refresh
+        If Not Property.Metadata Is Nothing Then
+            If Property.Metadata.AffectsRender Then W.Refresh
+        End If
     End Sub
 
 Private Sub W_HitTest(ByVal x As Single, ByVal y As Single, HitResultHit As Boolean)

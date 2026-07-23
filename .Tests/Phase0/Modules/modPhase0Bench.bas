@@ -31,6 +31,8 @@ Public Sub RunAll()
     If Not Phase1Bench_VisibilityHiddenReserves() Then Failed = Failed + 1
     If Not Phase1Bench_VisibilityCollapsedReclaims() Then Failed = Failed + 1
     If Not Phase1Bench_VisibleBoolCollapsed() Then Failed = Failed + 1
+    If Not Phase1Bench_TextBlockVisibility() Then Failed = Failed + 1
+    If Not Phase1Bench_ImageVisibility() Then Failed = Failed + 1
     If Not Phase1Bench_BorderWidthXaml() Then Failed = Failed + 1
     If Not Phase1Bench_BorderMeasure() Then Failed = Failed + 1
     If Not Phase1Bench_MinWidthFloor() Then Failed = Failed + 1
@@ -109,7 +111,7 @@ Public Sub RunAll()
 
     ' Report only ? do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (85 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (87 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -459,6 +461,105 @@ Fail:
     Phase1Bench_VisibleBoolCollapsed = False
     On Error Resume Next
     KeepAlive Ug
+    Err.Clear
+End Function
+
+' TextBlock Visibility Hidden reserves / Collapsed reclaims; Visible=False -> Collapsed.
+Public Function Phase1Bench_TextBlockVisibility() As Boolean
+    Dim Sp As StackPanel
+    Dim A As TextBlock
+    Dim B As TextBlock
+    Dim C As TextBlock
+
+    On Error GoTo Fail
+
+    Set Sp = New StackPanel
+    Sp.Orientation = OrientationVertical
+    Sp.Widget.Move 0, 0, 200, 300
+
+    Set A = New TextBlock
+    A.Width = 180
+    A.Height = 20
+    A.Text = "A"
+    Set B = New TextBlock
+    B.Width = 180
+    B.Height = 20
+    B.Text = "B"
+    Set C = New TextBlock
+    C.Width = 180
+    C.Height = 20
+    C.Text = "C"
+
+    Sp.Children.Add A
+    Sp.Children.Add B
+    Sp.Children.Add C
+
+    If Abs(C.Widget.Top - 40!) > 1! Then Err.Raise vbObjectError, , "Baseline C.Top expected 40, got " & C.Widget.Top
+
+    B.Visibility = VisibilityHidden
+    If Abs(C.Widget.Top - 40!) > 1! Then Err.Raise vbObjectError, , "Hidden must keep slot; C.Top expected 40, got " & C.Widget.Top
+    If B.Widget.Visible Then Err.Raise vbObjectError, , "Hidden TextBlock Widget.Visible must be False"
+
+    B.Visibility = VisibilityVisible
+    B.Visibility = VisibilityCollapsed
+    If Abs(C.Widget.Top - 20!) > 1! Then Err.Raise vbObjectError, , "Collapsed must reclaim; C.Top expected 20, got " & C.Widget.Top
+    If Sp.Widget.Widgets.Exists("_" & ObjPtr(B)) Then Err.Raise vbObjectError, , "Collapsed TextBlock must leave parent Widgets"
+
+    B.Visible = True
+    If B.Visibility <> VisibilityVisible Then Err.Raise vbObjectError, , "Visible=True must restore VisibilityVisible"
+    B.Visible = False
+    If B.Visibility <> VisibilityCollapsed Then Err.Raise vbObjectError, , "Visible=False must map to VisibilityCollapsed"
+    If Abs(C.Widget.Top - 20!) > 1! Then Err.Raise vbObjectError, , "Visible=False must reclaim; C.Top expected 20, got " & C.Widget.Top
+
+    KeepAlive Sp
+    LogResult "P1-VIS-TB", 0, "OK TextBlock Hidden/Collapsed/Visible bool"
+    Debug.Print "PASS  P1-VIS-TB TextBlock Visibility + Visible bool"
+    Phase1Bench_TextBlockVisibility = True
+    Exit Function
+
+Fail:
+    LogResult "P1-VIS-TB", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-VIS-TB - " & Err.Description
+    Phase1Bench_TextBlockVisibility = False
+    On Error Resume Next
+    KeepAlive Sp
+    Err.Clear
+End Function
+
+' Image Visibility applies to widget; Visible=False -> Collapsed.
+Public Function Phase1Bench_ImageVisibility() As Boolean
+    Dim Img As VCF.Image
+
+    On Error GoTo Fail
+
+    Set Img = New VCF.Image
+    If Img.Visibility <> VisibilityVisible Then Err.Raise vbObjectError, , "Default Visibility expected Visible"
+    If Not Img.Widget.Visible Then Err.Raise vbObjectError, , "Default Widget.Visible expected True"
+
+    Img.Visibility = VisibilityHidden
+    If Img.Widget.Visible Then Err.Raise vbObjectError, , "Hidden Image Widget.Visible must be False"
+    If Img.Visible Then Err.Raise vbObjectError, , "Hidden must sync Visible=False"
+
+    Img.Visible = True
+    If Img.Visibility <> VisibilityVisible Then Err.Raise vbObjectError, , "Visible=True must restore VisibilityVisible"
+    If Not Img.Widget.Visible Then Err.Raise vbObjectError, , "Visible=True Widget.Visible expected True"
+
+    Img.Visible = False
+    If Img.Visibility <> VisibilityCollapsed Then Err.Raise vbObjectError, , "Visible=False must map to VisibilityCollapsed"
+    If Img.Widget.Visible Then Err.Raise vbObjectError, , "Collapsed Image Widget.Visible must be False"
+
+    KeepAlive Img
+    LogResult "P1-VIS-IMG", 0, "OK Image Visibility + Visible bool"
+    Debug.Print "PASS  P1-VIS-IMG Image Visibility + Visible bool"
+    Phase1Bench_ImageVisibility = True
+    Exit Function
+
+Fail:
+    LogResult "P1-VIS-IMG", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-VIS-IMG - " & Err.Description
+    Phase1Bench_ImageVisibility = False
+    On Error Resume Next
+    KeepAlive Img
     Err.Clear
 End Function
 

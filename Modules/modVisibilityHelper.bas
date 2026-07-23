@@ -2,6 +2,7 @@ Attribute VB_Name = "modVisibilityHelper"
 Option Explicit
 
 Public Sub SetVisibility(W As cWidgetBase, Value As Visibility)
+    If W Is Nothing Then Exit Sub
     Select Case Value
         Case VisibilityVisible
             If Not W.Visible Then W.Visible = True

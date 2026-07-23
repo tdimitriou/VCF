@@ -288,7 +288,7 @@ Fields: `DataType`, `Key`, `Name`. Prop: `Children` → `UIElementCollection`.
 
 **DPs registered:** DataContext, ShowGridLines, BorderStyle, Style  
 **Non-DP layout:** DesignLeft/Top/Width/Height fields; `MoveChild` scale cascade  
-**Issues:** DataContext rebind TODO; Design* Let triggers resize.
+**Issues:** ~~DataContext rebind TODO~~ → **P4-DCTX**; ~~Design* Let triggers resize~~ → Design* removed (**3.0.0**).
 
 ---
 

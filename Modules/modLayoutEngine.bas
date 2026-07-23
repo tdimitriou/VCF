@@ -139,7 +139,7 @@ Public Function ReadElementVisibility(ByVal Child As Object) As Visibility
     End If
     If TypeOf Child Is IUIElement Then
         Select Case TypeName(Child)
-            Case "Panel", "UserControl", "StackPanel", "Grid", "DockPanel", "Canvas", "ContentControl", "Border", "Button"
+            Case "Panel", "UserControl", "StackPanel", "Grid", "DockPanel", "Canvas", "ContentControl", "Border", "Button", "TextBlock", "Image"
                 ReadElementVisibility = Child.Visibility
                 Exit Function
         End Select

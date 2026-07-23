@@ -107,6 +107,8 @@ These are set via XAML `CallByName` / fields — **outside** binding/style prece
 | `ScaleFont` | Boolean | Yes |
 | `HorizontalAlignment`, `VerticalAlignment` | Long | Yes |
 | `Text` | String | Yes |
+| `Visibility` | Visibility enum | Yes (widget); layout via parent Relayout |
+| `Visible` | Boolean | Compat facade → Collapsed when False (**3.23.0**) |
 
 ### 2.4 TextBox
 
@@ -147,6 +149,8 @@ These are set via XAML `CallByName` / fields — **outside** binding/style prece
 | Property | Type |
 |----------|------|
 | `DataContext` | Object |
+| `Visibility` | Visibility enum (**3.23.0**) |
+| `Visible` | Boolean compat facade (**3.23.0**) |
 
 **Non-DP:** `ImageKey`, `KeepAspectRatio`
 
