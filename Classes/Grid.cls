@@ -44,6 +44,45 @@ Public Property Get ColumnDefinitions() As ObservableCollection
     Set ColumnDefinitions = m_ColumnDefinitions
 End Property
 
+' Attached property accessors (WPF Grid.Get*/Set* shape; storage = AttachedProperties("Grid")).
+Public Function GetRow(ByVal Element As IUIElement) As Long
+    GetRow = GetGridAttachedLong(Element, "Row", 0)
+End Function
+
+Public Sub SetRow(ByVal Element As IUIElement, ByVal Value As Long)
+    If Value < 0 Then Value = 0
+    SetGridAttachedLong Element, "Row", Value
+End Sub
+
+Public Function GetColumn(ByVal Element As IUIElement) As Long
+    GetColumn = GetGridAttachedLong(Element, "Column", 0)
+End Function
+
+Public Sub SetColumn(ByVal Element As IUIElement, ByVal Value As Long)
+    If Value < 0 Then Value = 0
+    SetGridAttachedLong Element, "Column", Value
+End Sub
+
+Public Function GetRowSpan(ByVal Element As IUIElement) As Long
+    GetRowSpan = GetGridAttachedLong(Element, "RowSpan", 1)
+    If GetRowSpan < 1 Then GetRowSpan = 1
+End Function
+
+Public Sub SetRowSpan(ByVal Element As IUIElement, ByVal Value As Long)
+    If Value < 1 Then Value = 1
+    SetGridAttachedLong Element, "RowSpan", Value
+End Sub
+
+Public Function GetColumnSpan(ByVal Element As IUIElement) As Long
+    GetColumnSpan = GetGridAttachedLong(Element, "ColumnSpan", 1)
+    If GetColumnSpan < 1 Then GetColumnSpan = 1
+End Function
+
+Public Sub SetColumnSpan(ByVal Element As IUIElement, ByVal Value As Long)
+    If Value < 1 Then Value = 1
+    SetGridAttachedLong Element, "ColumnSpan", Value
+End Sub
+
 '#Region Public Properties
     Public Property Get Bindings() As VCF.List
         Set Bindings = m_Bindings
@@ -131,6 +170,38 @@ End Property
     
     Public Property Get Visibility() As Visibility
         Visibility = m_Layout.Visibility
+    End Property
+
+    Public Property Get MinWidth() As Double
+        MinWidth = m_Layout.MinWidth
+    End Property
+
+    Public Property Let MinWidth(ByVal Value As Double)
+        m_Layout.MinWidth = Value
+    End Property
+
+    Public Property Get MinHeight() As Double
+        MinHeight = m_Layout.MinHeight
+    End Property
+
+    Public Property Let MinHeight(ByVal Value As Double)
+        m_Layout.MinHeight = Value
+    End Property
+
+    Public Property Get MaxWidth() As Double
+        MaxWidth = m_Layout.MaxWidth
+    End Property
+
+    Public Property Let MaxWidth(ByVal Value As Double)
+        m_Layout.MaxWidth = Value
+    End Property
+
+    Public Property Get MaxHeight() As Double
+        MaxHeight = m_Layout.MaxHeight
+    End Property
+
+    Public Property Let MaxHeight(ByVal Value As Double)
+        m_Layout.MaxHeight = Value
     End Property
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
@@ -298,6 +369,10 @@ End Sub
     Private Sub ArrangePanel()
         ArrangeGridChildren m_Children, W, m_RowDefinitions, m_ColumnDefinitions
     End Sub
+
+    Friend Sub RelayoutChildren()
+        ArrangePanel
+    End Sub
 '#End Region
 
 '#Region DependencyProperties Events
@@ -307,7 +382,11 @@ End Sub
             Case Else
                 If Not m_Children Is Nothing Then
                     If m_Layout.HandlesLayoutProperty(Property.Name) Then
-                        ArrangePanel
+                        If Property.Name = "Visibility" Then
+                            m_Layout.OnLayoutPropertyChanged Property.Name, m_Children, W
+                        Else
+                            ArrangePanel
+                        End If
                     End If
                 End If
         End Select

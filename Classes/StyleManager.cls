@@ -13,6 +13,8 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
+' Full style apply: setters + active triggers + ControlTemplate + template align.
+' Use when Style DP changes. Trigger condition changes should call ReapplyStyleValues.
 Public Sub ApplyStyle(ByVal Style As Style, ByVal Target As Object)
     Dim InheritanceBatchStarted As Boolean
     Dim FailNum As Long
@@ -28,19 +30,16 @@ Public Sub ApplyStyle(ByVal Style As Style, ByVal Target As Object)
         Err.Raise vbObjectError, TypeName(Me), "Target Type mismatch"
     End If
 
-110 modInheritanceBatch.BeginInheritanceUpdate Target
-    InheritanceBatchStarted = True
+105 modStyleTriggerEngine.BeginStyleReapply
 
-120 SetObjectProperties Target, Style
-130 modStyleTriggerEngine.ApplyActiveTriggers Style, Target
-
-140 modInheritanceBatch.EndInheritanceUpdate
-    InheritanceBatchStarted = False
+110 Call ReapplyStyleValuesCore(Style, Target, InheritanceBatchStarted)
 
 150 modControlTemplateEngine.ApplyControlTemplate Style, Target
 160 PushTemplateContentAlignment Style, Target
 
-170 modRenderCoalescer.RequestWidgetRefresh Target.Widget
+165 modStyleTriggerEngine.EndStyleReapply
+
+170 modRenderCoalescer.RequestWidgetRefresh TryGetTargetWidget(Target)
 
     Exit Sub
 
@@ -49,6 +48,9 @@ Handler:
     FailSrc = Err.Source
     FailDesc = Err.Description
     FailErl = Erl
+    On Error Resume Next
+    modStyleTriggerEngine.EndStyleReapply
+    On Error GoTo 0
     modStyleApplyLog.LogError "StyleManager", "ApplyStyle", FailNum, FailDesc, FailErl
     If InheritanceBatchStarted Then
         On Error Resume Next
@@ -62,7 +64,79 @@ Handler:
     End If
 End Sub
 
-' Lookless-prep: ControlTemplate alignment slot ? target DPs via SetCurrentValue
+' 3.2.0 trigger lifecycle: re-write Current via style setters then active triggers only.
+' Does NOT re-clone ControlTemplate (safe for IsMouseOver / condition churn).
+Public Sub ReapplyStyleValues(ByVal Style As Style, ByVal Target As Object)
+    Dim InheritanceBatchStarted As Boolean
+    Dim FailNum As Long
+    Dim FailSrc As String
+    Dim FailDesc As String
+    Dim FailErl As Long
+
+    On Error GoTo Handler
+
+100 If Style Is Nothing Then Err.Raise 91, "StyleManager.ReapplyStyleValues", "Style is Nothing"
+102 If Target Is Nothing Then Err.Raise 91, "StyleManager.ReapplyStyleValues", "Target is Nothing"
+104 If TypeName(Target) <> Style.TargetType Then
+        Err.Raise vbObjectError, TypeName(Me), "Target Type mismatch"
+    End If
+
+105 modStyleTriggerEngine.BeginStyleReapply
+
+110 Call ReapplyStyleValuesCore(Style, Target, InheritanceBatchStarted)
+
+165 modStyleTriggerEngine.EndStyleReapply
+
+170 modRenderCoalescer.RequestWidgetRefresh TryGetTargetWidget(Target)
+
+    Exit Sub
+
+Handler:
+    FailNum = Err.Number
+    FailSrc = Err.Source
+    FailDesc = Err.Description
+    FailErl = Erl
+    On Error Resume Next
+    modStyleTriggerEngine.EndStyleReapply
+    On Error GoTo 0
+    modStyleApplyLog.LogError "StyleManager", "ReapplyStyleValues", FailNum, FailDesc, FailErl
+    If InheritanceBatchStarted Then
+        On Error Resume Next
+        modInheritanceBatch.EndInheritanceUpdate
+        On Error GoTo 0
+    End If
+    If Len(FailSrc) = 0 Then
+        Err.Raise FailNum, "StyleManager.ReapplyStyleValues", FailDesc
+    Else
+        Err.Raise FailNum, FailSrc, FailDesc
+    End If
+End Sub
+
+' Target may arrive as IDependencyObject (DP notify) ? QI to IControl for Widget.
+Private Function TryGetTargetWidget(ByVal Target As Object) As cWidgetBase
+    Dim Ctrl As IControl
+
+    On Error Resume Next
+    If Target Is Nothing Then Exit Function
+    If TypeOf Target Is IControl Then
+        Set Ctrl = Target
+        Set TryGetTargetWidget = Ctrl.Widget
+    End If
+    Err.Clear
+End Function
+
+Private Sub ReapplyStyleValuesCore(ByVal Style As Style, ByVal Target As Object, ByRef InheritanceBatchStarted As Boolean)
+110 modInheritanceBatch.BeginInheritanceUpdate Target
+    InheritanceBatchStarted = True
+
+120 SetObjectProperties Target, Style
+130 modStyleTriggerEngine.ApplyActiveTriggers Style, Target
+
+140 modInheritanceBatch.EndInheritanceUpdate
+    InheritanceBatchStarted = False
+End Sub
+
+' Lookless-prep: ControlTemplate alignment slot - target DPs via SetCurrentValue
 Private Sub PushTemplateContentAlignment(ByVal St As Style, ByVal Target As Object)
     Dim Tmpl As ControlTemplate
     Dim Dep As IDependencyObject
@@ -183,7 +257,7 @@ Handler:
     modStyleApplyLog.LogErrorAndReraise "StyleManager", "SetDependencyProperty"
 End Sub
 
-' Intentional soft probe for non-DP property names — keep Resume Next (not part of fail-fast chain).
+' Intentional soft probe for non-DP property names ? keep Resume Next (not part of fail-fast chain).
 Private Function SetProperty(ByVal Obj As Object, ByVal Name As String, ByVal Value As String, Optional ByVal Recursive As Boolean = True) As Boolean
     On Error Resume Next
 

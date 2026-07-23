@@ -45,14 +45,20 @@ These are set via XAML `CallByName` / fields — **outside** binding/style prece
 
 **Rewrite rule:** Migrate to DPs on `FrameworkElement` or remove in favor of templates.
 
-### 1.3 Attached properties (partial)
+### 1.3 Attached properties (RegisterAttached — Grid)
 
-**UniformGrid** uses `AttachedProperties("Grid")` dictionary for:
+**3.4.0:** `DependencyPropertyRegistry.RegisterAttached` metadata + typed **`Grid.Get*` / `Set*`** for:
 
-- `Grid.ColumnSpan`
-- `Grid.RowSpan`
+- `Grid.Row` (default 0)
+- `Grid.Column` (default 0)
+- `Grid.RowSpan` (default 1)
+- `Grid.ColumnSpan` (default 1)
 
-**Not** full WPF `RegisterAttached` — no typed getters on any element.
+**Storage:** still `AttachedProperties("Grid")` nested dictionary (XAML `Grid.Row="…"` unchanged). Not yet a per-element DP-bag attached store.
+
+**Deferred (accepted 2026-07-23):** migrate `Grid.*` values into the target’s `DependencyProperties` bag via lazy `EnsureAttached` on Set; layout/`Get*` read DP with metadata default; keep nested-dict shim until Phase0 + POS XAML green. Do **not** eager-register attached DPs on every instance. Queue after Min/Max unless Change/`ClearValue`/attached binding is needed sooner — see handoff Phase 2a deferred list.
+
+**UniformGrid** reads spans via `GetGridAttachedLong`.
 
 ---
 
@@ -146,7 +152,8 @@ Register **once** in `DependencyPropertyRegistry` module:
 |----------|------|----------------|---------------|---------|
 | `Width` | Single | Yes | No | NaN/auto |
 | `Height` | Single | Yes | No | NaN/auto |
-| `MinWidth`, `MinHeight`, `MaxWidth`, `MaxHeight` | Single | Yes | No | |
+| `MinWidth`, `MinHeight` | Double | Yes | No | default 0 |
+| `MaxWidth`, `MaxHeight` | Double | Yes | No | default **0 = unbounded**; positive = ceiling |
 | `Margin` | Thickness | Yes | No | 0 |
 | `Padding` | Thickness | Yes | No | 0 |
 | `HorizontalAlignment` | Enum | Yes | No | Stretch |
@@ -250,7 +257,9 @@ Metadata DefaultValue            ← DependencyPropertyMetadata
 
 **API:** `ClearValue` drops local only; `ReadLocalValue` inspects local slot; binding Detach clears local.
 
-**Future:** Trigger deactivate/restore (B3); template/animation layers.
+**Trigger interim:** re-`ApplyStyle` on condition change (active triggers only).  
+
+**Roadmap (deferred):** full WPF-aligned layer stack — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md). Do not start until queued.
 
 ---
 

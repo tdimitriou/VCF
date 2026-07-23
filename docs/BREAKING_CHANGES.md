@@ -5,6 +5,119 @@
 
 ---
 
+## [3.6.0] — 2026-07-23 — SelectionChanged naming
+
+### Added
+
+- **`SelectionChanged`** event on **`ListView`** and **`ListViewBase`** (WPF name; parameterless in this release).
+- Raised together with **`ListIndexChanged`** at every existing raise site (user / keyboard / `ListIndex` Let).
+- Phase0 **P4d-SELCHG** — suite **69**.
+
+### Soft deprecation
+
+- Prefer **`SelectionChanged`** for new code. **`ListIndexChanged`** remains raised as a compat alias (no hard break).
+
+### Notes
+
+- DP-driven **`SelectedIndex=`** still uses silent base index (no event) — same as before for `ListIndexChanged`.
+- No `SelectionChangedEventArgs` / AddedItems yet.
+- DLL version **3.6.0**.
+
+---
+
+## [3.5.0] — 2026-07-23 — Min/Max layout constraints
+
+### Added
+
+- **`MaxWidth` / `MaxHeight`** DPs on FrameworkElement (with existing **`MinWidth` / `MinHeight`**).
+- Layout clamp in Measure + StackPanel / Grid / Panel / decorator arrange: `size = Max(Min, size)`; if `Max > 0` then `size = Min(Max, size)`.
+- **`Max* = 0` means unbounded** (no WPF Infinity).
+- Public Min/Max Get/Let on Panel, Border, Button, StackPanel, Grid.
+- Phase0 **P1-MINMAX-MIN**, **P1-MINMAX-MAX** — suite **68**.
+
+### Notes
+
+- Additive for apps that never set Max*; setting Max can shrink arranged size vs prior builds.
+- DLL version **3.5.0**.
+
+---
+
+## [3.4.0] — 2026-07-23 — RegisterAttached (Grid)
+
+### Added
+
+- **`DependencyPropertyRegistry.RegisterAttached`** — metadata for attached props (`IsAttachedRegistered`, `HasAttachedOwner`, `GetAttachedDefault`).
+- Built-in: **`Grid.Row`**, **`Grid.Column`**, **`Grid.RowSpan`**, **`Grid.ColumnSpan`** (Long; defaults 0/0/1/1).
+- **`Grid.GetRow` / `SetRow`**, **`GetColumn` / `SetColumn`**, **`GetRowSpan` / `SetRowSpan`**, **`GetColumnSpan` / `SetColumnSpan`** — WPF-shaped accessors; storage remains `AttachedProperties("Grid")`.
+- **`modLayoutEngine.SetGridAttachedLong`** — shared write path with `GetGridAttachedLong`.
+- Phase0 **P2-GRID-ATTACH**, **P2-GRID-XAML** — suite **66**.
+
+### Breaking (strict only)
+
+- With **`StrictXamlLoad=True`**, unknown attached attributes under an owner that has registered attached props (e.g. `Grid.Foo`) raise **`XamlLoadException`**. Non-strict and unknown owners unchanged.
+
+### Notes
+
+- Does **not** migrate attached values into the per-element DP bag (deferred).
+- DLL version **3.4.0**.
+
+---
+
+## [3.3.0] — 2026-07-23 — Visibility / Hidden / Collapsed layout
+
+### Breaking
+
+- **`Visible=False` → `Visibility=Collapsed`** on **Button** and **UniformGrid** (and any element where layout reads the legacy `Visible` bool). Previously `Visible=False` only flipped `W.Visible` while the `Visibility` DP stayed **Visible**, so panels kept the layout slot. **Migration:** use `Visibility=Hidden` when you need an invisible element that still reserves space; keep `Visible=False` / `Visibility=Collapsed` when the parent should reclaim space (POS UniformGrid menus).
+
+### Added / Changed
+
+- WPF layout semantics gated: **Visible** = paint + slot; **Hidden** = no paint, slot kept; **Collapsed** = no paint, slot removed.
+- **`modLayoutEngine.InvalidateParentLayout`** — child Visibility changes rearrange StackPanel / Grid / UniformGrid / Panel / Border / ContentControl.
+- Public **`Visibility`** on **Button** / **Border**; **`Visible`** facade on Button / UniformGrid synced to Visibility.
+- Phase0 **P1-VIS-HIDDEN**, **P1-VIS-COLLAPSE**, **P1-VIS-BOOL** — suite **64**.
+
+### Notes
+
+- Does **not** remove the `Visible` bool (compat). TextBlock / Image Visibility deferred.
+- DLL version **3.3.0**.
+
+---
+
+## [3.2.2] — 2026-07-23 — PropertyTrigger conditions → ReapplyStyleValues
+
+### Changed
+
+- **`modStyleTriggerEngine.NotifyConditionPropertyChanged`** — if the target Style watches that condition, calls **`ReapplyStyleValues`** (reentrancy-guarded).
+- **`DependencyProperties`** — after every DP change (except while style reapply is in progress), notifies trigger engine so **any DP used as a Trigger Property** reactivates/deactivates correctly.
+- **`Style.WatchesTriggerCondition`** — includes `BasedOn` chain.
+- **`Button.IsMouseOver`** — uses Notify (non-DP condition) instead of a private reapply helper.
+- **P6b-TRIG** — also gates **Selected** DP trigger activate/restore.
+
+### Notes
+
+- Closes interim **B3** overlap under the **3.2.0** two-slot model.
+- **WPF-faithful precedence layers** remain deferred — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md).
+- DLL version **3.2.2**.
+
+---
+
+## [3.2.1] — 2026-07-23 — Style reapply vs full ApplyStyle
+
+### Changed
+
+- **`StyleManager.ReapplyStyleValues`** — style setters + active triggers + refresh only (3.2.0 trigger lifecycle).
+- **`StyleManager.ApplyStyle`** — still full path including **ControlTemplate** + content-align (Style DP change).
+- **`Button.IsMouseOver`** — calls **`ReapplyStyleValues`** so hover does not re-clone lookless chrome.
+- Phase0 **P6b-TRIG** asserts ContentPresenter instance stable across hover.
+
+### Notes
+
+- Non-breaking; aligns interim trigger restore with locked two-slot Current model.
+- Full WPF precedence stack remains deferred — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md).
+- DLL version **3.2.1**.
+
+---
+
 ## [3.2.0] — 2026-07-23 — DP precedence contract (ClearValue + metadata default)
 
 ### Locked contract (conflict #4)
@@ -35,7 +148,8 @@ No separate binding / trigger / animation layers yet (B3+ deferred).
 
 - Friend `DependencyProperty.ClearValue` no longer clears the current slot.
 - Migrating remaining `Class_Initialize` `SetCurrentValue` defaults → metadata is incremental (not all controls in this release).
-- Trigger deactivate/restore (B3) still deferred.
+- **Trigger lifecycle (interim):** condition changes re-run **`ApplyStyle`** (style setters, then active triggers only) — see **P6b-TRIG** / Button `IsMouseOver`. Not a separate trigger layer.
+- **Full WPF effective-value stack** — accepted roadmap, **deferred (not now)**: [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md).
 - DLL version **3.2.0**.
 
 ---

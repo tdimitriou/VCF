@@ -185,14 +185,14 @@ View/Window/UserControl → NewWindow/NewUserControl → LoadSuperclassData
 
 **P2 — WPF precedence & attached**
 
-8. **Value precedence stack** (minimum): Local → Style → Inherited → Default (document; implement in `GetValue`).
+8. ~~**Value precedence stack** (minimum)~~ → **3.2.0** two-slot + metadata default locked; **full WPF stack deferred** — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md).
 9. **`RegisterAttached`** for `Grid.Row`, `Grid.Column`, `Grid.ColumnSpan`, etc. — replace ad-hoc `AttachedProperties("Grid")` dictionary where possible.
 10. **Read-only DPs** — `ActualWidth`, `ActualHeight` (set only by arrange pass).
 
 **P3 — Advanced (later)**
 
-11. **CoerceValueCallback / ValidateValueCallback**.
-12. **Trigger/setter precedence** (when ControlTemplate/triggers added).
+11. **CoerceValueCallback / ValidateValueCallback** — part of deferred DP precedence epic.
+12. ~~**Trigger/setter precedence**~~ → covered by deferred epic (interim = re-`ApplyStyle`).
 13. **Replace listener-pull** with push-only for INPC sources; keep pull as opt-in for legacy non-INPC sources only.
 
 ### 2.5.6 POS implication
@@ -206,6 +206,7 @@ View/Window/UserControl → NewWindow/NewUserControl → LoadSuperclassData
 - [ ] Adopt **`BindingExpression`** name/API from WPF or VCF-specific name?
 - [ ] Keep **listener pull** on `GetValue` for non-INPC legacy POS objects?
 - ~~Migrate **`Design*`** to DPs in one breaking release or dual-register?~~ → **One breaking release** (§3.3, §9).
+- ~~Full WPF value precedence now?~~ → **Deferred roadmap** — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) (keep **3.2.0** until queued).
 
 ---
 
@@ -978,7 +979,7 @@ ItemsControl
 | `SelectedIndex` | **`ListViewBase.ListIndex`** (Long, not a DP on ListView XAML) | Wrong name; not bindable from XAML on bound ListView |
 | `SelectedItem` | **`ListCollectionView.CurrentItem`** (internal sync) | Not exposed as ListView DP; no `{Binding SelectedItem}` |
 | `SelectedValue` / `SelectedValuePath` | **DialogWindow:** `@Selected` string compare in `GetButtonXML` | Ad hoc, not framework |
-| `SelectionChanged` | **`ListIndexChanged`** event on ListViewBase | Not WPF name; not a DP-driven pattern |
+| `SelectionChanged` | **`SelectionChanged`** on ListView/ListViewBase (**3.6.0**); **`ListIndexChanged`** still raised as alias | Parameterless; no EventArgs/AddedItems yet; silent on DP `SelectedIndex=` |
 | `Selector` type | **None** | No shared base for ComboBox/TabControl later |
 | Button toggle | **`Button.Selected`** DP | Visual state only — not container selection |
 
@@ -1069,7 +1070,7 @@ WPF uses **`ListBoxItem`** / **`ListViewItem`** with **`IsSelected`**. VCF v1 op
 | Phase | Selector deliverable |
 |-------|---------------------|
 | **4** | **`Selector` base** + **`ItemsControl`**; **`ListView : Selector`** — expose `SelectedItem` / `SelectedIndex` / `SelectedValue` / `SelectedValuePath` in XAML; sync with `ListCollectionView` |
-| **4** | **`SelectionChanged`** event; **`MIGRATION.md`:** `ListIndex` → `SelectedIndex` |
+| **4** | **`SelectionChanged`** event — ~~done~~ (**3.6.0** dual-raise with `ListIndexChanged`); **`MIGRATION.md`:** `ListIndex` → `SelectedIndex` |
 | **5** | **`ListBox`**, **`ComboBox`**, **`TabControl`** on `Selector` |
 | **6** | **`ItemContainerStyle`**, selected triggers in templates |
 | **7 / POS** | LoginView, DialogWindow, any `ListIndex` code-behind → bindings |
@@ -1318,7 +1319,9 @@ Selector (§2.13)
 
 ## 2.15 Visibility / Collapsed and StackPanel
 
-**Report:** **`Visibility`** / **`Collapsed`** are **partially** implemented and **inconsistent** across controls. **`StackPanel`** does **not** exist — POS and WPF alignment need both on **`FrameworkElement`** with proper layout semantics (Phase 1–2).
+**Status (2026-07-23 — 3.3.0):** WPF **Visible / Hidden / Collapsed** layout semantics are gated in Phase0 (`P1-VIS-HIDDEN`, `P1-VIS-COLLAPSE`, `P1-VIS-BOOL`). `IsLayoutCollapsed` / `IsWidgetVisible` + panel arrange skip Collapsed only; **Hidden** keeps the slot with `W.Visible=False`. **Button** / **UniformGrid** sync legacy **`Visible` bool** to **`Visibility`** (`False`→**Collapsed**). **`InvalidateParentLayout`** rearranges parents on child Visibility change. **Still open:** remove `Visible` bool entirely; TextBlock/Image Visibility; `IsHitTestVisible`. StackPanel **exists** (Phase 2).
+
+**Historical report (pre-3.3.0):** **`Visibility`** / **`Collapsed`** were **partially** implemented and **inconsistent** across controls.
 
 ### 2.15.1 Visibility today — split API, incomplete semantics
 
@@ -1922,7 +1925,9 @@ Remove duplicate **`m_CornerRadius`** fields where a DP exists. **`PropertyChang
 
 **F. Attached properties — real registry**
 
-Replace ad-hoc **`AttachedProperties("Grid")`** dict with **`RegisterAttached("Grid.Column", …)`** + **`Grid.GetColumn(element)`** / **`SetColumn`** — WPF pattern for **`UniformGrid` → `Grid`**.
+**Status (2026-07-23 — 3.4.0):** `RegisterAttached` metadata + **`Grid.GetRow`/`SetRow`** (and Column/spans) ship; storage remains **`AttachedProperties("Grid")`**. Full attached-in-DP-bag model still deferred.
+
+Replace ad-hoc **`AttachedProperties("Grid")`** dict with **`RegisterAttached("Grid.Column", …)`** + **`Grid.GetColumn(element)`** / **`SetColumn`** — WPF pattern for **`UniformGrid` → `Grid`** (API done; storage migration later).
 
 ### 2.18.4 Phasing (coordinates §2.5, §3.3, Phase 1)
 
@@ -2401,7 +2406,8 @@ Avoid creating **`ObservableCollection`** for static XAML children that never ch
 
 ### Phase 4 — Bindings & MVVM
 
-- **Dependency property P0:** `BindingExpression`, DataContext rebind, public `ClearValue`, **lazy inheritance** (see §2.5, §2.8)
+- **Dependency property P0:** `BindingExpression`, DataContext rebind, public `ClearValue`, **lazy inheritance** (see §2.5, §2.8) — largely **done** through **3.2.0**
+- **Full WPF DP precedence stack** — **deferred** epic (not in Phase 4 critical path): [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) (~2–3 months core when queued)
 - **Collections P0:** lightweight **`CollectionChangedEventArgs`**, fix **`ListCollectionView`** static init, **`Move`** handler (§2.21)
 - **TextBox TwoWay:** `UpdateSourceDelay` + flush on Enter/LostFocus (§2.9)
 - DataContext rebind; RelativeSource/ElementName (minimal — **required for commands in DataTemplates**, §2.12.8)

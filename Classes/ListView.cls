@@ -33,6 +33,7 @@ Event MouseMoveOnListItem(ByVal HoverIndex As Long, ByVal RelX As Single, ByVal 
 Event SelectedAll()
 Event DimensionsAdjusted()
 Event ListIndexChanged()
+Event SelectionChanged()
 Event MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
 Event QueryRowLevel(ByVal Index As Long, Level As Long)
 
@@ -500,6 +501,7 @@ Private m_Ready                                   As Boolean
             m_DependencyProperties.SetCurrentValue "SelectedIndex", m_Base.ListIndex
             m_SyncingSelection = False
             RaiseEvent ListIndexChanged
+            RaiseEvent SelectionChanged
             Exit Sub
         End If
 
@@ -508,6 +510,7 @@ Private m_Ready                                   As Boolean
         m_SyncingSelection = False
         modSelectorEngine.PublishSelectorState m_DependencyProperties, m_ListCollectionView, m_SelectedValuePath, m_SyncingSelection
         RaiseEvent ListIndexChanged
+        RaiseEvent SelectionChanged
     End Sub
 
     Private Sub m_Base_MouseMoveOnListItem(ByVal HoverIndex As Long, ByVal RelX As Single, ByVal RelY As Single)

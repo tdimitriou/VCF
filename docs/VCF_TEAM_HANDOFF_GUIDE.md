@@ -18,6 +18,7 @@ This is the **single entry point** for the VCF rewrite program. Read in order fo
 | 3 | [VCF_FRAMEWORK_REWRITE_SPEC.md](./VCF_FRAMEWORK_REWRITE_SPEC.md) | Per-type rewrite actions, phases, bugs, tests | Planning sprints |
 | 4 | [VCF_CLASS_REFERENCE.md](./VCF_CLASS_REFERENCE.md) | **Every class**: public API, line count, private behavior, issues | Implementation |
 | 5 | [VCF_PROPERTY_REGISTRY.md](./VCF_PROPERTY_REGISTRY.md) | **Every dependency property** today + target registry | DP / binding work |
+| 5a | [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) | Full WPF DP precedence epic — **deferred**; 3.2.0 interim contract | When queued |
 | 6 | [VCF_XAML_WPF_SUBSET.md](./VCF_XAML_WPF_SUBSET.md) | XAML grammar: today vs target, POS patterns, migration | Parser / XAML |
 | 7 | [VCF_INFRASTRUCTURE.md](./VCF_INFRASTRUCTURE.md) | Collections, views, events, resources, modules | Non-visual core |
 | 8 | [VCF_LISTVIEW_ARCHITECTURE.md](./VCF_LISTVIEW_ARCHITECTURE.md) | ListView stack, engine, binding, InvoiceGrid target | ListView phase |
@@ -217,6 +218,14 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **Button / ContentControl** — ~~IContentControl + ContentHost composition~~ (**3.1.0**)
   **ListView dual presenter** — ~~permanent bound vs owner-draw~~ (**decision 2026-07-23**; no converge)
   **DP value precedence** — ~~two-slot locked + ClearValue + metadata default~~ (**3.2.0** / **P4-PREC**)
+  **B3 trigger restore (interim)** — ~~`ReapplyStyleValues` + Notify on all DP/IsMouseOver conditions~~ (**3.2.1–3.2.2**)
+  **Visibility / Hidden / Collapsed** — ~~WPF layout semantics + Visible↔Visibility sync~~ (**3.3.0** / **P1-VIS-HIDDEN** / **P1-VIS-COLLAPSE** / **P1-VIS-BOOL**)
+  **RegisterAttached (Grid)** — ~~registry + Grid.Get/Set Row/Column/Span~~ (**3.4.0** / **P2-GRID-ATTACH** / **P2-GRID-XAML**)
+  **Min/Max layout** — ~~MinWidth/MinHeight/MaxWidth/MaxHeight clamp~~ (**3.5.0** / **P1-MINMAX-MIN** / **P1-MINMAX-MAX**)
+  **SelectionChanged naming** — ~~`SelectionChanged` + `ListIndexChanged` dual-raise~~ (**3.6.0** / **P4d-SELCHG**)
+  **Attached storage → DP bag** — **deferred** (accepted 2026-07-23): lazy `EnsureAttached` + `Grid.*` in per-element `DependencyProperties`; keep dict shim until green — when Change/ClearValue/binding on attached is needed
+  **Full WPF DP precedence stack** — **deferred** roadmap epic (not now) — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) (~2–3 mo core)
+  **Overlaps next** — fundamentals overlaps cleared; pick up deferred attached DP-bag or other backlog when ready
   **B-RESZ** / **B-NAV** — ~~Phase0 benches~~
   **ListView bind hotspot** — ~~B-BIND-DENSE~~ (clone preserves bindings; 21×6 gate)
   **Margin/Padding family 1** — ~~ListView Margin=0 Padding=4,1,4,1~~ (**P2a-PAD**)
@@ -436,6 +445,7 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 - `docs/VCF_TEAM_HANDOFF_GUIDE.md` (this file)
 - `docs/VCF_CLASS_REFERENCE.md`
 - `docs/VCF_PROPERTY_REGISTRY.md`
+- `docs/VCF_DP_PRECEDENCE_ROADMAP.md` (full WPF DP stack — deferred)
 - `docs/VCF_XAML_WPF_SUBSET.md`
 - `docs/VCF_INFRASTRUCTURE.md`
 - `docs/VCF_LISTVIEW_ARCHITECTURE.md`
@@ -450,6 +460,8 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 
 | Date | Change |
 |------|--------|
+| 2026-07-23 | **Full WPF DP precedence** accepted as deferred roadmap epic — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md); keep **3.2.0** until queued |
+| 2026-07-23 | **3.2.0** DP ClearValue + metadata default (**P4-PREC**); ListView dual presenters locked |
 | 2026-07-20 | Phase 8a — inheritance batch + DataContext coalesce; **P8-INHERIT**; Button visuals not inheritable |
 | 2026-07-20 | Phase 8b — lazy `GetValue` inherit + batched notify; Pass no-op; **complete** (Phase0 + IDE DeNovoSmoke) |
 | 2026-07-20 | DeNovoSmoke **m2** — MainMenuView + StubMainMenuViewModel; Login→MainMenu / Logout; Shift+M; lazy + `[P7d-LOAD-MAINMENU]` |

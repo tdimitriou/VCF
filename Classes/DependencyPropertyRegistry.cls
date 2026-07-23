@@ -14,17 +14,61 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private m_TypeDefs As cSortedDictionary
+Private m_Attached As cSortedDictionary
+Private m_AttachedOwners As cSortedDictionary
 Private m_Initialized As Boolean
 
 Private Sub Class_Initialize()
     Set m_TypeDefs = New_c.SortedDictionary(TextCompare)
+    Set m_Attached = New_c.SortedDictionary(TextCompare)
+    Set m_AttachedOwners = New_c.SortedDictionary(TextCompare)
 End Sub
 
 Public Sub EnsureBuiltInTypes()
     If m_Initialized Then Exit Sub
     RegisterFrameworkElementType
+    RegisterBuiltInAttached
     m_Initialized = True
 End Sub
+
+' WPF-shaped attached metadata (storage remains AttachedProperties dict).
+Public Sub RegisterAttached( _
+    ByVal OwnerType As String, _
+    ByVal Name As String, _
+    ByVal PropertyType As VbVarType, _
+    Optional ByVal DefaultValue As Variant)
+
+    Dim FullName As String
+
+    If Len(OwnerType) = 0 Or Len(Name) = 0 Then Exit Sub
+    FullName = OwnerType & "." & Name
+
+    If m_Attached.Exists(FullName) Then m_Attached.Remove FullName
+    m_Attached.Add FullName, Array(OwnerType, Name, PropertyType, DefaultValue)
+
+    If Not m_AttachedOwners.Exists(OwnerType) Then
+        m_AttachedOwners.Add OwnerType, True
+    End If
+End Sub
+
+Public Function IsAttachedRegistered(ByVal FullName As String) As Boolean
+    EnsureBuiltInTypes
+    IsAttachedRegistered = m_Attached.Exists(FullName)
+End Function
+
+Public Function HasAttachedOwner(ByVal OwnerType As String) As Boolean
+    EnsureBuiltInTypes
+    HasAttachedOwner = m_AttachedOwners.Exists(OwnerType)
+End Function
+
+Public Function GetAttachedDefault(ByVal FullName As String) As Variant
+    Dim Entry As Variant
+
+    EnsureBuiltInTypes
+    If Not m_Attached.Exists(FullName) Then Exit Function
+    Entry = m_Attached(FullName)
+    GetAttachedDefault = Entry(3)
+End Function
 
 Public Sub RegisterType( _
     ByVal TypeName As String, _
@@ -98,7 +142,9 @@ Private Sub RegisterFrameworkElementType()
         Array("Margin", vbObject, "Thickness", vbNullString, True, False, False, OneWay), _
         Array("Visibility", vbLong, vbNullString, vbNullString, False, True, False, OneWay), _
         Array("MinWidth", vbDouble, vbNullString, vbNullString, True, False, False, OneWay), _
-        Array("MinHeight", vbDouble, vbNullString, vbNullString, True, False, False, OneWay)
+        Array("MinHeight", vbDouble, vbNullString, vbNullString, True, False, False, OneWay), _
+        Array("MaxWidth", vbDouble, vbNullString, vbNullString, True, False, False, OneWay), _
+        Array("MaxHeight", vbDouble, vbNullString, vbNullString, True, False, False, OneWay)
 
     RegisterType "Panel", "FrameworkElement", _
         Array("ShowGridLines", vbBoolean, vbNullString, vbNullString, False, True, False, OneWay)
@@ -130,6 +176,13 @@ Private Sub RegisterFrameworkElementType()
         Array("Content", vbVariant, vbNullString, vbNullString, False, True, False, OneWay), _
         Array("Padding", vbObject, "Thickness", vbNullString, True, False, False, OneWay)
     RegisterType "Window", "FrameworkElement"
+End Sub
+
+Private Sub RegisterBuiltInAttached()
+    RegisterAttached "Grid", "Row", vbLong, 0&
+    RegisterAttached "Grid", "Column", vbLong, 0&
+    RegisterAttached "Grid", "RowSpan", vbLong, 1&
+    RegisterAttached "Grid", "ColumnSpan", vbLong, 1&
 End Sub
 
 Private Sub ApplyInheritedDefs(ByVal Defs As cCollection, ByVal BaseTypeName As String)

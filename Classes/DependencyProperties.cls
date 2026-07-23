@@ -106,12 +106,16 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
             modBindingExpressions.OnDataContextChanged Me.Target
         End If
         
-        ' Phase 8b ? push model removed; notify descendant bindings that pull this DP.
+        ' Phase 8b - push model removed; notify descendant bindings that pull this DP.
         If Not Property.Metadata Is Nothing Then
             If Property.Metadata.IsInheritable Then
                 DependencyPropertiesStatic.NotifyInheritableToDescendants Me.Target, Property
             End If
         End If
+
+        ' PropertyTrigger conditions on DPs: reapply setters + active triggers (3.2.1+).
+        ' Pass coclass Object (not IDependencyObject-typed Target) so StyleManager can QI Widget.
+        modStyleTriggerEngine.NotifyConditionPropertyChanged API.ObjFromPtr(m_TargetPtr), Property.Name
     End Sub
     
     Friend Property Get RegisteredProperties() As cSortedDictionary

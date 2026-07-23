@@ -653,10 +653,24 @@ Private Sub SetAttachedProperty(ByVal Obj As IUIElement, ByVal PropertyName As S
     Dim PropDict As String
     Dim PropKey As String
     Dim PropData
+    Dim FullName As String
+    Dim Reg As DependencyPropertyRegistry
             
     PropData = Split(PropertyName, ".")
+    If UBound(PropData) < 1 Then Exit Sub
     PropDict = PropData(0)
     PropKey = PropData(1)
+    FullName = PropDict & "." & PropKey
+
+    If modConstructors.StrictXamlLoad Then
+        Set Reg = modStaticClasses.DependencyPropertyRegistry
+        Reg.EnsureBuiltInTypes
+        If Reg.HasAttachedOwner(PropDict) Then
+            If Not Reg.IsAttachedRegistered(FullName) Then
+                RaiseXamlLoad "Unknown attached property '" & FullName & "'.", TypeName(Obj), FullName
+            End If
+        End If
+    End If
     
     If Obj.AttachedProperties.ContainsKey(PropDict) Then
         Set Dict = Obj.AttachedProperties(PropDict)
@@ -665,7 +679,11 @@ Private Sub SetAttachedProperty(ByVal Obj As IUIElement, ByVal PropertyName As S
         Obj.AttachedProperties.Add PropDict, Dict
     End If
     
-    If Not Dict.ContainsKey(PropKey) Then Dict.Add PropKey, Value
+    If Dict.ContainsKey(PropKey) Then
+        Dict.Item(PropKey) = Value
+    Else
+        Dict.Add PropKey, Value
+    End If
 
 End Sub
 

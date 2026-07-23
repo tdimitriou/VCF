@@ -341,6 +341,10 @@ End Sub
         End If
     End Sub
 
+    Friend Sub RelayoutChildren()
+        ArrangeContent
+    End Sub
+
     Private Sub ApplyContentValue(ByVal Value As Variant)
         m_ContentHost.ApplyContentValue m_Children, m_DependencyProperties, Value
     End Sub
@@ -359,7 +363,11 @@ End Sub
             Case Else
                 If Not m_Children Is Nothing Then
                     If m_Layout.HandlesLayoutProperty(Property.Name) Then
-                        ArrangeContent
+                        If Property.Name = "Visibility" Then
+                            m_Layout.OnLayoutPropertyChanged Property.Name, m_Children, W
+                        Else
+                            ArrangeContent
+                        End If
                     End If
                 End If
         End Select

@@ -86,6 +86,54 @@ Public Property Let Visibility(ByVal Value As Visibility)
     ApplyVisibilityToWidget
 End Property
 
+Public Property Get MinWidth() As Double
+    If Host.DependencyProperties.Exists("MinWidth") Then
+        MinWidth = CDbl(Host.DependencyProperties.GetValue("MinWidth"))
+    End If
+End Property
+
+Public Property Let MinWidth(ByVal Value As Double)
+    If Host.DependencyProperties.Exists("MinWidth") Then
+        Host.DependencyProperties.SetValue "MinWidth", Value
+    End If
+End Property
+
+Public Property Get MinHeight() As Double
+    If Host.DependencyProperties.Exists("MinHeight") Then
+        MinHeight = CDbl(Host.DependencyProperties.GetValue("MinHeight"))
+    End If
+End Property
+
+Public Property Let MinHeight(ByVal Value As Double)
+    If Host.DependencyProperties.Exists("MinHeight") Then
+        Host.DependencyProperties.SetValue "MinHeight", Value
+    End If
+End Property
+
+Public Property Get MaxWidth() As Double
+    If Host.DependencyProperties.Exists("MaxWidth") Then
+        MaxWidth = CDbl(Host.DependencyProperties.GetValue("MaxWidth"))
+    End If
+End Property
+
+Public Property Let MaxWidth(ByVal Value As Double)
+    If Host.DependencyProperties.Exists("MaxWidth") Then
+        Host.DependencyProperties.SetValue "MaxWidth", Value
+    End If
+End Property
+
+Public Property Get MaxHeight() As Double
+    If Host.DependencyProperties.Exists("MaxHeight") Then
+        MaxHeight = CDbl(Host.DependencyProperties.GetValue("MaxHeight"))
+    End If
+End Property
+
+Public Property Let MaxHeight(ByVal Value As Double)
+    If Host.DependencyProperties.Exists("MaxHeight") Then
+        Host.DependencyProperties.SetValue "MaxHeight", Value
+    End If
+End Property
+
 Public Property Get DesiredWidth() As Double
     DesiredWidth = m_DesiredWidth
 End Property
@@ -105,6 +153,9 @@ Public Sub Measure(ByVal AvailableWidth As Double, ByVal AvailableHeight As Doub
     If H <= 0 Then H = AvailableHeight
     If AvailableWidth > 0 And W > AvailableWidth Then W = AvailableWidth
     If AvailableHeight > 0 And H > AvailableHeight Then H = AvailableHeight
+
+    W = ClampElementWidth(Host, W)
+    H = ClampElementHeight(Host, H)
 
     m_DesiredWidth = W
     m_DesiredHeight = H
@@ -161,6 +212,8 @@ Public Sub ArrangeChildren( _
         End If
 
         R = LayoutRectFromMargin(ReadChildMargin(Child), ReadChildWidth(Child), ReadChildHeight(Child))
+        R.Width = CSng(ClampElementWidth(Child, R.Width))
+        R.Height = CSng(ClampElementHeight(Child, R.Height))
 
         ApplyLayoutRectToElement ChildUI, R
         ApplyChildVisibility Child, ChildVis
@@ -180,7 +233,7 @@ End Sub
 
 Public Function HandlesLayoutProperty(ByVal PropertyName As String) As Boolean
     Select Case PropertyName
-        Case "Width", "Height", "Margin", "Visibility", "MinWidth", "MinHeight"
+        Case "Width", "Height", "Margin", "Visibility", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight"
             HandlesLayoutProperty = True
     End Select
 End Function
@@ -195,8 +248,10 @@ Public Sub OnLayoutPropertyChanged( _
     Select Case PropertyName
         Case "Visibility"
             ApplyVisibilityToWidget
-        Case "Width", "Height", "Margin"
+            InvalidateParentLayout Host
+        Case "Width", "Height", "Margin", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight"
             OnHostResize Children, HostWidget, OverrideHostWidth, OverrideHostHeight
+            InvalidateParentLayout Host
     End Select
 End Sub
 
@@ -206,6 +261,8 @@ Private Sub SetDefaultLayoutValues()
         If .Exists("Height") Then .SetCurrentValue "Height", 300#
         If .Exists("MinWidth") Then .SetCurrentValue "MinWidth", 0#
         If .Exists("MinHeight") Then .SetCurrentValue "MinHeight", 0#
+        If .Exists("MaxWidth") Then .SetCurrentValue "MaxWidth", 0#
+        If .Exists("MaxHeight") Then .SetCurrentValue "MaxHeight", 0#
         If .Exists("Visibility") Then .SetCurrentValue "Visibility", CLng(VisibilityVisible)
         If .Exists("Margin") Then
             Dim DefaultMargin As Thickness
@@ -242,16 +299,17 @@ Private Function ReadChildVisibility(ByVal Child As Object) As Visibility
             If CBool(Child.DependencyProperties.GetValue("Visible")) Then
                 ReadChildVisibility = VisibilityVisible
             Else
-                ReadChildVisibility = VisibilityHidden
+                ReadChildVisibility = VisibilityCollapsed
             End If
             Exit Function
         End If
     End If
     If TypeOf Child Is IUIElement Then
-        If TypeName(Child) = "Panel" Or TypeName(Child) = "UserControl" Then
-            ReadChildVisibility = Child.Visibility
-            Exit Function
-        End If
+        Select Case TypeName(Child)
+            Case "Panel", "UserControl", "StackPanel", "Grid", "ContentControl", "Border", "Button"
+                ReadChildVisibility = Child.Visibility
+                Exit Function
+        End Select
     End If
     ReadChildVisibility = VisibilityVisible
 End Function

@@ -33,6 +33,7 @@ Event MouseMoveOnListItem(ByVal HoverIndex As Long, ByVal RelX As Single, ByVal 
 Event SelectedAll() 'J?rgen
 Event DimensionsAdjusted()
 Event ListIndexChanged()
+Event SelectionChanged()
 Event MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
 Event QueryRowLevel(ByVal Index As Long, Level As Long)
 
@@ -180,6 +181,7 @@ Public Property Let ListIndex(ByVal NewValue As Long)
   If mListIndex = -1 Then W.Refresh Else EnsureVisibleSelection
   
   RaiseEvent ListIndexChanged
+  RaiseEvent SelectionChanged
   RaiseEvent Click
   W.RaiseBubblingEvent Me, "Click"
 End Property
@@ -210,6 +212,7 @@ End Property
 
 Public Sub EnsureVisibleSelection()
 Dim NewPos&
+Dim Cols&
 
   If mListIndex < 0 Then Exit Sub
   If mListIndex > mListCount Then Exit Sub
@@ -222,12 +225,15 @@ Dim NewPos&
     W.Refresh
     Exit Sub
   End If
-  If mListIndex \ mVisibleCols < VScrollBar.Value Then
-    VScrollBar.Value = mListIndex \ mVisibleCols
+  ' Unlaid-out lists keep mVisibleCols=0 until AdjustDimensions; avoid \ 0.
+  Cols = mVisibleCols
+  If Cols < 1 Then Cols = 1
+  If mListIndex \ Cols < VScrollBar.Value Then
+    VScrollBar.Value = mListIndex \ Cols
   End If
-  If mListIndex \ mVisibleCols > VScrollBar.Value + mVisibleRows - 1 Then
+  If mListIndex \ Cols > VScrollBar.Value + mVisibleRows - 1 Then
     If mVisibleRows <= 0 Then mVisibleRows = 1
-    NewPos = mListIndex \ mVisibleCols - mVisibleRows + 1
+    NewPos = mListIndex \ Cols - mVisibleRows + 1
     If NewPos < 0 Then NewPos = 0
     If NewPos > VScrollBar.Max Then NewPos = VScrollBar.Max
     VScrollBar.Value = NewPos
@@ -827,6 +833,7 @@ Private Sub ChangeListIndex(ByVal NewValue As Long) 'small Helper for the Event 
   mListIndex = NewValue
   If mListIndex = -1 Then W.Refresh Else EnsureVisibleSelection
   RaiseEvent ListIndexChanged
+  RaiseEvent SelectionChanged
 End Sub
 
 Private Sub W_KeyUp(KeyCode As Integer, Shift As Integer)

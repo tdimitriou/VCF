@@ -222,6 +222,29 @@ Attribute GetSetter.VB_UserMemId = 0
         VerifyInitialization
         Set TriggerAt = m_Triggers.ItemByIndex(Index)
     End Property
+
+    ' True if this style or BasedOn has a PropertyTrigger on ConditionPropertyName.
+    Public Function WatchesTriggerCondition(ByVal ConditionPropertyName As String) As Boolean
+        Dim i As Long
+        Dim Trig As PropertyTrigger
+
+        VerifyInitialization
+        If Len(ConditionPropertyName) = 0 Then Exit Function
+
+        For i = 0 To m_Triggers.Count - 1
+            Set Trig = m_Triggers.ItemByIndex(i)
+            If Not Trig Is Nothing Then
+                If StrComp(Trig.PropertyName, ConditionPropertyName, vbTextCompare) = 0 Then
+                    WatchesTriggerCondition = True
+                    Exit Function
+                End If
+            End If
+        Next
+
+        If Not BasedOn Is Nothing Then
+            WatchesTriggerCondition = BasedOn.WatchesTriggerCondition(ConditionPropertyName)
+        End If
+    End Function
     
     Public Sub Clear()
         VerifyInitialization

@@ -63,7 +63,8 @@ Public WithEvents W As cWidgetBase
 | `MouseUpClick`, `MouseMoveOnListItem` | Mouse |
 | `SelectedAll` | Ctrl+A |
 | `DimensionsAdjusted` | Layout |
-| `ListIndexChanged` | Selection index |
+| `ListIndexChanged` | Selection index (compat alias) |
+| `SelectionChanged` | Selection index (WPF name; **3.6.0**) |
 
 ### 3.4 Selection model (today)
 

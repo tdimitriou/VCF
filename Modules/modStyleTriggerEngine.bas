@@ -1,6 +1,73 @@
 Attribute VB_Name = "modStyleTriggerEngine"
 Option Explicit
 
+' Depth while ApplyStyle / ReapplyStyleValues runs ? blocks NotifyConditionPropertyChanged recursion.
+Private m_StyleReapplyDepth As Long
+
+Public Sub BeginStyleReapply()
+    m_StyleReapplyDepth = m_StyleReapplyDepth + 1
+End Sub
+
+Public Sub EndStyleReapply()
+    If m_StyleReapplyDepth > 0 Then m_StyleReapplyDepth = m_StyleReapplyDepth - 1
+End Sub
+
+Public Property Get IsStyleReapplyInProgress() As Boolean
+    IsStyleReapplyInProgress = (m_StyleReapplyDepth > 0)
+End Property
+
+' Call when a PropertyTrigger condition property changes (DP or CLR such as IsMouseOver).
+' Reapplies style setters + active triggers only (3.2.1) ? no ControlTemplate rebuild.
+Public Sub NotifyConditionPropertyChanged(ByVal Target As Object, ByVal ConditionPropertyName As String)
+    Dim St As Style
+
+    On Error GoTo Handler
+
+100 If m_StyleReapplyDepth > 0 Then Exit Sub
+102 If Target Is Nothing Then Exit Sub
+104 If Len(ConditionPropertyName) = 0 Then Exit Sub
+106 If StrComp(ConditionPropertyName, "Style", vbTextCompare) = 0 Then Exit Sub
+
+110 Set St = TryGetTargetStyle(Target)
+112 If St Is Nothing Then Exit Sub
+114 If Not St.WatchesTriggerCondition(ConditionPropertyName) Then Exit Sub
+
+120 With New StyleManager
+130     .ReapplyStyleValues St, Target
+    End With
+
+    Exit Sub
+
+Handler:
+    modStyleApplyLog.LogErrorAndReraise "modStyleTriggerEngine", "NotifyConditionPropertyChanged"
+End Sub
+
+Private Function TryGetTargetStyle(ByVal Target As Object) As Style
+    Dim Dep As IDependencyObject
+    Dim V As Variant
+
+    On Error Resume Next
+
+    If TypeOf Target Is IDependencyObject Then
+        Set Dep = Target
+        If Not Dep.DependencyProperties Is Nothing Then
+            If Dep.DependencyProperties.Exists("Style") Then
+                Call API.CopyVariable(Dep.DependencyProperties.GetValue("Style"), V)
+                If IsObject(V) Then
+                    If Not V Is Nothing Then
+                        If TypeOf V Is Style Then Set TryGetTargetStyle = V
+                    End If
+                End If
+            End If
+        End If
+    End If
+
+    If TryGetTargetStyle Is Nothing Then
+        Set TryGetTargetStyle = CallByName(Target, "Style", VbGet)
+    End If
+    Err.Clear
+End Function
+
 Public Sub ApplyActiveTriggers(ByVal Style As Style, ByVal Target As Object)
     On Error GoTo Handler
 
@@ -47,7 +114,7 @@ Handler:
     modStyleApplyLog.LogErrorAndReraise "modStyleTriggerEngine", "IsPropertyTriggerActive"
 End Function
 
-' Soft property probe — intentional Resume Next.
+' Soft property probe ? intentional Resume Next.
 Public Function ReadTriggerPropertyValue(ByVal Target As Object, ByVal PropertyName As String) As Variant
     On Error Resume Next
 

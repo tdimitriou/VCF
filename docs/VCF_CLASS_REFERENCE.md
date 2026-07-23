@@ -407,7 +407,7 @@ Forwards TextBoxBase events. + `Border`, `Focused`, `Visibility`, `SetFocus`.
 
 ### ListViewBase (1178 lines) — **Refactor (engine)**
 
-**Events:** OwnerDrawItem, OwnerDrawSubItem, OwnerDrawHeader, Click, HeaderClick, DblClick, DeleteKeyPressed, Scroll*, Mouse*, SelectedAll, DimensionsAdjusted, ListIndexChanged
+**Events:** OwnerDrawItem, OwnerDrawSubItem, OwnerDrawHeader, Click, HeaderClick, DblClick, DeleteKeyPressed, Scroll*, Mouse*, SelectedAll, DimensionsAdjusted, ListIndexChanged, SelectionChanged
 
 **Public properties (complete):**
 

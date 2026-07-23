@@ -141,6 +141,38 @@ End Property
         Visibility = m_Layout.Visibility
     End Property
 
+    Public Property Get MinWidth() As Double
+        MinWidth = m_Layout.MinWidth
+    End Property
+
+    Public Property Let MinWidth(ByVal Value As Double)
+        m_Layout.MinWidth = Value
+    End Property
+
+    Public Property Get MinHeight() As Double
+        MinHeight = m_Layout.MinHeight
+    End Property
+
+    Public Property Let MinHeight(ByVal Value As Double)
+        m_Layout.MinHeight = Value
+    End Property
+
+    Public Property Get MaxWidth() As Double
+        MaxWidth = m_Layout.MaxWidth
+    End Property
+
+    Public Property Let MaxWidth(ByVal Value As Double)
+        m_Layout.MaxWidth = Value
+    End Property
+
+    Public Property Get MaxHeight() As Double
+        MaxHeight = m_Layout.MaxHeight
+    End Property
+
+    Public Property Let MaxHeight(ByVal Value As Double)
+        m_Layout.MaxHeight = Value
+    End Property
+
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
         
@@ -306,6 +338,10 @@ End Sub
     Private Sub ArrangePanel()
         ArrangeStackPanelChildren m_Children, W, m_Orientation
     End Sub
+
+    Friend Sub RelayoutChildren()
+        ArrangePanel
+    End Sub
 '#End Region
 
 '#Region DependencyProperties Events
@@ -318,7 +354,11 @@ End Sub
             Case Else
                 If Not m_Children Is Nothing Then
                     If m_Layout.HandlesLayoutProperty(Property.Name) Then
-                        ArrangePanel
+                        If Property.Name = "Visibility" Then
+                            m_Layout.OnLayoutPropertyChanged Property.Name, m_Children, W
+                        Else
+                            ArrangePanel
+                        End If
                     End If
                 End If
         End Select

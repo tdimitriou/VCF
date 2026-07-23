@@ -39,6 +39,7 @@ Private WithEvents m_DependencyProperties As DependencyProperties
 Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As List
 Private m_BaseUIElement As UIElementBase
+Private m_SyncingVisibility As Boolean
 
 Public Name As String
 
@@ -119,6 +120,28 @@ Public Name As String
         Call m_DependencyProperties.SetValue("Margin", Value)
     End Property
 
+    Public Property Get Visible() As Boolean
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Visible"), Visible)
+    End Property
+
+    Public Property Let Visible(ByVal Value As Boolean)
+        Call m_DependencyProperties.SetValue("Visible", Value)
+    End Property
+
+    Public Property Get Visibility() As Visibility
+        If m_DependencyProperties.Exists("Visibility") Then
+            Visibility = CLng(m_DependencyProperties.GetValue("Visibility"))
+        Else
+            Visibility = VisibilityVisible
+        End If
+    End Property
+
+    Public Property Let Visibility(ByVal Value As Visibility)
+        If m_DependencyProperties.Exists("Visibility") Then
+            Call m_DependencyProperties.SetValue("Visibility", CLng(Value))
+        End If
+    End Property
+
     ' ItemsPanelTemplate clone ? set metrics without MoveChildren (grid not hosted yet).
     Friend Sub ApplyItemsPanelMetrics(ByVal NewRows As Long, ByVal NewColumns As Long, ByVal Pad As Thickness)
         Dim PadCopy As Thickness
@@ -183,7 +206,9 @@ Public Name As String
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
             Call .Register("ShowGridLines", vbBoolean)
             Call .Register("Visible", vbBoolean)
+            Call .Register("Visibility", vbLong, , , , NewDependencyPropertyMetadata(False, True, False))
             .SetCurrentValue "Visible", True
+            .SetCurrentValue "Visibility", CLng(VisibilityVisible)
             Call .Register("Padding", vbObject, "Thickness")
             Call .Register("Width", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
             Call .Register("Height", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
@@ -415,26 +440,20 @@ End Sub
         Dim ChildVis As Visibility
         Set Obj = Child
         
-        Dim ColSpan As Integer
+        Dim ColSpan As Long
         Dim RowSpan As Long
-        ColSpan = 1
-        RowSpan = 1
-        
+        ColSpan = GetGridAttachedLong(Obj, "ColumnSpan", 1)
+        RowSpan = GetGridAttachedLong(Obj, "RowSpan", 1)
+        If ColSpan < 1 Then ColSpan = 1
+        If RowSpan < 1 Then RowSpan = 1
+
         Dim StartRow As Long
         Dim StartCol As Long
         StartRow = CellPosition.T
         StartCol = CellPosition.L
-        
-        Dim GridProps As ObservableDictionary
-        If Obj.AttachedProperties.ContainsKey("Grid") Then
-            Set GridProps = Obj.AttachedProperties("Grid")
-            
-            If GridProps.ContainsKey("ColumnSpan") Then ColSpan = GridProps("ColumnSpan")
-            If GridProps.ContainsKey("RowSpan") Then RowSpan = GridProps("RowSpan")
-        
-            If RowSpan > (m_Rows - StartRow) Then RowSpan = m_Rows - StartRow
-            If ColSpan > (m_Columns - StartCol) Then ColSpan = m_Columns - StartCol
-        End If
+
+        If RowSpan > (m_Rows - StartRow) Then RowSpan = m_Rows - StartRow
+        If ColSpan > (m_Columns - StartCol) Then ColSpan = m_Columns - StartCol
         
        Dim i As Long
        Dim j As Long
@@ -483,12 +502,31 @@ End Sub
 '#Region DependencyProperties Events
     Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
         Select Case Property.Name
-            Case "Visible":         W.Visible = Property.GetValue
+            Case "Visible"
+                If Not m_SyncingVisibility Then
+                    m_SyncingVisibility = True
+                    If CBool(Property.GetValue) Then
+                        m_DependencyProperties.SetValue "Visibility", CLng(VisibilityVisible)
+                    Else
+                        m_DependencyProperties.SetValue "Visibility", CLng(VisibilityCollapsed)
+                    End If
+                    m_SyncingVisibility = False
+                End If
+            Case "Visibility"
+                If Not m_SyncingVisibility Then
+                    m_SyncingVisibility = True
+                    m_DependencyProperties.SetCurrentValue "Visible", (CLng(Property.GetValue) = VisibilityVisible)
+                    m_SyncingVisibility = False
+                End If
+                ApplyVisibility W, CLng(Property.GetValue)
+                InvalidateParentLayout Me
             Case "Style":           ApplyStyle
         End Select
         
         DependencyPropertiesStatic.PassPropertyValue m_Children, Property
-        If Property.Metadata.AffectsRender Then W.Refresh
+        If Not Property.Metadata Is Nothing Then
+            If Property.Metadata.AffectsRender Then W.Refresh
+        End If
     End Sub
 '#End Region
 

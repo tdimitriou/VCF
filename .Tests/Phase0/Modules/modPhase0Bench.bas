@@ -28,10 +28,17 @@ Public Sub RunAll()
     If Not Phase0Bench_StrictUnknownType() Then Failed = Failed + 1
     If Not Phase1Bench_LayoutWidthXaml() Then Failed = Failed + 1
     If Not Phase1Bench_PanelVisibilityCollapsed() Then Failed = Failed + 1
+    If Not Phase1Bench_VisibilityHiddenReserves() Then Failed = Failed + 1
+    If Not Phase1Bench_VisibilityCollapsedReclaims() Then Failed = Failed + 1
+    If Not Phase1Bench_VisibleBoolCollapsed() Then Failed = Failed + 1
     If Not Phase1Bench_BorderWidthXaml() Then Failed = Failed + 1
+    If Not Phase1Bench_MinWidthFloor() Then Failed = Failed + 1
+    If Not Phase1Bench_MaxWidthCeiling() Then Failed = Failed + 1
     If Not Phase2Bench_StackPanelXaml() Then Failed = Failed + 1
     If Not Phase2Bench_StackPanelLayout() Then Failed = Failed + 1
     If Not Phase2Bench_GridRowDefinitionsXaml() Then Failed = Failed + 1
+    If Not Phase2Bench_GridAttachedCode() Then Failed = Failed + 1
+    If Not Phase2Bench_GridAttachedXaml() Then Failed = Failed + 1
     If Not Phase3Bench_MergedDictionaryLookup() Then Failed = Failed + 1
     If Not Phase3Bench_ResourceSourceLoad() Then Failed = Failed + 1
     If Not Phase3Bench_DynamicResourceExtension() Then Failed = Failed + 1
@@ -52,6 +59,7 @@ Public Sub RunAll()
     If Not Phase4bBench_Move() Then Failed = Failed + 1
     If Not Phase4bBench_ItemsControl() Then Failed = Failed + 1
     If Not Phase4dBench_Selector() Then Failed = Failed + 1
+    If Not Phase4dBench_SelectionChanged() Then Failed = Failed + 1
     If Not Phase5aBench_OwnerDrawListView() Then Failed = Failed + 1
     If Not Phase5bBench_MeasureRow() Then Failed = Failed + 1
     If Not Phase5cBench_RowLevel() Then Failed = Failed + 1
@@ -85,7 +93,7 @@ Public Sub RunAll()
 
     ' Report only ? do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (61 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (69 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -286,8 +294,156 @@ Public Function Phase1Bench_PanelVisibilityCollapsed() As Boolean
 
 Fail:
     LogResult "P1-VIS", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P1-VIS ? " & Err.Description
+    Debug.Print "FAIL  P1-VIS - " & Err.Description
     Phase1Bench_PanelVisibilityCollapsed = False
+End Function
+
+' Hidden keeps layout slot; Collapsed removes it (StackPanel).
+Public Function Phase1Bench_VisibilityHiddenReserves() As Boolean
+    Dim Sp As StackPanel
+    Dim A As Panel
+    Dim B As Panel
+    Dim C As Panel
+
+    On Error GoTo Fail
+
+    Set Sp = New StackPanel
+    Sp.Orientation = OrientationVertical
+    Sp.Widget.Move 0, 0, 200, 300
+
+    Set A = New Panel
+    A.Width = 180
+    A.Height = 20
+    Set B = New Panel
+    B.Width = 180
+    B.Height = 20
+    Set C = New Panel
+    C.Width = 180
+    C.Height = 20
+
+    Sp.Children.Add A
+    Sp.Children.Add B
+    Sp.Children.Add C
+
+    If Abs(C.Widget.Top - 40!) > 1! Then Err.Raise vbObjectError, , "Baseline C.Top expected 40, got " & C.Widget.Top
+
+    B.Visibility = VisibilityHidden
+
+    If Abs(C.Widget.Top - 40!) > 1! Then Err.Raise vbObjectError, , "Hidden must keep slot; C.Top expected 40, got " & C.Widget.Top
+    If B.Widget.Visible Then Err.Raise vbObjectError, , "Hidden child Widget.Visible must be False"
+    If Abs(B.Widget.Top - 20!) > 1! Then Err.Raise vbObjectError, , "Hidden child must still be arranged at Top=20"
+
+    KeepAlive Sp
+    LogResult "P1-VIS-HIDDEN", 0, "OK Hidden reserves slot C.Top=" & C.Widget.Top
+    Debug.Print "PASS  P1-VIS-HIDDEN StackPanel Hidden reserves space"
+    Phase1Bench_VisibilityHiddenReserves = True
+    Exit Function
+
+Fail:
+    LogResult "P1-VIS-HIDDEN", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-VIS-HIDDEN - " & Err.Description
+    Phase1Bench_VisibilityHiddenReserves = False
+    On Error Resume Next
+    KeepAlive Sp
+    Err.Clear
+End Function
+
+Public Function Phase1Bench_VisibilityCollapsedReclaims() As Boolean
+    Dim Sp As StackPanel
+    Dim A As Panel
+    Dim B As Panel
+    Dim C As Panel
+
+    On Error GoTo Fail
+
+    Set Sp = New StackPanel
+    Sp.Orientation = OrientationVertical
+    Sp.Widget.Move 0, 0, 200, 300
+
+    Set A = New Panel
+    A.Width = 180
+    A.Height = 20
+    Set B = New Panel
+    B.Width = 180
+    B.Height = 20
+    Set C = New Panel
+    C.Width = 180
+    C.Height = 20
+
+    Sp.Children.Add A
+    Sp.Children.Add B
+    Sp.Children.Add C
+
+    B.Visibility = VisibilityCollapsed
+
+    If Abs(C.Widget.Top - 20!) > 1! Then Err.Raise vbObjectError, , "Collapsed must reclaim; C.Top expected 20, got " & C.Widget.Top
+    If Sp.Widget.Widgets.Exists("_" & ObjPtr(B)) Then Err.Raise vbObjectError, , "Collapsed child must be detached from parent Widgets"
+
+    KeepAlive Sp
+    LogResult "P1-VIS-COLLAPSE", 0, "OK Collapsed reclaims C.Top=" & C.Widget.Top
+    Debug.Print "PASS  P1-VIS-COLLAPSE StackPanel Collapsed reclaims space"
+    Phase1Bench_VisibilityCollapsedReclaims = True
+    Exit Function
+
+Fail:
+    LogResult "P1-VIS-COLLAPSE", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-VIS-COLLAPSE - " & Err.Description
+    Phase1Bench_VisibilityCollapsedReclaims = False
+    On Error Resume Next
+    KeepAlive Sp
+    Err.Clear
+End Function
+
+' Button.Visible=False maps to VisibilityCollapsed (UniformGrid cell reclaim).
+Public Function Phase1Bench_VisibleBoolCollapsed() As Boolean
+    Dim Ug As UniformGrid
+    Dim B1 As Button
+    Dim B2 As Button
+    Dim B3 As Button
+
+    On Error GoTo Fail
+
+    Set Ug = New UniformGrid
+    Ug.Rows = 1
+    Ug.Columns = 3
+    Ug.Widget.Move 0, 0, 300, 40
+
+    Set B1 = New Button
+    B1.Content = "1"
+    Set B2 = New Button
+    B2.Content = "2"
+    Set B3 = New Button
+    B3.Content = "3"
+
+    Ug.Children.Add B1
+    Ug.Children.Add B2
+    Ug.Children.Add B3
+
+    If Abs(B3.Widget.Left - 200!) > 2! Then Err.Raise vbObjectError, , "Baseline B3.Left expected ~200, got " & B3.Widget.Left
+
+    B2.Visible = False
+
+    If B2.Visibility <> VisibilityCollapsed Then Err.Raise vbObjectError, , "Visible=False must map to VisibilityCollapsed, got " & B2.Visibility
+    If Abs(B3.Widget.Left - 100!) > 2! Then Err.Raise vbObjectError, , "After Visible=False, B3.Left expected ~100, got " & B3.Widget.Left
+    If Ug.Widget.Widgets.Exists("_" & ObjPtr(B2)) Then Err.Raise vbObjectError, , "Collapsed Button must leave UniformGrid Widgets"
+
+    B2.Visible = True
+    If B2.Visibility <> VisibilityVisible Then Err.Raise vbObjectError, , "Visible=True must restore VisibilityVisible"
+    If Abs(B3.Widget.Left - 200!) > 2! Then Err.Raise vbObjectError, , "After Visible=True, B3.Left expected ~200, got " & B3.Widget.Left
+
+    KeepAlive Ug
+    LogResult "P1-VIS-BOOL", 0, "OK Visible bool maps to Collapsed cell reclaim"
+    Debug.Print "PASS  P1-VIS-BOOL Button.Visible maps to Collapsed"
+    Phase1Bench_VisibleBoolCollapsed = True
+    Exit Function
+
+Fail:
+    LogResult "P1-VIS-BOOL", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-VIS-BOOL - " & Err.Description
+    Phase1Bench_VisibleBoolCollapsed = False
+    On Error Resume Next
+    KeepAlive Ug
+    Err.Clear
 End Function
 
 Public Function Phase1Bench_BorderWidthXaml() As Boolean
@@ -311,8 +467,78 @@ Public Function Phase1Bench_BorderWidthXaml() As Boolean
 
 Fail:
     LogResult "P1-BORDER", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P1-BORDER ? " & Err.Description
+    Debug.Print "FAIL  P1-BORDER - " & Err.Description
     Phase1Bench_BorderWidthXaml = False
+End Function
+
+Public Function Phase1Bench_MinWidthFloor() As Boolean
+    Dim Sp As StackPanel
+    Dim Child As Panel
+
+    On Error GoTo Fail
+
+    Set Sp = New StackPanel
+    Sp.Orientation = OrientationVertical
+    Sp.Widget.Move 0, 0, 300, 100
+
+    Set Child = New Panel
+    Child.Width = 50
+    Child.Height = 20
+    Child.MinWidth = 120
+    Sp.Children.Add Child
+
+    If Abs(Child.Widget.Width - 120!) > 1! Then
+        Err.Raise vbObjectError, , "MinWidth floor expected Widget.Width=120, got " & Child.Widget.Width
+    End If
+
+    KeepAlive Sp
+    LogResult "P1-MINMAX-MIN", 0, "OK MinWidth floors arranged width"
+    Debug.Print "PASS  P1-MINMAX-MIN MinWidth floors arranged size"
+    Phase1Bench_MinWidthFloor = True
+    Exit Function
+
+Fail:
+    LogResult "P1-MINMAX-MIN", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-MINMAX-MIN - " & Err.Description
+    Phase1Bench_MinWidthFloor = False
+    On Error Resume Next
+    KeepAlive Sp
+    Err.Clear
+End Function
+
+Public Function Phase1Bench_MaxWidthCeiling() As Boolean
+    Dim Sp As StackPanel
+    Dim Child As Panel
+
+    On Error GoTo Fail
+
+    Set Sp = New StackPanel
+    Sp.Orientation = OrientationVertical
+    Sp.Widget.Move 0, 0, 300, 100
+
+    Set Child = New Panel
+    Child.Width = 200
+    Child.Height = 20
+    Child.MaxWidth = 80
+    Sp.Children.Add Child
+
+    If Abs(Child.Widget.Width - 80!) > 1! Then
+        Err.Raise vbObjectError, , "MaxWidth ceiling expected Widget.Width=80, got " & Child.Widget.Width
+    End If
+
+    KeepAlive Sp
+    LogResult "P1-MINMAX-MAX", 0, "OK MaxWidth ceilings arranged width"
+    Debug.Print "PASS  P1-MINMAX-MAX MaxWidth ceilings arranged size"
+    Phase1Bench_MaxWidthCeiling = True
+    Exit Function
+
+Fail:
+    LogResult "P1-MINMAX-MAX", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-MINMAX-MAX - " & Err.Description
+    Phase1Bench_MaxWidthCeiling = False
+    On Error Resume Next
+    KeepAlive Sp
+    Err.Clear
 End Function
 
 Public Function Phase2Bench_StackPanelXaml() As Boolean
@@ -401,8 +627,153 @@ Public Function Phase2Bench_GridRowDefinitionsXaml() As Boolean
 
 Fail:
     LogResult "P2-GRID", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P2-GRID ? " & Err.Description
+    Debug.Print "FAIL  P2-GRID - " & Err.Description
     Phase2Bench_GridRowDefinitionsXaml = False
+End Function
+
+Public Function Phase2Bench_GridAttachedCode() As Boolean
+    Dim G As Grid
+    Dim Rd As RowDefinition
+    Dim Cd As ColumnDefinition
+    Dim P00 As Panel
+    Dim P01 As Panel
+    Dim P10 As Panel
+    Dim P11 As Panel
+
+    On Error GoTo Fail
+
+    Set G = New Grid
+    G.Width = 200
+    G.Height = 200
+
+    Set Rd = New RowDefinition
+    Rd.Height = "*"
+    G.RowDefinitions.Add Rd
+    Set Rd = New RowDefinition
+    Rd.Height = "*"
+    G.RowDefinitions.Add Rd
+
+    Set Cd = New ColumnDefinition
+    Cd.Width = "*"
+    G.ColumnDefinitions.Add Cd
+    Set Cd = New ColumnDefinition
+    Cd.Width = "*"
+    G.ColumnDefinitions.Add Cd
+
+    Set P00 = New Panel
+    P00.Width = 40
+    P00.Height = 40
+    Set P01 = New Panel
+    P01.Width = 40
+    P01.Height = 40
+    Set P10 = New Panel
+    P10.Width = 40
+    P10.Height = 40
+    Set P11 = New Panel
+    P11.Width = 40
+    P11.Height = 40
+
+    G.SetRow P00, 0
+    G.SetColumn P00, 0
+    G.SetRow P01, 0
+    G.SetColumn P01, 1
+    G.SetRow P10, 1
+    G.SetColumn P10, 0
+    G.SetRow P11, 1
+    G.SetColumn P11, 1
+
+    If G.GetRow(P11) <> 1 Then Err.Raise vbObjectError, , "GetRow(P11) expected 1"
+    If G.GetColumn(P01) <> 1 Then Err.Raise vbObjectError, , "GetColumn(P01) expected 1"
+
+    G.Children.Add P00
+    G.Children.Add P01
+    G.Children.Add P10
+    G.Children.Add P11
+    G.Widget.Move 0, 0, 200, 200
+
+    If Abs(P00.Widget.Left - 0!) > 2! Or Abs(P00.Widget.Top - 0!) > 2! Then
+        Err.Raise vbObjectError, , "P00 expected (0,0), got (" & P00.Widget.Left & "," & P00.Widget.Top & ")"
+    End If
+    If Abs(P01.Widget.Left - 100!) > 2! Or Abs(P01.Widget.Top - 0!) > 2! Then
+        Err.Raise vbObjectError, , "P01 expected (100,0), got (" & P01.Widget.Left & "," & P01.Widget.Top & ")"
+    End If
+    If Abs(P10.Widget.Left - 0!) > 2! Or Abs(P10.Widget.Top - 100!) > 2! Then
+        Err.Raise vbObjectError, , "P10 expected (0,100), got (" & P10.Widget.Left & "," & P10.Widget.Top & ")"
+    End If
+    If Abs(P11.Widget.Left - 100!) > 2! Or Abs(P11.Widget.Top - 100!) > 2! Then
+        Err.Raise vbObjectError, , "P11 expected (100,100), got (" & P11.Widget.Left & "," & P11.Widget.Top & ")"
+    End If
+
+    KeepAlive G
+    LogResult "P2-GRID-ATTACH", 0, "OK Get/SetRow Column cell positions"
+    Debug.Print "PASS  P2-GRID-ATTACH Grid.SetRow/SetColumn positions"
+    Phase2Bench_GridAttachedCode = True
+    Exit Function
+
+Fail:
+    LogResult "P2-GRID-ATTACH", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-GRID-ATTACH - " & Err.Description
+    Phase2Bench_GridAttachedCode = False
+    On Error Resume Next
+    KeepAlive G
+    Err.Clear
+End Function
+
+Public Function Phase2Bench_GridAttachedXaml() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As Grid
+    Dim Xml As String
+    Dim P00 As Panel
+    Dim P01 As Panel
+    Dim P10 As Panel
+    Dim P11 As Panel
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Xml = LoadTextFile(App.Path & "\Resources\LayoutGridAttach.xml")
+    Set Root = Reader.Load(Xml)
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "Grid XAML returned Nothing"
+    If Root.Children.Count <> 4 Then Err.Raise vbObjectError, , "Expected 4 children, got " & Root.Children.Count
+
+    Set P00 = Root.Children(0)
+    Set P01 = Root.Children(1)
+    Set P10 = Root.Children(2)
+    Set P11 = Root.Children(3)
+
+    If Root.GetRow(P11) <> 1 Or Root.GetColumn(P11) <> 1 Then
+        Err.Raise vbObjectError, , "XAML attached GetRow/GetColumn mismatch for P11"
+    End If
+
+    Root.Widget.Move 0, 0, 200, 200
+
+    If Abs(P00.Widget.Left - 0!) > 2! Or Abs(P00.Widget.Top - 0!) > 2! Then
+        Err.Raise vbObjectError, , "XAML P00 expected (0,0), got (" & P00.Widget.Left & "," & P00.Widget.Top & ")"
+    End If
+    If Abs(P01.Widget.Left - 100!) > 2! Or Abs(P01.Widget.Top - 0!) > 2! Then
+        Err.Raise vbObjectError, , "XAML P01 expected (100,0), got (" & P01.Widget.Left & "," & P01.Widget.Top & ")"
+    End If
+    If Abs(P10.Widget.Left - 0!) > 2! Or Abs(P10.Widget.Top - 100!) > 2! Then
+        Err.Raise vbObjectError, , "XAML P10 expected (0,100), got (" & P10.Widget.Left & "," & P10.Widget.Top & ")"
+    End If
+    If Abs(P11.Widget.Left - 100!) > 2! Or Abs(P11.Widget.Top - 100!) > 2! Then
+        Err.Raise vbObjectError, , "XAML P11 expected (100,100), got (" & P11.Widget.Left & "," & P11.Widget.Top & ")"
+    End If
+
+    KeepAlive Root
+    LogResult "P2-GRID-XAML", 0, "OK Grid.Row/Column XAML positions"
+    Debug.Print "PASS  P2-GRID-XAML Grid.Row/Column XAML positions"
+    Phase2Bench_GridAttachedXaml = True
+    Exit Function
+
+Fail:
+    LogResult "P2-GRID-XAML", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-GRID-XAML - " & Err.Description
+    Phase2Bench_GridAttachedXaml = False
+    On Error Resume Next
+    KeepAlive Root
+    Err.Clear
 End Function
 
 Public Function Phase3Bench_MergedDictionaryLookup() As Boolean
@@ -1318,6 +1689,44 @@ Fail:
     Phase4dBench_Selector = False
 End Function
 
+Public Function Phase4dBench_SelectionChanged() As Boolean
+    Dim Host As Phase0SelectionHost
+    Dim Coll As ObservableCollection
+
+    On Error GoTo Fail
+
+    Set Coll = New ObservableCollection
+    Coll.Add "alpha"
+    Coll.Add "beta"
+    Coll.Add "gamma"
+
+    Set Host = New Phase0SelectionHost
+    Host.Setup Coll
+    KeepAlive Host
+
+    Host.ResetCounts
+    Host.ListView.Base.ListIndex = 1
+    If Host.ListView.SelectedIndex <> 1 Then Err.Raise vbObjectError, , "SelectedIndex expected 1 after Base.ListIndex"
+    If Host.SelectionChangedCount <> 1 Then Err.Raise vbObjectError, , "SelectionChanged expected 1, got " & Host.SelectionChangedCount
+    If Host.ListIndexChangedCount <> 1 Then Err.Raise vbObjectError, , "ListIndexChanged expected 1, got " & Host.ListIndexChangedCount
+
+    Host.ResetCounts
+    Host.ListView.Base.ListIndex = 2
+    If Host.ListView.SelectedIndex <> 2 Then Err.Raise vbObjectError, , "SelectedIndex expected 2 after Base.ListIndex"
+    If Host.SelectionChangedCount <> 1 Then Err.Raise vbObjectError, , "SelectionChanged expected 1 on second change, got " & Host.SelectionChangedCount
+    If Host.ListIndexChangedCount <> 1 Then Err.Raise vbObjectError, , "ListIndexChanged expected 1 on second change, got " & Host.ListIndexChangedCount
+
+    LogResult "P4d-SELCHG", 0, "OK SelectionChanged + ListIndexChanged dual-raise"
+    Debug.Print "PASS  P4d-SELCHG SelectionChanged naming"
+    Phase4dBench_SelectionChanged = True
+    Exit Function
+
+Fail:
+    LogResult "P4d-SELCHG", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4d-SELCHG ? " & Err.Description
+    Phase4dBench_SelectionChanged = False
+End Function
+
 Public Function Phase5aBench_OwnerDrawListView() As Boolean
     Dim LV As ListView
     Dim Reader As XAMLReader
@@ -1468,6 +1877,11 @@ Public Function Phase6bBench_PropertyTrigger() As Boolean
     Dim St As Style
     Dim Btn As Button
     Dim Trig As PropertyTrigger
+    Dim Tmpl As ControlTemplate
+    Dim Chrome As Border
+    Dim Pres As ContentPresenter
+    Dim PtrBefore As Long
+    Dim Rad As VCF.CornerRadius
 
     On Error GoTo Fail
 
@@ -1480,26 +1894,69 @@ Public Function Phase6bBench_PropertyTrigger() As Boolean
     Trig.SetSetter "BackColor", CLng(255)
     St.AddTrigger Trig
 
+    ' Live template: hover must not re-clone chrome (ReapplyStyleValues path).
+    Set Tmpl = New ControlTemplate
+    Tmpl.TargetType = "Button"
+    Set Chrome = New Border
+    Rad.TopLeft = 4
+    Rad.TopRight = 4
+    Rad.BottomLeft = 4
+    Rad.BottomRight = 4
+    Chrome.CornerRadius = Rad
+    Set Pres = New ContentPresenter
+    Set Chrome.Child = Pres
+    Tmpl.Children.Add Chrome
+    Set St.Template = Tmpl
+
     Set Btn = New Button
     Set Btn.Style = St
 
     If Btn.Widget.BackColor <> 16777215 Then Err.Raise vbObjectError, , "Expected base BackColor 16777215, got " & Btn.Widget.BackColor
+    If Btn.ContentPresenter Is Nothing Then Err.Raise vbObjectError, , "Expected live ContentPresenter after Style+Template"
+    PtrBefore = ObjPtr(Btn.ContentPresenter)
 
     Btn.IsMouseOver = True
     If Btn.Widget.BackColor <> 255 Then Err.Raise vbObjectError, , "Expected hover BackColor 255, got " & Btn.Widget.BackColor
+    If ObjPtr(Btn.ContentPresenter) <> PtrBefore Then Err.Raise vbObjectError, , "Hover re-cloned ContentPresenter (expected ReapplyStyleValues)"
 
     Btn.IsMouseOver = False
     If Btn.Widget.BackColor <> 16777215 Then Err.Raise vbObjectError, , "Expected restored BackColor 16777215, got " & Btn.Widget.BackColor
+    If ObjPtr(Btn.ContentPresenter) <> PtrBefore Then Err.Raise vbObjectError, , "Unhover re-cloned ContentPresenter"
 
-    LogResult "P6b-TRIG", 0, "OK IsMouseOver PropertyTrigger BackColor"
+    ' DP condition path: NotifyConditionPropertyChanged from DependencyProperties (Selected).
+    Set Trig = New PropertyTrigger
+    Trig.Initialize "Selected", "True"
+    Trig.SetSetter "BackColor", CLng(65280)
+    St.AddTrigger Trig
+    ' StyleChanged re-runs full ApplyStyle (template ok once).
+    Set Btn.Style = St
+
+    If Btn.Widget.BackColor <> 16777215 Then Err.Raise vbObjectError, , "Expected base after Selected trigger add"
+    Btn.Selected = True
+    If Btn.Widget.BackColor <> 65280 Then Err.Raise vbObjectError, , "Expected Selected trigger BackColor 65280, got " & Btn.Widget.BackColor
+    Btn.Selected = False
+    If Btn.Widget.BackColor <> 16777215 Then Err.Raise vbObjectError, , "Expected restore after Selected=False, got " & Btn.Widget.BackColor
+
+    KeepAlive Btn
+    Set Btn = Nothing
+    Set St = Nothing
+    Set Trig = Nothing
+    Set Tmpl = Nothing
+    Set Chrome = Nothing
+    Set Pres = Nothing
+
+    LogResult "P6b-TRIG", 0, "OK IsMouseOver+Selected trigger Notify/ReapplyStyleValues"
     Debug.Print "PASS  P6b-TRIG Style PropertyTrigger IsMouseOver"
     Phase6bBench_PropertyTrigger = True
     Exit Function
 
 Fail:
     LogResult "P6b-TRIG", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P6b-TRIG ? " & Err.Description
+    Debug.Print "FAIL  P6b-TRIG - " & Err.Description
     Phase6bBench_PropertyTrigger = False
+    On Error Resume Next
+    KeepAlive Btn
+    Err.Clear
 End Function
 
 Public Function Phase6cBench_ControlTemplate() As Boolean

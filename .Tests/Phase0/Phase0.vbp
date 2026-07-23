@@ -9,6 +9,7 @@ Class=Phase0DialogButtonItem; Classes\Phase0DialogButtonItem.cls
 Class=Phase0DialogCommand; Classes\Phase0DialogCommand.cls
 Class=Phase0CollectionSink; Classes\Phase0CollectionSink.cls
 Class=Phase0MeasureRowHost; Classes\Phase0MeasureRowHost.cls
+Class=Phase0SelectionHost; Classes\Phase0SelectionHost.cls
 Class=Phase0App; Classes\Phase0App.cls
 Class=Phase0Shell; Classes\Phase0Shell.cls
 Startup="Sub Main"

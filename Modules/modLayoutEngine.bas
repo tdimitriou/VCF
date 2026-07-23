@@ -99,23 +99,67 @@ Public Function ReadElementVisibility(ByVal Child As Object) As Visibility
             Exit Function
         End If
         If Child.DependencyProperties.Exists("Visible") Then
+            ' Visible=False ? Collapsed (WPF BoolToVisibility / POS grid reclaim).
             If CBool(Child.DependencyProperties.GetValue("Visible")) Then
                 ReadElementVisibility = VisibilityVisible
             Else
-                ReadElementVisibility = VisibilityHidden
+                ReadElementVisibility = VisibilityCollapsed
             End If
             Exit Function
         End If
     End If
     If TypeOf Child Is IUIElement Then
         Select Case TypeName(Child)
-            Case "Panel", "UserControl", "StackPanel", "Grid", "ContentControl", "Border"
+            Case "Panel", "UserControl", "StackPanel", "Grid", "ContentControl", "Border", "Button"
                 ReadElementVisibility = Child.Visibility
                 Exit Function
         End Select
     End If
     ReadElementVisibility = VisibilityVisible
 End Function
+
+' Parent must rearrange when a child Visibility toggles Hidden/Collapsed/Visible.
+Public Sub InvalidateParentLayout(ByVal Child As Object)
+    Dim ParentCtrl As IControl
+    Dim ParentObj As Object
+    Dim Sp As StackPanel
+    Dim G As Grid
+    Dim Ug As UniformGrid
+    Dim P As Panel
+    Dim B As Border
+    Dim Cc As ContentControl
+
+    On Error Resume Next
+
+    If Child Is Nothing Then Exit Sub
+    If Not TypeOf Child Is IControl Then Exit Sub
+    Set ParentCtrl = Child.Parent
+    If ParentCtrl Is Nothing Then Exit Sub
+    Set ParentObj = ParentCtrl
+    Err.Clear
+    On Error GoTo 0
+
+    Select Case TypeName(ParentObj)
+        Case "StackPanel"
+            Set Sp = ParentObj
+            Sp.RelayoutChildren
+        Case "Grid"
+            Set G = ParentObj
+            G.RelayoutChildren
+        Case "UniformGrid"
+            Set Ug = ParentObj
+            Ug.ArrangeChildren
+        Case "Panel"
+            Set P = ParentObj
+            P.RelayoutChildren
+        Case "Border"
+            Set B = ParentObj
+            B.RelayoutChildren
+        Case "ContentControl"
+            Set Cc = ParentObj
+            Cc.RelayoutChildren
+    End Select
+End Sub
 
 Public Function ReadElementMargin(ByVal Child As Object) As Thickness
     On Error Resume Next
@@ -141,15 +185,77 @@ Public Function ReadElementHeight(ByVal Child As Object) As Double
     End If
 End Function
 
+' MaxWidth/MaxHeight = 0 means unbounded. Apply after choosing a candidate size.
+Public Function ClampElementWidth(ByVal Child As Object, ByVal Width As Double) As Double
+    Dim MinW As Double
+    Dim MaxW As Double
+
+    ClampElementWidth = Width
+    On Error Resume Next
+    If Child Is Nothing Then Exit Function
+    If Not TypeOf Child Is IDependencyObject Then Exit Function
+    If Child.DependencyProperties Is Nothing Then Exit Function
+
+    If Child.DependencyProperties.Exists("MinWidth") Then
+        MinW = CDbl(Child.DependencyProperties.GetValue("MinWidth"))
+        If MinW > ClampElementWidth Then ClampElementWidth = MinW
+    End If
+    If Child.DependencyProperties.Exists("MaxWidth") Then
+        MaxW = CDbl(Child.DependencyProperties.GetValue("MaxWidth"))
+        If MaxW > 0 And ClampElementWidth > MaxW Then ClampElementWidth = MaxW
+    End If
+End Function
+
+Public Function ClampElementHeight(ByVal Child As Object, ByVal Height As Double) As Double
+    Dim MinH As Double
+    Dim MaxH As Double
+
+    ClampElementHeight = Height
+    On Error Resume Next
+    If Child Is Nothing Then Exit Function
+    If Not TypeOf Child Is IDependencyObject Then Exit Function
+    If Child.DependencyProperties Is Nothing Then Exit Function
+
+    If Child.DependencyProperties.Exists("MinHeight") Then
+        MinH = CDbl(Child.DependencyProperties.GetValue("MinHeight"))
+        If MinH > ClampElementHeight Then ClampElementHeight = MinH
+    End If
+    If Child.DependencyProperties.Exists("MaxHeight") Then
+        MaxH = CDbl(Child.DependencyProperties.GetValue("MaxHeight"))
+        If MaxH > 0 And ClampElementHeight > MaxH Then ClampElementHeight = MaxH
+    End If
+End Function
+
 Public Function GetGridAttachedLong(ByVal Child As IUIElement, ByVal Key As String, Optional ByVal DefaultValue As Long = 0) As Long
     Dim Dict As ObservableDictionary
 
     GetGridAttachedLong = DefaultValue
     On Error Resume Next
+    If Child Is Nothing Then Exit Function
     If Not Child.AttachedProperties.ContainsKey("Grid") Then Exit Function
     Set Dict = Child.AttachedProperties("Grid")
     If Dict.ContainsKey(Key) Then GetGridAttachedLong = CLng(Dict(Key))
 End Function
+
+Public Sub SetGridAttachedLong(ByVal Child As IUIElement, ByVal Key As String, ByVal Value As Long)
+    Dim Dict As ObservableDictionary
+
+    If Child Is Nothing Then Exit Sub
+    If Len(Key) = 0 Then Exit Sub
+
+    If Child.AttachedProperties.ContainsKey("Grid") Then
+        Set Dict = Child.AttachedProperties("Grid")
+    Else
+        Set Dict = New ObservableDictionary
+        Child.AttachedProperties.Add "Grid", Dict
+    End If
+
+    If Dict.ContainsKey(Key) Then
+        Dict.Item(Key) = Value
+    Else
+        Dict.Add Key, Value
+    End If
+End Sub
 
 Public Sub ApplyChildWidgetVisibility(ByVal Child As Object, ByVal Value As Visibility)
     On Error Resume Next
@@ -255,6 +361,8 @@ Public Sub ArrangeStackPanelChildren( _
             Else
                 R.Height = 0!
             End If
+            R.Width = CSng(ClampElementWidth(Child, R.Width))
+            R.Height = CSng(ClampElementHeight(Child, R.Height))
             Offset = R.Top + R.Height + CSng(Margin.Bottom)
         Else
             R.Left = Offset + CSng(Margin.Left)
@@ -269,6 +377,8 @@ Public Sub ArrangeStackPanelChildren( _
             Else
                 R.Height = HostHeight - CSng(Margin.Top + Margin.Bottom)
             End If
+            R.Width = CSng(ClampElementWidth(Child, R.Width))
+            R.Height = CSng(ClampElementHeight(Child, R.Height))
             Offset = R.Left + R.Width + CSng(Margin.Right)
         End If
 
@@ -312,6 +422,8 @@ Public Sub ArrangeDecoratorChild( _
     R.Height = HostWidget.Height - InsetTop - InsetBottom
     If R.Width < 0! Then R.Width = 0!
     If R.Height < 0! Then R.Height = 0!
+    R.Width = CSng(ClampElementWidth(Child, R.Width))
+    R.Height = CSng(ClampElementHeight(Child, R.Height))
 
     ApplyLayoutRectToElement ChildUI, R
     ApplyChildWidgetVisibility Child, ChildVis
@@ -412,6 +524,8 @@ Public Sub ArrangeGridChildren( _
         R.Height = CellHeight - CSng(Margin.Top + Margin.Bottom)
         If R.Width < 0! Then R.Width = 0!
         If R.Height < 0! Then R.Height = 0!
+        R.Width = CSng(ClampElementWidth(Child, R.Width))
+        R.Height = CSng(ClampElementHeight(Child, R.Height))
 
         ApplyLayoutRectToElement ChildUI, R
         ApplyChildWidgetVisibility Child, ChildVis
@@ -555,13 +669,13 @@ Private Function GridAutoTrackSize( _
             Span = GetGridAttachedLong(ChildUI, "RowSpan", 1)
             If TrackIndex < Track Or TrackIndex >= Track + Span Then GoTo NextChild
             Set Margin = ReadElementMargin(Child)
-            Desired = CSng(ReadElementHeight(Child) + Margin.Top + Margin.Bottom)
+            Desired = CSng(ClampElementHeight(Child, ReadElementHeight(Child)) + Margin.Top + Margin.Bottom)
         Else
             Track = GetGridAttachedLong(ChildUI, "Column", 0)
             Span = GetGridAttachedLong(ChildUI, "ColumnSpan", 1)
             If TrackIndex < Track Or TrackIndex >= Track + Span Then GoTo NextChild
             Set Margin = ReadElementMargin(Child)
-            Desired = CSng(ReadElementWidth(Child) + Margin.Left + Margin.Right)
+            Desired = CSng(ClampElementWidth(Child, ReadElementWidth(Child)) + Margin.Left + Margin.Right)
         End If
         If Desired > MaxDesired Then MaxDesired = Desired
 

@@ -45,6 +45,7 @@ Private m_Layout                                As FrameworkElement
 Private m_ContentHost                           As ContentHost
 ' Live lookless ControlTemplate root (cloned Border); not a public COM property.
 Private m_TemplateRoot                          As Object
+Private m_SyncingVisibility                     As Boolean
 
 Private Const OVERLAY_ALPHA                     As Single = 0.25
 Private Const OVERLAY_COLOR                     As Long = vbBlack
@@ -177,7 +178,8 @@ Attribute TmrRelease.VB_VarHelpID = -1
     Public Property Let IsMouseOver(ByVal Value As Boolean)
         If m_IsMouseOver = Value Then Exit Property
         m_IsMouseOver = Value
-        ApplyStyle
+        ' Non-DP trigger condition ? same path as DP conditions (Notify ? ReapplyStyleValues).
+        modStyleTriggerEngine.NotifyConditionPropertyChanged Me, "IsMouseOver"
     End Property
 
     Public Property Get BorderWidth() As Double
@@ -254,6 +256,55 @@ Attribute TmrRelease.VB_VarHelpID = -1
 
     Public Property Let Height(ByVal Value As Double)
         m_Layout.Height = Value
+    End Property
+
+    Public Property Get Visibility() As Visibility
+        Visibility = m_Layout.Visibility
+    End Property
+
+    Public Property Let Visibility(ByVal Value As Visibility)
+        m_Layout.Visibility = Value
+    End Property
+
+    Public Property Get MinWidth() As Double
+        MinWidth = m_Layout.MinWidth
+    End Property
+
+    Public Property Let MinWidth(ByVal Value As Double)
+        m_Layout.MinWidth = Value
+    End Property
+
+    Public Property Get MinHeight() As Double
+        MinHeight = m_Layout.MinHeight
+    End Property
+
+    Public Property Let MinHeight(ByVal Value As Double)
+        m_Layout.MinHeight = Value
+    End Property
+
+    Public Property Get MaxWidth() As Double
+        MaxWidth = m_Layout.MaxWidth
+    End Property
+
+    Public Property Let MaxWidth(ByVal Value As Double)
+        m_Layout.MaxWidth = Value
+    End Property
+
+    Public Property Get MaxHeight() As Double
+        MaxHeight = m_Layout.MaxHeight
+    End Property
+
+    Public Property Let MaxHeight(ByVal Value As Double)
+        m_Layout.MaxHeight = Value
+    End Property
+
+    ' Compat facade: False ? VisibilityCollapsed (layout reclaim).
+    Public Property Get Visible() As Boolean
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Visible"), Visible)
+    End Property
+
+    Public Property Let Visible(ByVal Value As Boolean)
+        Call m_DependencyProperties.SetValue("Visible", Value)
     End Property
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
@@ -575,11 +626,28 @@ Catch:
 '#Region DependencyProperties Events
     Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
         On Error Resume Next
-                
-        ' Pass the changed property value to the matching widget
-        ' property (if any) to use in the drawing routines
+
         Select Case Property.Name
-            Case "Visible":         W.Visible = Property.GetValue
+            Case "Visible"
+                If Not m_SyncingVisibility Then
+                    m_SyncingVisibility = True
+                    If CBool(Property.GetValue) Then
+                        m_Layout.Visibility = VisibilityVisible
+                    Else
+                        m_Layout.Visibility = VisibilityCollapsed
+                    End If
+                    m_SyncingVisibility = False
+                End If
+            Case "Visibility"
+                If Not m_SyncingVisibility Then
+                    m_SyncingVisibility = True
+                    If m_DependencyProperties.Exists("Visible") Then
+                        m_DependencyProperties.SetCurrentValue "Visible", (CLng(Property.GetValue) = VisibilityVisible)
+                    End If
+                    m_SyncingVisibility = False
+                End If
+                ApplyVisibility W, CLng(Property.GetValue)
+                InvalidateParentLayout Me
             Case "Selected":        modRenderCoalescer.RequestWidgetRefresh W
             Case "BackColor":       W.BackColor = Property.GetValue
             Case "BorderColor":     W.BorderColor = Property.GetValue
@@ -591,6 +659,12 @@ Catch:
             Case "Padding":         Call W_Resize: modRenderCoalescer.RequestWidgetRefresh W
             Case "Command":         AttachCommandCanExecuteListener: SyncCommandEnabled
             Case "CommandParameter": SyncCommandEnabled
+            Case Else
+                If Not m_Layout Is Nothing Then
+                    If m_Layout.HandlesLayoutProperty(Property.Name) Then
+                        m_Layout.OnLayoutPropertyChanged Property.Name, m_Children, W
+                    End If
+                End If
         End Select
         
         ' Pass the new property value to the contained widgets

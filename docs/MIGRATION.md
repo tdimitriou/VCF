@@ -28,6 +28,24 @@ See [VCF_TEAM_HANDOFF_GUIDE.md §8.1](./VCF_TEAM_HANDOFF_GUIDE.md) for No / Proj
 
 ---
 
+## Upgrading to 3.6.0 (SelectionChanged)
+
+### DLL pin
+
+- **`Demac.VCF.dll` 3.6.0**
+
+### VB6 code
+
+- Prefer **`WithEvents` `SelectionChanged`** on **`ListView`** / **`ListViewBase`** for new handlers.
+- Prefer **`SelectedIndex`** (DP) over **`ListIndex`** for bound selection state.
+- **`ListIndexChanged`** still fires (compat alias) — no required rename of existing handlers.
+
+### Verification
+
+- Phase0 **P4d-SELCHG** (suite **69**).
+
+---
+
 ## Upgrading to 2.18.0 (POS layout shim — migrated XAML)
 
 **When:** DeNovo applied mechanical XAML migration (`Margin` on `TextBlock`, etc.) and needs runtime layout on pin ≥ 2.15.0.
