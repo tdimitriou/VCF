@@ -130,20 +130,19 @@ View/Window/UserControl → NewWindow/NewUserControl → LoadSuperclassData
 | Attached | **`RegisterAttached`** + `GetValue`/`SetValue` on any `DependencyObject` |
 | Layout DPs | **`Width`, `Height`, `Margin`, `Alignment`** are dependency properties → drive **Measure/Arrange** |
 
-### 2.5.2 VCF model (today)
+### 2.5.2 VCF model (today — locked **3.2.0**)
 
 | Concept | VCF |
 |---------|-----|
 | Registration | **Per-instance** `DependencyProperties.Register` in each control’s `Class_Initialize` — **not** static type-level identifiers |
-| Storage | Each property = **`DependencyProperty`** object with **`m_Value`** (local / `SetValue`) and **`m_CurrentValue`** (style / inherit / `SetCurrentValue`) + **`m_UnsetValue`** sentinel |
-| Effective value | **`GetValue`:** ask **Listeners** (binding pull via `OnValueRequested`) → if local unset use **`m_CurrentValue`** → **`Conversion.TryCast`** |
-| Precedence (simplified) | **Local `SetValue`** beats **`SetCurrentValue`** (style/inherit) — **no** trigger/template layers |
-| Style | **`StyleManager`** applies setters via **`SetCurrentValue`** (WPF-like intent) |
-| Inheritance | **Lazy `GetValue` parent-walk** (8b); **`NotifyInheritableToDescendants`**; **`IsInheritable`** (e.g. `DataContext`) |
-| Bindings | **`Binding`** implements **`IDependencyPropertyCallbackListener`**; **`AddListener`** on target DP; **`SetValue(ProvideValue)`** on source change; **DataContext** change via **Callback** on `DataContext` DP |
-| Metadata | **`IsInheritable`, `AffectsMeasure`, `AffectsRender`, `BindingMode`** — **no** coerce/validate/changed callbacks |
-| Attached | Partial: **`AttachedProperties`** dictionary (e.g. `Grid.ColumnSpan` on **`UniformGrid`**) — not full `RegisterAttached` |
-| Layout | **`DesignLeft/Top/Width/Height`** are **ordinary fields**, **not** dependency properties — set via `CallByName` from XAML, **not** in binding/style precedence system |
+| Storage | Each property = **`DependencyProperty`** with **`m_Value`** (local / `SetValue`) and **`m_CurrentValue`** (style / triggers / init via `SetCurrentValue`) + **`m_UnsetValue`** sentinel |
+| Effective value | **`GetValue`:** listeners may fill local → **local** → **current** → **inherit** (both unset) → **metadata DefaultValue** → `TryCast` |
+| Precedence (locked) | **Local > Current > Inherit > Metadata default** — Binding/TemplateBinding are local; triggers share current (last write); no animation/coerce |
+| Style / triggers | **`StyleManager`** / **`modStyleTriggerEngine`** use **`SetCurrentValue`** |
+| Inheritance | **Lazy `GetValue` parent-walk** (8b); **`NotifyInheritableToDescendants`**; **`IsInheritable`** |
+| ClearValue | **Public** `DependencyProperties.ClearValue` (local only); **`ReadLocalValue`**; binding **Detach** clears local |
+| Metadata | **`IsInheritable`, `AffectsMeasure`, `AffectsRender`, `BindingMode`, `DefaultValue`/`HasDefaultValue`** |
+| Attached | Partial: **`AttachedProperties`** dictionary — not full `RegisterAttached` |
 
 ### 2.5.3 What works well (keep)
 
@@ -160,12 +159,12 @@ View/Window/UserControl → NewWindow/NewUserControl → LoadSuperclassData
 |-----|--------|
 | **Dual property storage** | Layout (`Design*`) and some CLR props (`CornerRadius`, `GradientBackground`) live **outside** DPs → styles/bindings/layout engine cannot treat them uniformly |
 | **No static `DependencyProperty` fields** | No attached-property registry by type; harder WPF API surface (`Button.CommandProperty`); more memory per instance |
-| **No full value precedence** | Triggers, template setters, animated values — missing; limits ControlTemplate/triggers roadmap |
+| **No full value precedence** | Trigger deactivate/restore, template/animation layers still missing (B3+) — **two-slot + metadata default locked in 3.2.0** |
 | **DataContext change doesn’t rebind** | Controls TODO; binding registry not invalidated when context changes |
-| **Binding uses `SetValue` (local)** | Correct for many cases; but no **`BindingExpression`** object — hard to detach, update, or debug |
+| **Binding uses `SetValue` (local)** | Correct for precedence; **`BindingExpression`** exists for Attach/Detach/Update |
 | **`GetValue` listener pull** | Non-WPF; potential **perf** cost if called frequently; WPF pushes updates via expressions |
 | **`AffectsMeasure` unused** | Metadata flag exists but **no `InvalidateMeasure`** pipeline yet |
-| **`ClearValue` not public** | WPF uses this to remove local value and fall back to inherited/style |
+| **Init defaults via `SetCurrentValue`** | Many controls still seed current in `Class_Initialize` (blocks inherit); migrate to metadata DefaultValue incrementally |
 | **No coerce/validate/changed callbacks** | WPF metadata hooks for validation and side effects |
 | **Per-control Register boilerplate** | Every control repeats Register list — error-prone vs WPF static constructor |
 
@@ -937,7 +936,7 @@ Control (Button, …)
 
 ### 2.12.9 Open questions (see §8)
 
-- [ ] **ListView owner-draw vs full tree** — keep dual presenter permanently or converge when perf allows?
+- [x] **ListView owner-draw vs full tree** — **locked 2026-07-23:** keep **dual presenters permanently** (bound `DataTemplate`+`DrawOn` vs owner-draw `OwnerDrawItem`). Do **not** converge to ItemsControl-style visual trees per row. See §2.14.7 / [VCF_LISTVIEW_ARCHITECTURE.md](./VCF_LISTVIEW_ARCHITECTURE.md) §8.4.
 - [ ] **Command binding in DataTemplate** — require minimal RelativeSource in Phase 4, or temporary ItemsControl hook?
 
 ---
@@ -1229,17 +1228,32 @@ WPF uses **`ListBoxItem`** / **`ListViewItem`** with **`IsSelected`**. VCF v1 op
 
 ### 2.14.7 WPF-aligned target architecture (refactor proposal)
 
-**Unify public surface (agreed — merge ListView + UnboundListView):**
+**Unify public surface (agreed — merge ListView + UnboundListView — done 2.9.0):**
 
 ```text
 Selector (§2.13)
-└── ListView                    — single public control (breaking: drop UnboundListView type)
-    ├── ItemsSource set         → bound: DataTemplate + ItemsSource pipeline
-    └── ItemsSource null /      → owner-draw: OwnerDrawItem (InvoiceGrid path)
-        OwnerDraw mode
+└── ListView                    — single public control
+    ├── ItemsSource set         → bound: DataTemplate + DrawOn (immediate-mode)
+    └── ItemsSource Nothing     → owner-draw: OwnerDrawItem (InvoiceGrid / custom paint)
     └── composes
-        ListViewBase            — current engine, refactored OR replaced (§2.14.6)
+        ListViewBase            — scroll, hit-test, columns, MeasureRow, QueryRowLevel
 ```
+
+**Decision (2026-07-23 — conflict #3 locked):** Dual presenters are **permanent**. Bound mode is the WPF-ish MVVM path; owner-draw is the intentional stand-in for WPF `ListView`+`GridView` / TreeList-style grids until a richer bound column presenter exists. **Not** a temporary debt to collapse into one path.
+
+**WPF InvoiceGrid analogues (target mental model):**
+
+| Need | WPF | VCF |
+|------|-----|-----|
+| Lines collection | `ItemsSource` | Bound `ListView` **or** host-fed `ListCount` |
+| Columns + headers | `GridView` / read-only `DataGrid` | `ListViewBase` columns + owner-draw or future GridView-like templates |
+| Parent/child | Flat list + `Level` indent, or TreeList / `HierarchicalDataTemplate` | `QueryRowLevel` (+ optional flat `ItemsSource` + Level on VM) |
+| Variable height | Content-sized rows / custom measure | `MeasureRow` (`FixedRowHeight=False`) |
+| Large lists | UI virtualization | Cairo list engine (no per-row widget tree) |
+
+`ItemsSource` is **not** incompatible with InvoiceGrid — missing pieces are column/hierarchy **presentation**, not the collection. Hybrid allowed: `ItemsSource` + `MeasureRow`/`QueryRowLevel` (events fire in both modes; only `OwnerDrawItem` is owner-draw-gated).
+
+**Do not:** replace ListView rows with ItemsControl full visual trees for POS invoice scale (`B-BIND-DENSE` already stresses template clones).
 
 **XAML migration:**
 
@@ -2617,7 +2631,7 @@ To claim **complete POS UI on VCF**, implement in this order:
 - [ ] **`FrameworkElement` in VB6** — one base class + thin wrappers vs codegen? see §2.11.7
 - [ ] **Border refactor timing** — decorator model + breaking visual change in same release as layout engine? see §2.11.7
 - ~~**`@`-fragment templates vs binding-only `DataTemplate`**~~ — **resolved:** WPF-aligned **binding-only**; no `@` in framework; migrate POS MessageBox/DialogWindow in Phase 7 — §2.12.8, §9
-- [ ] **ListView owner-draw vs ItemsControl full tree** — see §2.12.9
+- [x] **ListView owner-draw vs ItemsControl full tree** — dual presenters permanent; see §2.12.9 / §2.14.7
 - [ ] **Command binding inside DataTemplate** — RelativeSource timing — see §2.12.9
 - [ ] **`ListBox` vs ListView-only** for dialog grids — see §2.13.9
 - [ ] **`ListIndex` → `SelectedIndex` migration** — alias vs hard break — see §2.13.9

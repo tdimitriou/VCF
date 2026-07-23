@@ -506,11 +506,10 @@ Catch:
             With m_DependencyProperties
                 Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
                 Call .Register("ShowGridLines", vbBoolean)
-                Call .Register("BorderStyle", vbLong, , , , NewDependencyPropertyMetadata(False, True, False))
+                Call .Register("BorderStyle", vbLong, , , , NewDependencyPropertyMetadata(False, True, False, OneWay, vbSizable))
                 Call .Register("Style", vbObject, "Style", , , NewDependencyPropertyMetadata(False, True, False))
                 .SetValue "Style", Nothing
-                
-                .SetCurrentValue "BorderStyle", vbSizable   ' The default window border style
+                ' BorderStyle default via metadata DefaultValue (vbSizable), not SetCurrentValue.
             End With
             
             Dim DefaultW As Double

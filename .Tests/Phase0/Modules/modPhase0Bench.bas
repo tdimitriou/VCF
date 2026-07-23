@@ -39,6 +39,7 @@ Public Sub RunAll()
     If Not Phase4Bench_BindingOneWay() Then Failed = Failed + 1
     If Not Phase4Bench_DataContextRebind() Then Failed = Failed + 1
     If Not Phase4Bench_BindingDetach() Then Failed = Failed + 1
+    If Not Phase4Bench_DpPrecedence() Then Failed = Failed + 1
     If Not Phase4Bench_RelativeSourceSelf() Then Failed = Failed + 1
     If Not Phase4Bench_ElementName() Then Failed = Failed + 1
     If Not Phase4Bench_RelativeSourceTemplatedParent() Then Failed = Failed + 1
@@ -84,7 +85,7 @@ Public Sub RunAll()
 
     ' Report only ? do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (58 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (61 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -620,9 +621,10 @@ Public Function Phase4Bench_BindingDetach() As Boolean
 
     Expr.Detach
     Vm.Title = "After"
-    If Tb.Text <> "Before" Then Err.Raise vbObjectError, , "Expected text frozen at Before, got " & Tb.Text
+    ' Detach clears local binding value (WPF ClearBinding); Text falls back to unset/default.
+    If Len(Tb.Text) <> 0 Then Err.Raise vbObjectError, , "Expected empty Text after Detach+ClearValue, got [" & Tb.Text & "]"
 
-    LogResult "P4-DETACH", 0, "OK Detach stops updates"
+    LogResult "P4-DETACH", 0, "OK Detach clears local + stops updates"
     Debug.Print "PASS  P4-DETACH Binding Detach"
     Set Expr = Nothing
     Set Tb = Nothing
@@ -636,6 +638,61 @@ Fail:
     LogResult "P4-DETACH", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P4-DETACH - " & Err.Description
     Phase4Bench_BindingDetach = False
+End Function
+
+' Locked two-slot precedence + ClearValue + metadata default (conflict #4 / 3.2.0).
+Public Function Phase4Bench_DpPrecedence() As Boolean
+    Dim Tb As TextBlock
+    Dim CC As ContentControl
+    Dim LocalRaw As Variant
+    Dim Meta As DependencyPropertyMetadata
+
+    On Error GoTo Fail
+
+    Set Tb = New TextBlock
+    Tb.DependencyProperties.SetCurrentValue "Text", "FromStyle"
+    Tb.DependencyProperties.SetValue "Text", "FromLocal"
+    If Tb.Text <> "FromLocal" Then Err.Raise vbObjectError, , "Local SetValue must beat SetCurrentValue, got " & Tb.Text
+
+    Tb.DependencyProperties.SetCurrentValue "Text", "StyleAgain"
+    If Tb.Text <> "FromLocal" Then Err.Raise vbObjectError, , "SetCurrentValue must not pierce local, got " & Tb.Text
+
+    Tb.DependencyProperties.ClearValue "Text"
+    If Tb.Text <> "StyleAgain" Then Err.Raise vbObjectError, , "ClearValue must fall back to current, got " & Tb.Text
+
+    Call API.CopyVariable(Tb.DependencyProperties.ReadLocalValue("Text"), LocalRaw)
+    If Not Object.Equals(LocalRaw, Tb.DependencyProperties.GetProperty("Text").UnsetValue) Then
+        Err.Raise vbObjectError, , "ReadLocalValue expected Unset after ClearValue"
+    End If
+
+    Set CC = New ContentControl
+    Set Meta = CC.DependencyProperties.GetProperty("Content").Metadata
+    If Not Meta.HasDefaultValue Then Err.Raise vbObjectError, , "Content metadata HasDefaultValue expected True"
+    If CStr(Meta.DefaultValue) <> "" Then Err.Raise vbObjectError, , "Content DefaultValue expected empty string"
+    CC.DependencyProperties.SetValue "Content", "LocalContent"
+    If CStr(CC.Content) <> "LocalContent" Then Err.Raise vbObjectError, , "Local Content expected"
+    CC.DependencyProperties.ClearValue "Content"
+    ' No style current -> metadata default "" (Window is not creatable; BorderStyle default gated in product code).
+    If CStr(CC.Content) <> "" Then Err.Raise vbObjectError, , "ClearValue Content expected metadata default empty, got " & CStr(CC.Content)
+
+    KeepAlive Tb
+    KeepAlive CC
+    Set Tb = Nothing
+    Set CC = Nothing
+
+    LogResult "P4-PREC", 0, "OK local>current ClearValue + metadata default"
+    Debug.Print "PASS  P4-PREC DP value precedence"
+    Phase4Bench_DpPrecedence = True
+    Exit Function
+
+Fail:
+    LogResult "P4-PREC", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4-PREC - " & Err.Description
+    Phase4Bench_DpPrecedence = False
+    On Error Resume Next
+    KeepAlive Tb
+    KeepAlive CC
+    Err.Clear
 End Function
 
 Public Function Phase4Bench_RelativeSourceSelf() As Boolean

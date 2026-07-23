@@ -51,7 +51,7 @@ E. SyncFormBorderStyle
 | 1 | XAML root attribute | `SetValue` via `LoadSuperclassData` | `BorderTestWindow.xml`: `BorderStyle="2"` |
 | 2 | Named window style | `Style` DP → `ApplyStyle` | `Style="{StaticResource DialogWindow}"` |
 | 3 | MyApp implicit `Window` style | `GetBaseStyle` → `SetCurrentValue` | `MyApp.xml`: `BorderStyle=2` |
-| 4 | Framework default | `SetCurrentValue` in `InitializeObject` | `vbSizable` fallback |
+| 4 | Framework default | Metadata **`DefaultValue`** = `vbSizable` (**3.2.0**; not `SetCurrentValue`) | `vbSizable` fallback |
 
 **DeNovo POS shell:** borderless via **`ShellWindow.IWindow_InitializeComponent`** (`SetValue 0`), overriding MyApp default `2`.
 

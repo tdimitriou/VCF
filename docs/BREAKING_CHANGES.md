@@ -5,6 +5,41 @@
 
 ---
 
+## [3.2.0] — 2026-07-23 — DP precedence contract (ClearValue + metadata default)
+
+### Locked contract (conflict #4)
+
+Effective value order (high → low):
+
+1. **Local** — `SetValue` (XAML, CLR, Binding, TemplateBinding)
+2. **Current** — `SetCurrentValue` (style setters, triggers, init seeds, template align) — last write wins *inside* this slot
+3. **Inherit** — lazy parent walk when both slots unset and `IsInheritable`
+4. **Metadata `DefaultValue`** — when still unset
+
+No separate binding / trigger / animation layers yet (B3+ deferred).
+
+### Added
+
+- **`DependencyProperties.ClearValue`** — clears **local** slot only (WPF `ClearValue`); style/current, inherit, or metadata default can reappear.
+- **`DependencyProperties.ReadLocalValue`** — raw local slot (Unset sentinel when none).
+- **`DependencyPropertyMetadata.DefaultValue` / `HasDefaultValue`** — `NewDependencyPropertyMetadata(..., DefaultValue)`.
+- Phase0 **P4-PREC** — suite **61** tests (includes prior under-count fix in Done tally).
+
+### Changed / breaking
+
+- **`Binding.Detach` / `BindingExpression.Detach`** — after removing the listener, **clears the target local value** (WPF `ClearBinding` intent). Prior behavior left the last transferred value frozen (`P4-DETACH` updated).
+- **`Window.BorderStyle`** — default `vbSizable` is **metadata DefaultValue**, not `SetCurrentValue`.
+- **`ContentControl.Content`** — metadata default `""`.
+
+### Notes
+
+- Friend `DependencyProperty.ClearValue` no longer clears the current slot.
+- Migrating remaining `Class_Initialize` `SetCurrentValue` defaults → metadata is incremental (not all controls in this release).
+- Trigger deactivate/restore (B3) still deferred.
+- DLL version **3.2.0**.
+
+---
+
 ## [3.1.0] — 2026-07-22 — IContentControl + ContentHost
 
 ### Added
@@ -22,6 +57,10 @@
 - Non-breaking for existing callers; new interface is additive.
 - **`ContentTemplate`** still deferred (next step on ContentHost / ContentControl).
 - DLL version **3.1.0**.
+
+### Follow-up decision (docs only — 2026-07-23)
+
+- **ListView dual presenter** locked permanent (bound vs owner-draw). No API change. See [VCF_LISTVIEW_ARCHITECTURE.md](./VCF_LISTVIEW_ARCHITECTURE.md) §8.4.
 
 ---
 

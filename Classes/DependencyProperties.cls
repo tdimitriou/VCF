@@ -55,6 +55,22 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
         
         p.SetValue Value
     End Sub
+
+    ' Clears local SetValue only; style/current, inherit, and metadata default can reappear.
+    Public Sub ClearValue(ByVal PropertyName As String)
+        Dim p As DependencyProperty
+        Set p = m_Props(PropertyName)
+        
+        p.ClearValue
+    End Sub
+
+    ' Local slot raw value (UnsetValue sentinel when no SetValue). Does not run inherit/default.
+    Public Function ReadLocalValue(ByVal PropertyName As String)
+        Dim p As DependencyProperty
+        Set p = m_Props(PropertyName)
+        
+        Call API.CopyVariable(p.ReadLocalValue, ReadLocalValue)
+    End Function
         
     Public Function GetValue(ByVal PropertyName As String)
         Dim p As DependencyProperty
@@ -90,7 +106,7 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
             modBindingExpressions.OnDataContextChanged Me.Target
         End If
         
-        ' Phase 8b — push model removed; notify descendant bindings that pull this DP.
+        ' Phase 8b ? push model removed; notify descendant bindings that pull this DP.
         If Not Property.Metadata Is Nothing Then
             If Property.Metadata.IsInheritable Then
                 DependencyPropertiesStatic.NotifyInheritableToDescendants Me.Target, Property

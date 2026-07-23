@@ -131,7 +131,7 @@ ReturnStored:
             Call API.CopyVariable(m_Value, GetValue)
         End If
         
-        ' Phase 8b — WPF-style lazy inherit: walk parent when no explicit local/current value.
+        ' Phase 8b - WPF-style lazy inherit: walk parent when no explicit local/current value.
         If m_InGetValue = 0 Then
             If Not m_Metadata Is Nothing Then
                 If m_Metadata.IsInheritable Then
@@ -142,11 +142,25 @@ ReturnStored:
             End If
         End If
         
+        ' Metadata default (below inherit) - B2; not stored in m_CurrentValue so inherit can win.
+        If Object.Equals(GetValue, m_UnsetValue) Then
+            If Not m_Metadata Is Nothing Then
+                If m_Metadata.HasDefaultValue Then
+                    Call API.CopyVariable(m_Metadata.DefaultValue, GetValue)
+                End If
+            End If
+        End If
+        
         API.CopyVariable Conversion.TryCast(GetValue, m_PropertyType), GetValue
         
     End Function
     
-    ' Local effective value only (no listeners, no inherit). Used for parent-chain walks.
+    ' Local slot only (no listeners, inherit, or metadata default).
+    Friend Function ReadLocalValue() As Variant
+        Call API.CopyVariable(m_Value, ReadLocalValue)
+    End Function
+    
+    ' Local effective value only (no listeners, no inherit, no metadata default). Used for parent-chain walks.
     Friend Function GetLocalEffectiveValue() As Variant
         If Object.Equals(m_Value, m_UnsetValue) Then
             Call API.CopyVariable(m_CurrentValue, GetLocalEffectiveValue)
@@ -225,9 +239,20 @@ NextInheritedCallback:
         Loop
     End Sub
     
+    ' Clears local slot only (WPF ClearValue) so style/current, inherit, or metadata default can win.
     Friend Sub ClearValue()
+        Dim OldEffectiveValue
+        
+        On Error Resume Next
+        If Object.Equals(m_Value, m_UnsetValue) Then Exit Sub
+        
+        Call API.CopyVariable(GetValue, OldEffectiveValue)
         Call API.CopyVariable(m_UnsetValue, m_Value)
-        Call API.CopyVariable(m_UnsetValue, m_CurrentValue)
+        
+        If Object.Equals(GetValue, OldEffectiveValue) Then Exit Sub
+        
+        Err.Clear
+        OnDependencyPropertyChanged OldEffectiveValue
     End Sub
     
     Friend Sub SetCurrentValue(Value)

@@ -210,7 +210,7 @@ End Sub
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
             Call .Register("ShowGridLines", vbBoolean)
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
-            Call .Register("Content", vbVariant, , , , NewDependencyPropertyMetadata(False, True, False, OneWay))
+            Call .Register("Content", vbVariant, , , , NewDependencyPropertyMetadata(False, True, False, OneWay, ""))
             .SetValue "Style", Nothing
         End With
         

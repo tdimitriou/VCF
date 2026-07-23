@@ -906,6 +906,8 @@ Private m_Ready                                   As Boolean
         Set CreateDataTemplate = modItemTemplateEngine.CloneDataTemplateForItem(m_ItemTemplate, Item, m_BaseUIElement)
     End Function
 
+    ' Permanent dual presenter (2026-07-23): ItemsSource set = bound DataTemplate+DrawOn;
+    ' Nothing = owner-draw OwnerDrawItem. MeasureRow/QueryRowLevel raise in both modes.
     Private Function IsOwnerDrawMode() As Boolean
         IsOwnerDrawMode = (m_ItemsSource Is Nothing)
     End Function

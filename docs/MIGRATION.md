@@ -74,7 +74,8 @@ Details per release: [BREAKING_CHANGES.md](./BREAKING_CHANGES.md).
 |--------|-------|
 | `DesignWidth` / `DesignHeight` | `Width` / `Height` (shim accepts both) |
 | `DesignLeft` / `DesignTop` on **`TextBlock`**, **`Image`**, other legacy types | **Keep `Design*`** or use DLL with [POS layout shim](./POS_RUNTIME_FEEDBACK.md) — **`Margin` is ignored** on types without layout DPs |
-| `<UnboundListView …/>` | `<ListView …/>` without `ItemsSource` |
+| `<UnboundListView …/>` | `<ListView …/>` without `ItemsSource` (owner-draw mode) |
+| InvoiceGrid / multi-column hierarchy | Prefer owner-draw `ListView` + `MeasureRow`/`QueryRowLevel`/`OwnerDrawItem`; or bound `ItemsSource` + flat Level + templates — dual presenters are permanent ([ListView architecture](./VCF_LISTVIEW_ARCHITECTURE.md) §8.4) |
 | `{ThemeResource Key=…}` | `{DynamicResource …}` |
 | `ThemesManager` `ActiveThemeName=""` with `{DynamicResource}` styles | Set **`ActiveThemeName`** to a valid theme key (e.g. `Default`) before styles apply |
 | `<res:Path\Fragment/>` | Merged `ResourceDictionary` + `{StaticResource …}` |
@@ -89,7 +90,8 @@ Details per release: [BREAKING_CHANGES.md](./BREAKING_CHANGES.md).
 | `ListView` owner-draw only via `UnboundListView` | `ListView` (same API surface) |
 | Manual binding recreate on DataContext | Automatic rebind (Phase 4) |
 | Batch layout refresh storms | Optional `New RenderCoalescer` + `BeginRenderUpdate` / `EndRenderUpdate` |
-| Manual binding detach before `RemoveAll` | **Remove** — `Window.Form_Unload` auto-detaches (Phase 7d) |
+| Manual binding detach before `RemoveAll` | **Remove** — `Window.Form_Unload` auto-detaches (Phase 7d). **Note (3.2.0):** `BindingExpression.Detach` clears the target **local** value (falls back to style/current/inherit/default) — do not assume the last bound value stays frozen. |
+| Rely on `SetCurrentValue` framework defaults | Prefer **`NewDependencyPropertyMetadata(..., DefaultValue:=…)`** for new defaults (**3.2.0**); `ClearValue` can then restore them |
 | Borderless shell | `SetValue BorderStyle, 0` in `IWindow_InitializeComponent` before style apply — [WINDOW_LIFECYCLE.md](./WINDOW_LIFECYCLE.md) |
 
 ### Verification

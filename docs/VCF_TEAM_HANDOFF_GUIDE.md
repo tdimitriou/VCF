@@ -215,6 +215,8 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   Option C — ~~deferred~~ **cancelled** with Design* removal (3.0.0)
   **Design* / LegacyScaleLayout** — ~~removed~~ (**3.0.0** — Width/Height/Margin + panels only)
   **Button / ContentControl** — ~~IContentControl + ContentHost composition~~ (**3.1.0**)
+  **ListView dual presenter** — ~~permanent bound vs owner-draw~~ (**decision 2026-07-23**; no converge)
+  **DP value precedence** — ~~two-slot locked + ClearValue + metadata default~~ (**3.2.0** / **P4-PREC**)
   **B-RESZ** / **B-NAV** — ~~Phase0 benches~~
   **ListView bind hotspot** — ~~B-BIND-DENSE~~ (clone preserves bindings; 21×6 gate)
   **Margin/Padding family 1** — ~~ListView Margin=0 Padding=4,1,4,1~~ (**P2a-PAD**)

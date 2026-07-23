@@ -1,7 +1,7 @@
 # VCF — dependency property registry (current + target)
 
 **Companion:** [VCF_CLASS_REFERENCE.md](./VCF_CLASS_REFERENCE.md) · [VCF_TEAM_HANDOFF_GUIDE.md](./VCF_TEAM_HANDOFF_GUIDE.md)  
-**Last updated:** 2026-06-19  
+**Last updated:** 2026-07-23  
 
 ---
 
@@ -26,6 +26,7 @@ End With
 | `AffectsRender` | Control should `W.Refresh` on change |
 | `AffectsMeasure` | **Defined but unused** — no InvalidateMeasure pipeline |
 | `BindingMode` | Default for `{Binding}` when Mode=Default |
+| `DefaultValue` / `HasDefaultValue` | Metadata default below inherit (**3.2.0**); prefer over init `SetCurrentValue` for framework defaults |
 
 ### 1.2 Non-DP properties (dual storage problem)
 
@@ -235,19 +236,21 @@ Remove `ShowGridLines`.
 
 ---
 
-## 5. Value precedence (target)
+## 5. Value precedence (locked — 3.2.0)
 
 ```text
-Local value (SetValue)
+Local value (SetValue)           ← XAML, CLR, Binding, TemplateBinding
   ↓ if unset
-Style setter (SetCurrentValue from StyleManager)
+Current (SetCurrentValue)        ← style setters, triggers, some init seeds
   ↓ if unset
-Inherited value (IsInheritable from parent)
+Inherited (IsInheritable)        ← lazy parent walk
   ↓ if unset
-Default value (metadata)
+Metadata DefaultValue            ← DependencyPropertyMetadata
 ```
 
-**Future (Phase 6):** Template triggers, DataTriggers between Style and Local.
+**API:** `ClearValue` drops local only; `ReadLocalValue` inspects local slot; binding Detach clears local.
+
+**Future:** Trigger deactivate/restore (B3); template/animation layers.
 
 ---
 

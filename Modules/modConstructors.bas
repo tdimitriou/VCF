@@ -130,7 +130,8 @@ End Function
 Public Function NewDependencyPropertyMetadata(Optional ByVal AffectsMeasure As Boolean, _
                                                 Optional ByVal AffectsRender As Boolean, _
                                                 Optional ByVal IsInheritable As Boolean, _
-                                                Optional ByVal BindingMode As VCF.BindingMode = VCF.BindingMode.OneWay) _
+                                                Optional ByVal BindingMode As VCF.BindingMode = VCF.BindingMode.OneWay, _
+                                                Optional DefaultValue) _
                                                 As DependencyPropertyMetadata
     
     Set NewDependencyPropertyMetadata = New DependencyPropertyMetadata
@@ -140,6 +141,13 @@ Public Function NewDependencyPropertyMetadata(Optional ByVal AffectsMeasure As B
         .AffectsRender = AffectsRender
         .IsInheritable = IsInheritable
         .BindingMode = BindingMode
+        If Not IsMissing(DefaultValue) Then
+            If IsObject(DefaultValue) Then
+                Set .DefaultValue = DefaultValue
+            Else
+                .DefaultValue = DefaultValue
+            End If
+        End If
     End With
 End Function
 
@@ -199,7 +207,7 @@ Public Function CreateInstance(ByVal Namespace As String, ByVal Class As String)
     End If
 
     If Obj Is Nothing And StrictXamlLoad Then
-        RaiseXamlLoad "Unknown type '" & ElementName & "' — not registered and CreateObject failed.", ElementName
+        RaiseXamlLoad "Unknown type '" & ElementName & "' ? not registered and CreateObject failed.", ElementName
     End If
 
     Set CreateInstance = Obj

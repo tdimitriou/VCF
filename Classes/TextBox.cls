@@ -204,11 +204,11 @@ Public Name As String
         
         With m_DependencyProperties
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
-            Call .Register("Text", vbString, , , , NewDependencyPropertyMetadata(, True, , VCF.BindingMode.TwoWay))
+            Call .Register("Text", vbString, , , , NewDependencyPropertyMetadata(, True, , VCF.BindingMode.TwoWay, ""))
             Call .Register("Alignment", vbLong, , , , NewDependencyPropertyMetadata(, True))
             Call .Register("VCenter", vbBoolean, , , , NewDependencyPropertyMetadata(, True))
-            Call .Register("PasswordChar", vbString, , , , NewDependencyPropertyMetadata(, True))
-            Call .Register("CueBanner", vbString, , , , NewDependencyPropertyMetadata(, True))
+            Call .Register("PasswordChar", vbString, , , , NewDependencyPropertyMetadata(, True, , OneWay, ""))
+            Call .Register("CueBanner", vbString, , , , NewDependencyPropertyMetadata(, True, , OneWay, ""))
             Call .Register("Margin", vbObject, "Thickness")
             Call .Register("Padding", vbObject, "Thickness")
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
@@ -386,13 +386,33 @@ Private Sub m_Base_LostFocus()
 End Sub
 
 Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
+    Dim V As Variant
+
     Select Case Property.Name
     
-        Case "Text": m_Base.Text = Property.GetValue
+        Case "Text":
+            Call API.CopyVariable(Property.GetValue, V)
+            If IsNull(V) Or IsEmpty(V) Then
+                m_Base.Text = ""
+            Else
+                m_Base.Text = CStr(V)
+            End If
         Case "Alignment": m_Base.Alignment = Property.GetValue
         Case "VCenter": m_Base.VCenter = Property.GetValue
-        Case "CueBanner": m_Base.CueBannerText = Property.GetValue
-        Case "PasswordChar": m_Base.PasswordChar = Property.GetValue
+        Case "CueBanner":
+            Call API.CopyVariable(Property.GetValue, V)
+            If IsNull(V) Or IsEmpty(V) Then
+                m_Base.CueBannerText = ""
+            Else
+                m_Base.CueBannerText = CStr(V)
+            End If
+        Case "PasswordChar":
+            Call API.CopyVariable(Property.GetValue, V)
+            If IsNull(V) Or IsEmpty(V) Then
+                m_Base.PasswordChar = ""
+            Else
+                m_Base.PasswordChar = CStr(V)
+            End If
         Case "Padding": ApplyContentPadding
         Case "Style": ApplyStyle
 

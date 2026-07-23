@@ -1,13 +1,15 @@
 # VCF — ListView architecture specification
 
 **Companion:** [VCF_TEAM_HANDOFF_GUIDE.md](./VCF_TEAM_HANDOFF_GUIDE.md) · Alignment §2.14, §6.1  
-**Last updated:** 2026-06-19  
+**Last updated:** 2026-07-23  
 
 ---
 
 ## 1. Purpose
 
-Complete specification of the **ListView stack** — current three-layer model, known defects, WPF **Selector** target, and **InvoiceGrid** (POS) requirements — for VCF team rewrite (Phases 4–5).
+Complete specification of the **ListView stack** — two permanent presenters on one engine, WPF **Selector** surface, and **InvoiceGrid** (POS) requirements.
+
+**Conflict #3 (locked 2026-07-23):** Keep **dual presenters permanently** — bound (`ItemsSource` + `ItemTemplate` + `DrawOn`) and owner-draw (`ItemsSource` unset + `OwnerDrawItem`). Do not converge to per-row visual trees.
 
 ---
 
@@ -15,17 +17,20 @@ Complete specification of the **ListView stack** — current three-layer model, 
 
 ```text
 ┌─────────────────────────────────────────────────────────┐
-│  ListView (755 LOC)          UnboundListView (448 LOC)   │
-│  IItemsControl · bound rows  Owner-draw · no ItemsSource │
+│  ListView — Selector / IItemsControl                    │
+│  Bound: ItemsSource + ItemTemplate → DrawOn             │
+│  Owner-draw: ItemsSource Nothing → OwnerDrawItem        │
 ├─────────────────────────────────────────────────────────┤
-│  ListViewBase (1178 LOC) — Cairo/vbWidgets list engine   │
-│  cWidgetBase · scrollbars · columns · selection · paint  │
+│  ListViewBase — Cairo list engine                       │
+│  scroll · columns · selection · MeasureRow · QueryRowLevel │
 ├─────────────────────────────────────────────────────────┤
 │  vbRichClient5 cWidgetBase / Cairo context               │
 └─────────────────────────────────────────────────────────┘
 ```
 
 **Not** the vbWidgets DLL standalone List control — this is an **owner-draw Cairo engine** (cwWidget / Colin Edwards lineage) vendored into VCF as `ListViewBase`.
+
+**Mode switch:** `IsOwnerDrawMode = (ItemsSource Is Nothing)`. `MeasureRow` / `QueryRowLevel` raise in **both** modes; only `OwnerDrawItem` is gated to owner-draw (bound mode paints templates instead).
 
 ---
 
@@ -298,14 +303,23 @@ POS `InvoiceGridHelper.cls` — `MeasureRow` logic documents height rules.
 
 ### 8.3 VCF target
 
-**Evolve ListViewBase** — not separate VirtualizingListView:
+**Evolve ListViewBase** — not a separate VirtualizingListView and **not** ItemsControl-per-row:
 
-1. `MeasureRow(index As Long) As Long`
-2. Indent / tree expanders (P2)
-3. Column templates via DataTemplate (multiple TextBlocks per column)
-4. Stub `OrderItemsView.xml` migrates from `<UnboundListView/>` to bound `<ListView ItemsSource="{Binding Lines}"/>`
+1. `MeasureRow` / `FixedRowHeight` — done (P5b)
+2. `QueryRowLevel` indent — done (P5c)
+3. Column templates via DataTemplate (multiple TextBlocks / future GridView-like) — incremental
+4. Stub `OrderItemsView.xml` may use owner-draw **or** bound `ItemsSource` + Level on line VMs
 
----
+### 8.4 Decision — dual presenters permanent (2026-07-23)
+
+| Presenter | When | Role |
+|-----------|------|------|
+| **Bound** | `ItemsSource` set | MVVM lists; `ItemTemplate` clones painted via `DrawOn` |
+| **Owner-draw** | `ItemsSource` Nothing | POS InvoiceGrid-style custom paint; host sets `ListCount` |
+
+**WPF mapping:** InvoiceGrid ≈ `ListView`+`GridView` or read-only `DataGrid`, usually **flat `ItemsSource` + indent**, sometimes TreeList. VCF owner-draw is the pragmatic column/hierarchy presenter until bound column UI catches up. Hybrid (`ItemsSource` + `MeasureRow`/`QueryRowLevel`) is valid.
+
+**Out of scope for “unify”:** collapsing both into ItemsControl full visual trees (perf / `B-BIND-DENSE`).
 
 ## 9. POS usage map
 

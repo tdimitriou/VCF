@@ -34,7 +34,12 @@ Try:
         Case VbVarType.vbNull:          CType = Null
         Case VbVarType.vbObject:        Set CType = Value
         Case VbVarType.vbSingle:        CType = CSng(Value)
-        Case VbVarType.vbString:        CType = CStr(Value)
+        Case VbVarType.vbString:
+            If IsNull(Value) Or IsEmpty(Value) Then
+                CType = ""
+            Else
+                CType = CStr(Value)
+            End If
         Case VbVarType.vbVariant:       API.CopyVariable Value, CType
         
         Case Else:                      API.CopyVariable Value, CType
@@ -65,6 +70,10 @@ Catch:
     If TargetType = vbObject Or TargetType = vbDataObject Then
         
         Set TryCast = Nothing
+        
+    ElseIf TargetType = vbString Then
+        
+        TryCast = ""
         
     Else
     

@@ -504,7 +504,11 @@ Friend Sub DetachBinding()
 
     If m_TargetPropertyPtr <> 0 Then
         Set TargetProp = API.ObjFromPtr(m_TargetPropertyPtr)
-        If Not TargetProp Is Nothing Then TargetProp.RemoveListener Me
+        If Not TargetProp Is Nothing Then
+            TargetProp.RemoveListener Me
+            ' Drop binding-written local value so style/current/inherit/default can win (WPF ClearBinding).
+            TargetProp.ClearValue
+        End If
     End If
 
     If m_SrcDepObjPtr <> 0 Then
