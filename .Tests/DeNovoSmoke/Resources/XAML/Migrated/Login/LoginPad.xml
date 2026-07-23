@@ -1,0 +1,14 @@
+<UniformGrid Rows="4" Columns="3" Padding="4" ShowGridLines="0">
+	<Button Content="7" FontSize="16" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="7"/>
+	<Button Content="8" FontSize="16" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="8"/>
+	<Button Content="9" FontSize="16" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="9"/>
+	<Button Content="4" FontSize="16" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="4"/>
+	<Button Content="5" FontSize="16" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="5"/>
+	<Button Content="6" FontSize="16" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="6"/>
+	<Button Content="1" FontSize="16" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="1"/>
+	<Button Content="2" FontSize="16" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="2"/>
+	<Button Content="3" FontSize="16" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="3"/>
+	<Button Style="{StaticResource ButtonCancel}" Content="{Binding Text[Clear], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}" FontSize="12" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding ClearInput}"/>
+	<Button Content="0" FontSize="16" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding KeyClick, Source={StaticResource ResourceKey=AppCommands}}" CommandParameter="0"/>
+	<Button Style="{StaticResource ButtonSubmit}" Content="{Binding Text[Login], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}" FontSize="12" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Command="{Binding LoginCommand}"/>
+</UniformGrid>

@@ -3,7 +3,8 @@
 Milestone 1 screens synced from denovo `pos-v1/UI/Resources/XAML/` per [DENOVO_HARNESS_MILESTONE1.md](https://github.com/tdimitriou/denovo/blob/main/docs/migration/DENOVO_HARNESS_MILESTONE1.md) §2.
 
 **Milestone 2:** `Screens/MainMenu/MainMenuView.xml` is **harness-owned** until denovo publishes a MainMenu sync target.  
-**Milestone 3:** `Screens/SalesOrder/SalesOrderView.xml` is **harness-owned** (layout-only shell; not a full POS SalesOrder sync).
+**Milestone 3:** `Screens/SalesOrder/SalesOrderView.xml` is **harness-owned** (layout-only shell; not a full POS SalesOrder sync).  
+**3.14.0:** panel-migrated Login/Sales/StatusBar live under `Migrated/` (no canvas scale); absolute copies remain under `Screens/` / `Widgets/` for comparison.
 
 **VCF 3.0.0+:** fixtures must not use `Design*`. After sync, convert any `DesignLeft`/`DesignTop`/`DesignWidth`/`DesignHeight` to `Margin`/`Width`/`Height` (harness copy already migrated for **3.6.0**).
 
@@ -26,8 +27,9 @@ Add `-WhatIf` to preview. The script auto-detects the VCF path when possible; us
 | SplashView.xml | `Screens/Splash/` |
 | LoginView.xml, LoginPad.xml, LoginViewWpf.xml | `Screens/Login/` |
 | MainMenuView.xml | `Screens/MainMenu/` (harness m2) |
-| SalesOrderView.xml | `Screens/SalesOrder/` (harness m3) |
-| StatusBar.xml | `Widgets/` |
+| SalesOrderView.xml | `Screens/SalesOrder/` (legacy absolute) |
+| LoginViewWpf, LoginPad, SalesOrderView, StatusBar | `Migrated/Login/`, `Migrated/SalesOrder/`, `Migrated/Widgets/` (3.14.0) |
+| StatusBar.xml | `Widgets/` (legacy absolute) |
 | MyApp.xml | root |
 | ClockIn.png, Reboot.png, Close.png | `Resources/` |
 

@@ -262,10 +262,12 @@ Public Sub SetGridAttachedLong(ByVal Child As IUIElement, ByVal Key As String, B
 End Sub
 
 Public Sub ApplyChildWidgetVisibility(ByVal Child As Object, ByVal Value As Visibility)
+    Dim ChildControl As IControl
+
     On Error Resume Next
-    If TypeOf Child Is IControl Then
-        ApplyVisibility Child.Widget, Value
-    End If
+    If Not TypeOf Child Is IControl Then Exit Sub
+    Set ChildControl = Child
+    ApplyVisibility ChildControl.Widget, Value
 End Sub
 
 Public Function ControlWidgetKey(ByVal Child As Object) As String
@@ -278,9 +280,11 @@ Public Sub AttachChildWidget( _
     ByVal ChildVis As Visibility)
 
     Dim Key As String
+    Dim ChildControl As IControl
 
     If Not TypeOf Child Is IControl Then Exit Sub
-    If Child.Widget Is Nothing Then Exit Sub
+    Set ChildControl = Child
+    If ChildControl.Widget Is Nothing Then Exit Sub
     If HostWidget Is Nothing Then Exit Sub
 
     Key = ControlWidgetKey(Child)
@@ -300,6 +304,111 @@ Public Sub DetachCollapsedChild(ByVal Child As Object, ByVal HostWidget As cWidg
     If HostWidget.Widgets.Exists(Key) Then HostWidget.Widgets.Remove Key
 End Sub
 
+Public Function MeasureElementSize( _
+    ByVal Child As Object, _
+    ByVal AvailableWidth As Double, _
+    ByVal AvailableHeight As Double) As LayoutRect
+
+    Dim W As Double
+    Dim H As Double
+
+    MeasureElementSize.Left = 0!
+    MeasureElementSize.Top = 0!
+    MeasureElementSize.Width = 0!
+    MeasureElementSize.Height = 0!
+
+    If Child Is Nothing Then Exit Function
+
+    ' Prefer control MeasureLayout (StackPanel/Panel/…) when present.
+    On Error Resume Next
+    CallByName Child, "MeasureLayout", VbMethod, AvailableWidth, AvailableHeight
+    If Err.Number = 0 Then
+        Err.Clear
+        W = CDbl(CallByName(Child, "DesiredWidth", VbGet))
+        If Err.Number <> 0 Then W = 0#
+        Err.Clear
+        H = CDbl(CallByName(Child, "DesiredHeight", VbGet))
+        If Err.Number <> 0 Then H = 0#
+        Err.Clear
+        On Error GoTo 0
+        If W <= 0# Then W = ReadElementWidth(Child)
+        If H <= 0# Then H = ReadElementHeight(Child)
+        MeasureElementSize.Width = CSng(ClampElementWidth(Child, W))
+        MeasureElementSize.Height = CSng(ClampElementHeight(Child, H))
+        Exit Function
+    End If
+    Err.Clear
+    On Error GoTo 0
+
+    ' Leaf / no MeasureLayout: explicit Width/Height DPs only (unset stays 0 —
+    ' do not expand to Available*, which would break StackPanel Auto sizing).
+    W = ReadElementWidth(Child)
+    H = ReadElementHeight(Child)
+    MeasureElementSize.Width = CSng(ClampElementWidth(Child, W))
+    MeasureElementSize.Height = CSng(ClampElementHeight(Child, H))
+End Function
+
+' Content-driven stack measure (no widget Move). Vertical: children get height=0
+' available so unset Height stays 0; cross-axis uses AvailableWidth as stretch slot.
+Public Sub MeasureStackPanelContent( _
+    ByVal Children As UIElementCollection, _
+    ByVal PanelOrientation As Orientation, _
+    ByVal AvailableWidth As Double, _
+    ByVal AvailableHeight As Double, _
+    ByRef OutContentWidth As Double, _
+    ByRef OutContentHeight As Double)
+
+    Dim Child As Object
+    Dim ChildVis As Visibility
+    Dim Margin As Thickness
+    Dim Measured As LayoutRect
+    Dim ContentW As Double
+    Dim ContentH As Double
+    Dim SlotW As Double
+    Dim SlotH As Double
+    Dim Offset As Double
+
+    OutContentWidth = 0#
+    OutContentHeight = 0#
+    ContentW = 0#
+    ContentH = 0#
+    Offset = 0#
+
+    If Children Is Nothing Then Exit Sub
+
+    For Each Child In Children
+        ChildVis = ReadElementVisibility(Child)
+        If IsLayoutCollapsed(ChildVis) Then GoTo NextMeasureChild
+
+        Set Margin = ReadElementMargin(Child)
+
+        If PanelOrientation = OrientationVertical Then
+            SlotW = AvailableWidth - Margin.Left - Margin.Right
+            If SlotW < 0# Then SlotW = 0#
+            Measured = MeasureElementSize(Child, SlotW, 0#)
+            Offset = Offset + Margin.Top + CDbl(Measured.Height) + Margin.Bottom
+            If (CDbl(Measured.Width) + Margin.Left + Margin.Right) > ContentW Then
+                ContentW = CDbl(Measured.Width) + Margin.Left + Margin.Right
+            End If
+            ContentH = Offset
+        Else
+            SlotH = AvailableHeight - Margin.Top - Margin.Bottom
+            If SlotH < 0# Then SlotH = 0#
+            Measured = MeasureElementSize(Child, 0#, SlotH)
+            Offset = Offset + Margin.Left + CDbl(Measured.Width) + Margin.Right
+            ContentW = Offset
+            If (CDbl(Measured.Height) + Margin.Top + Margin.Bottom) > ContentH Then
+                ContentH = CDbl(Measured.Height) + Margin.Top + Margin.Bottom
+            End If
+        End If
+
+NextMeasureChild:
+    Next
+
+    OutContentWidth = ContentW
+    OutContentHeight = ContentH
+End Sub
+
 Public Sub ArrangeStackPanelChildren( _
     ByVal Children As UIElementCollection, _
     ByVal HostWidget As cWidgetBase, _
@@ -312,11 +421,14 @@ Public Sub ArrangeStackPanelChildren( _
     Dim ChildVis As Visibility
     Dim Margin As Thickness
     Dim R As LayoutRect
+    Dim Measured As LayoutRect
     Dim HostWidth As Single
     Dim HostHeight As Single
     Dim Offset As Single
     Dim ChildWidth As Double
     Dim ChildHeight As Double
+    Dim SlotW As Double
+    Dim SlotH As Double
 
     If Children Is Nothing Then Exit Sub
     If HostWidget Is Nothing Then Exit Sub
@@ -349,10 +461,16 @@ Public Sub ArrangeStackPanelChildren( _
         AttachChildWidget Child, HostWidget, ChildVis
 
         Set Margin = ReadElementMargin(Child)
-        ChildWidth = ReadElementWidth(Child)
-        ChildHeight = ReadElementHeight(Child)
 
         If PanelOrientation = OrientationVertical Then
+            SlotW = CDbl(HostWidth) - Margin.Left - Margin.Right
+            If SlotW < 0# Then SlotW = 0#
+            ' Infinite-height measure for stack children: pass 0 available height
+            ' so MeasureLayout/leaf path uses explicit Height only.
+            Measured = MeasureElementSize(Child, SlotW, 0#)
+            ChildWidth = Measured.Width
+            ChildHeight = Measured.Height
+
             R.Left = CSng(Margin.Left)
             R.Top = Offset + CSng(Margin.Top)
             If ChildWidth > 0 Then
@@ -360,22 +478,20 @@ Public Sub ArrangeStackPanelChildren( _
             Else
                 R.Width = HostWidth - CSng(Margin.Left + Margin.Right)
             End If
-            If ChildHeight > 0 Then
-                R.Height = CSng(ChildHeight)
-            Else
-                R.Height = 0!
-            End If
+            R.Height = CSng(ChildHeight)
             R.Width = CSng(ClampElementWidth(Child, R.Width))
             R.Height = CSng(ClampElementHeight(Child, R.Height))
             Offset = R.Top + R.Height + CSng(Margin.Bottom)
         Else
+            SlotH = CDbl(HostHeight) - Margin.Top - Margin.Bottom
+            If SlotH < 0# Then SlotH = 0#
+            Measured = MeasureElementSize(Child, 0#, SlotH)
+            ChildWidth = Measured.Width
+            ChildHeight = Measured.Height
+
             R.Left = Offset + CSng(Margin.Left)
             R.Top = CSng(Margin.Top)
-            If ChildWidth > 0 Then
-                R.Width = CSng(ChildWidth)
-            Else
-                R.Width = 0!
-            End If
+            R.Width = CSng(ChildWidth)
             If ChildHeight > 0 Then
                 R.Height = CSng(ChildHeight)
             Else
@@ -431,6 +547,41 @@ Public Sub ArrangeDecoratorChild( _
 
     ApplyLayoutRectToElement ChildUI, R
     ApplyChildWidgetVisibility Child, ChildVis
+End Sub
+
+' Single-child Border/ContentControl measure: child Desired + insets (child Margin).
+Public Sub MeasureDecoratorContent( _
+    ByVal Child As Object, _
+    ByVal AvailableWidth As Double, _
+    ByVal AvailableHeight As Double, _
+    ByVal InsetLeft As Double, _
+    ByVal InsetTop As Double, _
+    ByVal InsetRight As Double, _
+    ByVal InsetBottom As Double, _
+    ByRef OutContentWidth As Double, _
+    ByRef OutContentHeight As Double)
+
+    Dim SlotW As Double
+    Dim SlotH As Double
+    Dim Measured As LayoutRect
+    Dim ChildVis As Visibility
+
+    OutContentWidth = 0#
+    OutContentHeight = 0#
+
+    If Child Is Nothing Then Exit Sub
+
+    ChildVis = ReadElementVisibility(Child)
+    If IsLayoutCollapsed(ChildVis) Then Exit Sub
+
+    SlotW = AvailableWidth - InsetLeft - InsetRight
+    SlotH = AvailableHeight - InsetTop - InsetBottom
+    If SlotW < 0# Then SlotW = 0#
+    If SlotH < 0# Then SlotH = 0#
+
+    Measured = MeasureElementSize(Child, SlotW, SlotH)
+    OutContentWidth = CDbl(Measured.Width) + InsetLeft + InsetRight
+    OutContentHeight = CDbl(Measured.Height) + InsetTop + InsetBottom
 End Sub
 
 Public Sub ArrangeGridChildren( _
@@ -536,6 +687,53 @@ Public Sub ArrangeGridChildren( _
 
 NextChild:
     Next
+End Sub
+
+' Content-driven grid measure (no widget Move). Reuses ComputeGridTracks so
+' Desired* matches what arrange would allocate for the same Available*.
+Public Sub MeasureGridContent( _
+    ByVal Children As UIElementCollection, _
+    ByVal RowDefinitions As ObservableCollection, _
+    ByVal ColumnDefinitions As ObservableCollection, _
+    ByVal AvailableWidth As Double, _
+    ByVal AvailableHeight As Double, _
+    ByRef OutContentWidth As Double, _
+    ByRef OutContentHeight As Double)
+
+    Dim RowCount As Long
+    Dim ColCount As Long
+    Dim RowSizes() As Single
+    Dim ColSizes() As Single
+    Dim RowOffsets() As Single
+    Dim ColOffsets() As Single
+    Dim i As Long
+    Dim ContentW As Double
+    Dim ContentH As Double
+
+    OutContentWidth = 0#
+    OutContentHeight = 0#
+    ContentW = 0#
+    ContentH = 0#
+
+    If Children Is Nothing Then Exit Sub
+
+    RowCount = GridTrackCount(RowDefinitions, Children, True)
+    ColCount = GridTrackCount(ColumnDefinitions, Children, False)
+    If RowCount < 1 Then RowCount = 1
+    If ColCount < 1 Then ColCount = 1
+
+    ComputeGridTracks RowDefinitions, RowCount, CSng(AvailableHeight), Children, True, RowSizes, RowOffsets
+    ComputeGridTracks ColumnDefinitions, ColCount, CSng(AvailableWidth), Children, False, ColSizes, ColOffsets
+
+    For i = 0 To RowCount - 1
+        ContentH = ContentH + CDbl(RowSizes(i))
+    Next
+    For i = 0 To ColCount - 1
+        ContentW = ContentW + CDbl(ColSizes(i))
+    Next
+
+    OutContentWidth = ContentW
+    OutContentHeight = ContentH
 End Sub
 
 Private Function GridTrackCount( _
@@ -658,6 +856,7 @@ Private Function GridAutoTrackSize( _
     Dim Track As Long
     Dim Span As Long
     Dim Margin As Thickness
+    Dim Measured As LayoutRect
     Dim Desired As Single
     Dim MaxDesired As Single
 
@@ -673,13 +872,16 @@ Private Function GridAutoTrackSize( _
             Span = GetGridAttachedLong(ChildUI, "RowSpan", 1)
             If TrackIndex < Track Or TrackIndex >= Track + Span Then GoTo NextChild
             Set Margin = ReadElementMargin(Child)
-            Desired = CSng(ClampElementHeight(Child, ReadElementHeight(Child)) + Margin.Top + Margin.Bottom)
+            ' Infinite available on both axes: Auto uses Desired (explicit DP or MeasureLayout).
+            Measured = MeasureElementSize(Child, 0#, 0#)
+            Desired = CSng(ClampElementHeight(Child, CDbl(Measured.Height)) + Margin.Top + Margin.Bottom)
         Else
             Track = GetGridAttachedLong(ChildUI, "Column", 0)
             Span = GetGridAttachedLong(ChildUI, "ColumnSpan", 1)
             If TrackIndex < Track Or TrackIndex >= Track + Span Then GoTo NextChild
             Set Margin = ReadElementMargin(Child)
-            Desired = CSng(ClampElementWidth(Child, ReadElementWidth(Child)) + Margin.Left + Margin.Right)
+            Measured = MeasureElementSize(Child, 0#, 0#)
+            Desired = CSng(ClampElementWidth(Child, CDbl(Measured.Width)) + Margin.Left + Margin.Right)
         End If
         If Desired > MaxDesired Then MaxDesired = Desired
 

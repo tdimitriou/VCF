@@ -5,6 +5,82 @@
 
 ---
 
+## [3.14.0] — 2026-07-23 — Retire design-canvas scale bridge
+
+### Breaking
+- **`FrameworkElement.ArrangeChildren`** no longer scales absolute `Margin`/`Width`/`Height` by `hostWidget / hostDP` on **UserControl**, multi-child **Border**, or **Panel**. Those values are **fixed pixels**.
+- Absolute POS trees that relied on canvas scale will not resize proportionally — migrate to **Grid** / **StackPanel** / single-child **Border** (see [POS_LAYOUT_MIGRATION.md](./POS_LAYOUT_MIGRATION.md)).
+
+### Added / changed
+- **UserControl** with a **single root** child fills the UC client (typical migrated screen = root `Grid`).
+- Multi-child **Border** comment: fixed absolute; no scale.
+- Phase0 **P7d-LAY-PANEL** replaces **P7d-LAY-RESIZE** (panel star geometry on resize).
+- DeNovoSmoke Login/Sales load **Migrated** XAML under `Resources/XAML/Migrated/`.
+- **Layout default Width/Height** for panel hosts is **0** (unset), not 300 — so Grid `Auto` tracks measure content instead of a 300px phantom size (Login star-row starvation).
+
+- DLL version **3.14.0**.
+
+## [3.13.0] — 2026-07-23 — Measure/Arrange UniformGrid slice
+
+### Added / changed
+- **`UniformGrid.MeasureLayout`** — max child cell × Rows/Columns when Width/Height unset; Desired/Actual exposed.
+- Arrange (`MoveChildren`) measures first then fills equal cells; public `RelayoutChildren`.
+- Phase0 **P2a-UG-MEAS**. Suite **75**.
+
+### Not in this release
+- Retiring UC/multi-child Border/Panel canvas-scale bridge.
+
+- DLL version **3.13.0**.
+
+## [3.12.0] — 2026-07-23 — Measure/Arrange ContentControl slice
+
+### Added / changed
+- **`ContentControl.MeasureLayout`** — IUIElement Content child via `MeasureDecoratorContent`; string/empty uses `FrameworkElement.Measure`.
+- Arrange path Measure→`ArrangeDecoratorChild`→`ReportActualSize`; Desired/Actual exposed.
+- Phase0 **P6e-CC-MEAS**. Suite **74**.
+
+### Not in this release
+- ~~UniformGrid MeasureLayout~~ → **3.13.0**; retiring UC/multi-child Border/Panel canvas-scale bridge still deferred.
+
+- DLL version **3.12.0**.
+
+## [3.11.0] — 2026-07-23 — Measure/Arrange Border decorator slice
+
+### Added / changed
+- **`Border.MeasureLayout`** — single-child Desired = child Desired + Margin insets (`MeasureDecoratorContent`); multi-child falls back to `FrameworkElement.Measure`.
+- Arrange path Measure→decorator fill / canvas-scale→`ReportActualSize`; Desired/Actual exposed.
+- Phase0 **P1-BORDER-MEAS**. Suite **73**.
+
+### Not in this release
+- Retiring multi-child Border / UC / Panel canvas-scale bridge (`P7d-LAY-RESIZE` still requires it).
+
+- DLL version **3.11.0**.
+
+## [3.10.0] — 2026-07-23 — Measure/Arrange Grid slice
+
+### Added / changed
+- **`Grid.MeasureLayout`** — content-driven measure via `MeasureGridContent` (same track solver as arrange); exposes Desired/Actual; arrange path Measure→Arrange→`ReportActualSize`.
+- **`GridAutoTrackSize`** — uses `MeasureElementSize` (nested StackPanel/Panel Desired*) instead of Width/Height DPs only.
+- Phase0 **P2-GRID-MEAS** (Auto+Pixel+Star Desired/Actual). Suite **72**.
+
+### Not in this release
+- Full WPF Auto multi-pass / span redistribution; retiring UC/Border/Panel canvas-scale bridge.
+
+- DLL version **3.10.0**.
+
+## [3.9.0] — 2026-07-23 — Measure/Arrange first slice (StackPanel)
+
+### Added / changed
+- **`FrameworkElement`** — `DesiredWidth`/`DesiredHeight`, `ActualWidth`/`ActualHeight`, `InvalidateMeasure`/`InvalidateArrange`, dirty flags; layout DP changes invalidate measure and parent layout.
+- **`StackPanel.MeasureLayout`** — content-driven measure (`MeasureStackPanelContent`); arrange path measures then positions children from desired sizes (vertical unset height stays 0, not host height).
+- **`Panel.MeasureLayout`** — forwards to `FrameworkElement.Measure`; exposes Desired/Actual.
+- Phase0 **P2-STACK-MEAS** (Desired/Actual assertions). Suite **71**.
+
+### Not in this release
+- ~~Grid MeasureOverride~~ → **3.10.0**; retiring the UC/Border/Panel canvas-scale bridge still deferred.
+
+- DLL version **3.9.0**.
+
 ## [3.8.0] — 2026-07-23 — ContentTemplate on ContentControl
 
 ### Added

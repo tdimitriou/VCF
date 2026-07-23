@@ -177,6 +177,66 @@ Public Name As String
         m_Layout.MaxHeight = Value
     End Property
 
+    Public Property Get DesiredWidth() As Double
+        DesiredWidth = m_Layout.DesiredWidth
+    End Property
+
+    Public Property Get DesiredHeight() As Double
+        DesiredHeight = m_Layout.DesiredHeight
+    End Property
+
+    Public Property Get ActualWidth() As Double
+        ActualWidth = m_Layout.ActualWidth
+    End Property
+
+    Public Property Get ActualHeight() As Double
+        ActualHeight = m_Layout.ActualHeight
+    End Property
+
+    ' Single-child: child Desired + Margin insets. Multi-child: FE.Measure (explicit/Available).
+    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+        Dim ContentW As Double
+        Dim ContentH As Double
+        Dim DesiredW As Double
+        Dim DesiredH As Double
+        Dim Marg As Thickness
+        Dim InsetL As Double
+        Dim InsetT As Double
+        Dim InsetR As Double
+        Dim InsetB As Double
+
+        If m_Layout Is Nothing Then Exit Sub
+
+        If Not m_Children Is Nothing Then
+            If m_Children.Count = 1 Then
+                Set Marg = ReadElementMargin(m_Children(0))
+                InsetL = 0#: InsetT = 0#: InsetR = 0#: InsetB = 0#
+                If Not Marg Is Nothing Then
+                    InsetL = Marg.Left
+                    InsetT = Marg.Top
+                    InsetR = Marg.Right
+                    InsetB = Marg.Bottom
+                End If
+                MeasureDecoratorContent m_Children(0), AvailableWidth, AvailableHeight, _
+                    InsetL, InsetT, InsetR, InsetB, ContentW, ContentH
+
+                DesiredW = Width
+                DesiredH = Height
+                If DesiredW <= 0 Then DesiredW = ContentW
+                If DesiredH <= 0 Then DesiredH = ContentH
+                If AvailableWidth > 0 And DesiredW > AvailableWidth Then DesiredW = AvailableWidth
+                If AvailableHeight > 0 And DesiredH > AvailableHeight Then DesiredH = AvailableHeight
+
+                DesiredW = ClampElementWidth(Me, DesiredW)
+                DesiredH = ClampElementHeight(Me, DesiredH)
+                m_Layout.ReportDesiredSize DesiredW, DesiredH
+                Exit Sub
+            End If
+        End If
+
+        m_Layout.Measure AvailableWidth, AvailableHeight
+    End Sub
+
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
         
@@ -235,8 +295,8 @@ Public Name As String
         m_Layout.Initialize Me, Me, W
         m_Layout.RegisterLayoutProperties "Border"
         
-        m_Layout.Width = 300
-        m_Layout.Height = 300
+        m_Layout.Width = 0
+        m_Layout.Height = 0
             
         NewUIElementBase Me, m_BaseUIElement
     
@@ -353,8 +413,16 @@ Catch:
         Dim InsetR As Single
         Dim InsetB As Single
 
+        If W Is Nothing Then Exit Sub
+        If m_Layout Is Nothing Then Exit Sub
         If m_Children Is Nothing Then Exit Sub
-        If m_Children.Count = 0 Then Exit Sub
+
+        MeasureLayout CDbl(W.Width), CDbl(W.Height)
+
+        If m_Children.Count = 0 Then
+            m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
+            Exit Sub
+        End If
 
         ' Single child = WPF Border.Child fill (decorator).
         If m_Children.Count = 1 Then
@@ -370,11 +438,13 @@ Catch:
                 On Error GoTo 0
             End If
             ArrangeDecoratorChild m_Children(0), W, InsetL, InsetT, InsetR, InsetB
+            m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
             Exit Sub
         End If
 
-        ' Multi-child: Margin + Width/Height with design-canvas scale when host resized.
+        ' Multi-child: fixed Margin + Width/Height pixels (no design-canvas scale).
         m_Layout.ArrangeChildren m_Children, W
+        m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
     End Sub
 
     Friend Sub RelayoutChildren()

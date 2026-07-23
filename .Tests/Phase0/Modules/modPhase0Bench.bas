@@ -32,13 +32,16 @@ Public Sub RunAll()
     If Not Phase1Bench_VisibilityCollapsedReclaims() Then Failed = Failed + 1
     If Not Phase1Bench_VisibleBoolCollapsed() Then Failed = Failed + 1
     If Not Phase1Bench_BorderWidthXaml() Then Failed = Failed + 1
+    If Not Phase1Bench_BorderMeasure() Then Failed = Failed + 1
     If Not Phase1Bench_MinWidthFloor() Then Failed = Failed + 1
     If Not Phase1Bench_MaxWidthCeiling() Then Failed = Failed + 1
     If Not Phase2Bench_StackPanelXaml() Then Failed = Failed + 1
     If Not Phase2Bench_StackPanelLayout() Then Failed = Failed + 1
+    If Not Phase2Bench_StackPanelMeasure() Then Failed = Failed + 1
     If Not Phase2Bench_GridRowDefinitionsXaml() Then Failed = Failed + 1
     If Not Phase2Bench_GridAttachedCode() Then Failed = Failed + 1
     If Not Phase2Bench_GridAttachedXaml() Then Failed = Failed + 1
+    If Not Phase2Bench_GridMeasure() Then Failed = Failed + 1
     If Not Phase3Bench_MergedDictionaryLookup() Then Failed = Failed + 1
     If Not Phase3Bench_ResourceSourceLoad() Then Failed = Failed + 1
     If Not Phase3Bench_DynamicResourceExtension() Then Failed = Failed + 1
@@ -70,6 +73,7 @@ Public Sub RunAll()
     If Not Phase6eBench_ContentPresenter() Then Failed = Failed + 1
     If Not Phase6eBench_ContentAlignment() Then Failed = Failed + 1
     If Not Phase6eBench_ContentControlContent() Then Failed = Failed + 1
+    If Not Phase6eBench_ContentControlMeasure() Then Failed = Failed + 1
     If Not Phase6eBench_ContentTemplate() Then Failed = Failed + 1
     If Not Phase6fBench_TemplateBindingSlot() Then Failed = Failed + 1
     If Not Phase6gBench_LiveTemplateChrome() Then Failed = Failed + 1
@@ -81,7 +85,7 @@ Public Sub RunAll()
     If Not Phase2aBench_SystemThemeResolve() Then Failed = Failed + 1
     If Not Phase7aBench_PosSalesOrderShell() Then Failed = Failed + 1
     If Not Phase7cBench_LegacyLayoutShim() Then Failed = Failed + 1
-    If Not Phase7dBench_BorderDesignResize() Then Failed = Failed + 1
+    If Not Phase7dBench_PanelResize() Then Failed = Failed + 1
     If Not Phase8Bench_InheritanceBatch() Then Failed = Failed + 1
     If Not Phase2aBench_NestedUniformGridResize() Then Failed = Failed + 1
     If Not Phase2aBench_ViewNavLeak() Then Failed = Failed + 1
@@ -89,12 +93,13 @@ Public Sub RunAll()
     If Not Phase2aBench_ListViewPaddingDefaults() Then Failed = Failed + 1
     If Not Phase2aBench_TextBoxButtonPaddingDefaults() Then Failed = Failed + 1
     If Not Phase2aBench_UniformGridPaddingDefault() Then Failed = Failed + 1
+    If Not Phase2aBench_UniformGridMeasure() Then Failed = Failed + 1
     If Not Phase7cBench_DialogDataTemplate() Then Failed = Failed + 1
     If Not Phase7cBench_ItemsPanelUniformGrid() Then Failed = Failed + 1
 
     ' Report only ? do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (70 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (75 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -472,6 +477,53 @@ Fail:
     Phase1Bench_BorderWidthXaml = False
 End Function
 
+Public Function Phase1Bench_BorderMeasure() As Boolean
+    Dim B As Border
+    Dim Child As Panel
+    Dim Marg As Thickness
+
+    On Error GoTo Fail
+
+    Set B = New Border
+    B.Width = 0
+    B.Height = 0
+    B.Widget.Move 0, 0, 200, 150
+
+    Set Child = New Panel
+    Child.Width = 80
+    Child.Height = 40
+    Set Marg = New Thickness
+    Marg.Left = 10
+    Marg.Top = 5
+    Marg.Right = 10
+    Marg.Bottom = 5
+    Set Child.Margin = Marg
+
+    Set B.Child = Child
+
+    ' Child Desired 80x40 + Margin insets -> Border Desired 100x50
+    If Abs(B.DesiredWidth - 100#) > 0.5 Then Err.Raise vbObjectError, , "DesiredWidth expected 100, got " & B.DesiredWidth
+    If Abs(B.DesiredHeight - 50#) > 0.5 Then Err.Raise vbObjectError, , "DesiredHeight expected 50, got " & B.DesiredHeight
+    If Abs(B.ActualWidth - 200#) > 0.5 Then Err.Raise vbObjectError, , "ActualWidth expected 200, got " & B.ActualWidth
+    If Abs(B.ActualHeight - 150#) > 0.5 Then Err.Raise vbObjectError, , "ActualHeight expected 150, got " & B.ActualHeight
+    If Abs(Child.Widget.Left - 10!) > 1! Then Err.Raise vbObjectError, , "Child.Left expected 10, got " & Child.Widget.Left
+    If Abs(Child.Widget.Top - 5!) > 1! Then Err.Raise vbObjectError, , "Child.Top expected 5, got " & Child.Widget.Top
+
+    KeepAlive B
+    LogResult "P1-BORDER-MEAS", 0, "OK Desired=" & B.DesiredWidth & "x" & B.DesiredHeight
+    Debug.Print "PASS  P1-BORDER-MEAS Border Measure/Actual decorator child"
+    Phase1Bench_BorderMeasure = True
+    Exit Function
+
+Fail:
+    LogResult "P1-BORDER-MEAS", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-BORDER-MEAS - " & Err.Description
+    Phase1Bench_BorderMeasure = False
+    On Error Resume Next
+    KeepAlive B
+    Err.Clear
+End Function
+
 Public Function Phase1Bench_MinWidthFloor() As Boolean
     Dim Sp As StackPanel
     Dim Child As Panel
@@ -602,6 +654,51 @@ Fail:
     LogResult "P2-STACK-LAY", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P2-STACK-LAY ? " & Err.Description
     Phase2Bench_StackPanelLayout = False
+End Function
+
+Public Function Phase2Bench_StackPanelMeasure() As Boolean
+    Dim Sp As StackPanel
+    Dim P1 As Panel
+    Dim P2 As Panel
+
+    On Error GoTo Fail
+
+    Set Sp = New StackPanel
+    Sp.Orientation = OrientationVertical
+    ' Content-driven Desired*: unset Width/Height DPs (0) so MeasureLayout reports child sum.
+    Sp.Width = 0
+    Sp.Height = 0
+    Sp.Widget.Move 0, 0, 200, 300
+
+    Set P1 = New Panel
+    P1.Width = 180
+    P1.Height = 50
+    Set P2 = New Panel
+    P2.Width = 180
+    P2.Height = 80
+
+    Sp.Children.Add P1
+    Sp.Children.Add P2
+
+    If Abs(Sp.DesiredWidth - 180#) > 0.5 Then Err.Raise vbObjectError, , "DesiredWidth expected 180, got " & Sp.DesiredWidth
+    If Abs(Sp.DesiredHeight - 130#) > 0.5 Then Err.Raise vbObjectError, , "DesiredHeight expected 130, got " & Sp.DesiredHeight
+    If Abs(Sp.ActualWidth - 200#) > 0.5 Then Err.Raise vbObjectError, , "ActualWidth expected 200, got " & Sp.ActualWidth
+    If Abs(Sp.ActualHeight - 300#) > 0.5 Then Err.Raise vbObjectError, , "ActualHeight expected 300, got " & Sp.ActualHeight
+    If Abs(P2.Widget.Top - 50!) > 1! Then Err.Raise vbObjectError, , "P2.Top expected 50, got " & P2.Widget.Top
+
+    KeepAlive Sp
+    LogResult "P2-STACK-MEAS", 0, "OK DesiredH=" & Sp.DesiredHeight & " ActualW=" & Sp.ActualWidth
+    Debug.Print "PASS  P2-STACK-MEAS StackPanel Measure/Actual"
+    Phase2Bench_StackPanelMeasure = True
+    Exit Function
+
+Fail:
+    LogResult "P2-STACK-MEAS", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-STACK-MEAS - " & Err.Description
+    Phase2Bench_StackPanelMeasure = False
+    On Error Resume Next
+    KeepAlive Sp
+    Err.Clear
 End Function
 
 Public Function Phase2Bench_GridRowDefinitionsXaml() As Boolean
@@ -774,6 +871,70 @@ Fail:
     Phase2Bench_GridAttachedXaml = False
     On Error Resume Next
     KeepAlive Root
+    Err.Clear
+End Function
+
+Public Function Phase2Bench_GridMeasure() As Boolean
+    Dim G As Grid
+    Dim Rd As RowDefinition
+    Dim Cd As ColumnDefinition
+    Dim PAuto As Panel
+    Dim PPixel As Panel
+
+    On Error GoTo Fail
+
+    Set G = New Grid
+    ' Content-driven Desired*: unset Width/Height DPs so MeasureLayout reports track sum.
+    G.Width = 0
+    G.Height = 0
+    G.Widget.Move 0, 0, 200, 200
+
+    Set Rd = New RowDefinition
+    Rd.Height = "Auto"
+    G.RowDefinitions.Add Rd
+    Set Rd = New RowDefinition
+    Rd.Height = "80"
+    G.RowDefinitions.Add Rd
+
+    Set Cd = New ColumnDefinition
+    Cd.Width = "*"
+    G.ColumnDefinitions.Add Cd
+
+    Set PAuto = New Panel
+    PAuto.Width = 120
+    PAuto.Height = 50
+    Set PPixel = New Panel
+    PPixel.Width = 120
+    PPixel.Height = 40
+
+    G.SetRow PAuto, 0
+    G.SetColumn PAuto, 0
+    G.SetRow PPixel, 1
+    G.SetColumn PPixel, 0
+
+    G.Children.Add PAuto
+    G.Children.Add PPixel
+
+    ' Auto(50) + Pixel(80) = 130; star column eats AvailableWidth=200
+    If Abs(G.DesiredHeight - 130#) > 0.5 Then Err.Raise vbObjectError, , "DesiredHeight expected 130, got " & G.DesiredHeight
+    If Abs(G.DesiredWidth - 200#) > 0.5 Then Err.Raise vbObjectError, , "DesiredWidth expected 200, got " & G.DesiredWidth
+    If Abs(G.ActualWidth - 200#) > 0.5 Then Err.Raise vbObjectError, , "ActualWidth expected 200, got " & G.ActualWidth
+    If Abs(G.ActualHeight - 200#) > 0.5 Then Err.Raise vbObjectError, , "ActualHeight expected 200, got " & G.ActualHeight
+    If Abs(PAuto.Widget.Top - 0!) > 1! Then Err.Raise vbObjectError, , "PAuto.Top expected 0, got " & PAuto.Widget.Top
+    If Abs(PPixel.Widget.Top - 50!) > 1! Then Err.Raise vbObjectError, , "PPixel.Top expected 50, got " & PPixel.Widget.Top
+
+    KeepAlive G
+    LogResult "P2-GRID-MEAS", 0, "OK DesiredH=" & G.DesiredHeight & " ActualW=" & G.ActualWidth
+    Debug.Print "PASS  P2-GRID-MEAS Grid Measure/Actual Auto+Pixel+Star"
+    Phase2Bench_GridMeasure = True
+    Exit Function
+
+Fail:
+    LogResult "P2-GRID-MEAS", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-GRID-MEAS - " & Err.Description
+    Phase2Bench_GridMeasure = False
+    On Error Resume Next
+    KeepAlive G
     Err.Clear
 End Function
 
@@ -2262,7 +2423,51 @@ Fail:
     Err.Clear
 End Function
 
-' ContentTemplate clones DataTemplate visual; Content is item/DataContext for bindings.
+Public Function Phase6eBench_ContentControlMeasure() As Boolean
+    Dim CC As ContentControl
+    Dim Child As Panel
+
+    On Error GoTo Fail
+
+    Set CC = New ContentControl
+    CC.Width = 0
+    CC.Height = 0
+    CC.Widget.Move 0, 0, 200, 100
+
+    Set Child = New Panel
+    Child.Width = 80
+    Child.Height = 40
+    Set CC.Content = Child
+
+    If CC.Children.Count <> 1 Then Err.Raise vbObjectError, , "Expected 1 Content child, got " & CC.Children.Count
+    If Not CC.Children(0) Is Child Then Err.Raise vbObjectError, , "Children(0) is not Content Panel"
+    If Abs(Child.Width - 80#) > 0.5 Then Err.Raise vbObjectError, , "Child.Width expected 80, got " & Child.Width
+
+    CC.MeasureLayout 200, 100
+    If Abs(CC.DesiredWidth - 80#) > 0.5 Then Err.Raise vbObjectError, , "after MeasureLayout DesiredWidth expected 80, got " & CC.DesiredWidth
+
+    CC.RelayoutChildren
+    If Abs(CC.DesiredWidth - 80#) > 0.5 Then Err.Raise vbObjectError, , "after Relayout DesiredWidth expected 80, got " & CC.DesiredWidth
+    If Abs(CC.DesiredHeight - 40#) > 0.5 Then Err.Raise vbObjectError, , "DesiredHeight expected 40, got " & CC.DesiredHeight
+    If Abs(CC.ActualWidth - 200#) > 0.5 Then Err.Raise vbObjectError, , "ActualWidth expected 200, got " & CC.ActualWidth
+    If Abs(CC.ActualHeight - 100#) > 0.5 Then Err.Raise vbObjectError, , "ActualHeight expected 100, got " & CC.ActualHeight
+    If Abs(Child.Widget.Left - 0!) > 1! Then Err.Raise vbObjectError, , "Child.Left expected 0, got " & Child.Widget.Left
+    If Abs(Child.Widget.Top - 0!) > 1! Then Err.Raise vbObjectError, , "Child.Top expected 0, got " & Child.Widget.Top
+
+    KeepAlive CC
+    LogResult "P6e-CC-MEAS", 0, "OK Desired=" & CC.DesiredWidth & "x" & CC.DesiredHeight
+    Debug.Print "PASS  P6e-CC-MEAS ContentControl Measure/Actual"
+    Phase6eBench_ContentControlMeasure = True
+    Exit Function
+
+Fail:
+    LogResult "P6e-CC-MEAS", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6e-CC-MEAS - " & Err.Description
+    Phase6eBench_ContentControlMeasure = False
+    On Error Resume Next
+    KeepAlive CC
+    Err.Clear
+End Function
 Public Function Phase6eBench_ContentTemplate() As Boolean
     Dim CC As ContentControl
     Dim Tmpl As DataTemplate
@@ -2973,43 +3178,54 @@ Fail:
     Phase7cBench_LegacyLayoutShim = False
 End Function
 
-Public Function Phase7dBench_BorderDesignResize() As Boolean
+Public Function Phase7dBench_PanelResize() As Boolean
     Dim Reader As XAMLReader
-    Dim Root As Border
-    Dim A As TextBlock
-    Dim B As TextBlock
+    Dim Root As Grid
+    Dim LeftCol As Border
+    Dim RightCol As Border
+    Dim Lines As ListView
 
     On Error GoTo Fail
 
     Set Reader = New XAMLReader
-    Set Root = Reader.Load(LoadTextFile(App.Path & "\Resources\BorderDesignChildren.xml"))
+    Set Root = Reader.Load(LoadTextFile(App.Path & "\Resources\LayoutPanelResize.xml"))
 
-    If Root Is Nothing Then Err.Raise vbObjectError, , "BorderDesignChildren returned Nothing"
+    If Root Is Nothing Then Err.Raise vbObjectError, , "LayoutPanelResize returned Nothing"
     If Root.Children.Count <> 2 Then Err.Raise vbObjectError, , "Expected 2 children, got " & Root.Children.Count
 
-    Set A = Root.Children(0)
-    Set B = Root.Children(1)
+    Set LeftCol = Root.Children(0)
+    Set RightCol = Root.Children(1)
+    If TypeName(LeftCol) <> "Border" Then Err.Raise vbObjectError, , "Expected LeftColumn Border, got " & TypeName(LeftCol)
+    If LeftCol.Children.Count < 1 Then Err.Raise vbObjectError, , "Expected LinesList under LeftColumn"
+    Set Lines = LeftCol.Children(0)
 
-    ' Design-canvas scale when host widget size differs from Width/Height DPs.
+    ' Full design size: star columns split host (minus margins 4+4).
     Root.Widget.Move 0, 0, 400, 300
-    If Abs(A.Widget.Left - 40!) > 2! Then Err.Raise vbObjectError, , "A.Left expected ~40, got " & A.Widget.Left
-    If Abs(A.Widget.Width - 200!) > 2! Then Err.Raise vbObjectError, , "A.Width expected ~200, got " & A.Widget.Width
-    If Abs(B.Widget.Left - 100!) > 2! Then Err.Raise vbObjectError, , "B.Left expected ~100, got " & B.Widget.Left
+    If Abs(LeftCol.Widget.Left - 0!) > 3! Then Err.Raise vbObjectError, , "Left.Left expected ~0, got " & LeftCol.Widget.Left
+    If Abs(LeftCol.Widget.Width - 196!) > 6! Then Err.Raise vbObjectError, , "Left.Width expected ~196, got " & LeftCol.Widget.Width
+    If Abs(RightCol.Widget.Left - 204!) > 6! Then Err.Raise vbObjectError, , "Right.Left expected ~204, got " & RightCol.Widget.Left
+    If Abs(RightCol.Widget.Width - 196!) > 6! Then Err.Raise vbObjectError, , "Right.Width expected ~196, got " & RightCol.Widget.Width
+    If Abs(LeftCol.Widget.Height - 300!) > 6! Then Err.Raise vbObjectError, , "Left.Height expected ~300, got " & LeftCol.Widget.Height
+    If Lines.Widget.Height < 280! Then Err.Raise vbObjectError, , "LinesList should track column height, got " & Lines.Widget.Height
 
+    ' Half host: columns still fill halves via Grid stars (not 0.5x absolute Margin math).
     Root.Widget.Move 0, 0, 200, 150
-    If Abs(A.Widget.Left - 20!) > 2! Then Err.Raise vbObjectError, , "A.Left expected ~20 after half-size, got " & A.Widget.Left
-    If Abs(A.Widget.Width - 100!) > 2! Then Err.Raise vbObjectError, , "A.Width expected ~100 after half-size, got " & A.Widget.Width
-    If Abs(B.Widget.Left - 50!) > 2! Then Err.Raise vbObjectError, , "B.Left expected ~50 after half-size, got " & B.Widget.Left
+    If Abs(LeftCol.Widget.Width - 96!) > 6! Then Err.Raise vbObjectError, , "Left.Width expected ~96 after half, got " & LeftCol.Widget.Width
+    If Abs(RightCol.Widget.Left - 104!) > 6! Then Err.Raise vbObjectError, , "Right.Left expected ~104 after half, got " & RightCol.Widget.Left
+    If Abs(RightCol.Widget.Width - 96!) > 6! Then Err.Raise vbObjectError, , "Right.Width expected ~96 after half, got " & RightCol.Widget.Width
+    If Abs(LeftCol.Widget.Height - 150!) > 6! Then Err.Raise vbObjectError, , "Left.Height expected ~150 after half, got " & LeftCol.Widget.Height
+    If Lines.Widget.Height < 130! Then Err.Raise vbObjectError, , "LinesList should track half height, got " & Lines.Widget.Height
 
-    LogResult "P7d-LAY-RESIZE", 0, "OK Border design-canvas scale on widget resize"
-    Debug.Print "PASS  P7d-LAY-RESIZE Border Margin/Width design-canvas scale"
-    Phase7dBench_BorderDesignResize = True
+    KeepAlive Root
+    LogResult "P7d-LAY-PANEL", 0, "OK Grid star columns + ListView fill on resize"
+    Debug.Print "PASS  P7d-LAY-PANEL Grid star columns fill on host resize"
+    Phase7dBench_PanelResize = True
     Exit Function
 
 Fail:
-    LogResult "P7d-LAY-RESIZE", 0, "FAIL: " & Err.Description
-    Debug.Print "FAIL  P7d-LAY-RESIZE - " & Err.Description
-    Phase7dBench_BorderDesignResize = False
+    LogResult "P7d-LAY-PANEL", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P7d-LAY-PANEL - " & Err.Description
+    Phase7dBench_PanelResize = False
 End Function
 
 Public Function Phase8Bench_InheritanceBatch() As Boolean
@@ -3550,6 +3766,52 @@ Fail:
     Phase2aBench_UniformGridPaddingDefault = False
 End Function
 
+Public Function Phase2aBench_UniformGridMeasure() As Boolean
+    Dim Ug As UniformGrid
+    Dim P1 As Panel
+    Dim P2 As Panel
+
+    On Error GoTo Fail
+
+    Set Ug = New UniformGrid
+    Ug.Rows = 2
+    Ug.Columns = 2
+    Ug.Width = 0
+    Ug.Height = 0
+    Ug.Widget.Move 0, 0, 200, 200
+
+    Set P1 = New Panel
+    P1.Width = 40
+    P1.Height = 40
+    Set P2 = New Panel
+    P2.Width = 40
+    P2.Height = 50
+    Ug.Children.Add P1
+    Ug.Children.Add P2
+
+    Ug.MeasureLayout 200, 200
+    ' Max cell 40x50 * 2x2 => Desired 80x100
+    If Abs(Ug.DesiredWidth - 80#) > 0.5 Then Err.Raise vbObjectError, , "DesiredWidth expected 80, got " & Ug.DesiredWidth
+    If Abs(Ug.DesiredHeight - 100#) > 0.5 Then Err.Raise vbObjectError, , "DesiredHeight expected 100, got " & Ug.DesiredHeight
+
+    Ug.RelayoutChildren
+    If Abs(Ug.ActualWidth - 200#) > 0.5 Then Err.Raise vbObjectError, , "ActualWidth expected 200, got " & Ug.ActualWidth
+    If Abs(Ug.ActualHeight - 200#) > 0.5 Then Err.Raise vbObjectError, , "ActualHeight expected 200, got " & Ug.ActualHeight
+
+    KeepAlive Ug
+    LogResult "P2a-UG-MEAS", 0, "OK Desired=" & Ug.DesiredWidth & "x" & Ug.DesiredHeight
+    Debug.Print "PASS  P2a-UG-MEAS UniformGrid Measure/Actual"
+    Phase2aBench_UniformGridMeasure = True
+    Exit Function
+
+Fail:
+    LogResult "P2a-UG-MEAS", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2a-UG-MEAS - " & Err.Description
+    Phase2aBench_UniformGridMeasure = False
+    On Error Resume Next
+    KeepAlive Ug
+    Err.Clear
+End Function
 ' Phase 7c-dialog: ItemsControl + DataTemplate root=Button (binding-only; no @ substitution).
 Public Function Phase7cBench_DialogDataTemplate() As Boolean
     Dim IC As ItemsControl

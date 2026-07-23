@@ -1,0 +1,76 @@
+<UserControl x:Class="SalesOrderView" DataContext="SalesOrderViewModel" Width="1024" Height="768" Alpha="1" Margin="0,0,0,0">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="60"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="88"/>
+			<RowDefinition Height="25"/>
+		</Grid.RowDefinitions>
+
+		<!-- Header -->
+		<Border Grid.Row="0" CornerRadius="0" BorderColor="-1" BackColor="&HB1A200" Alpha="0" Height="48" MaxHeight="48" Margin="16,12,16,0">
+			<StackPanel Orientation="Vertical">
+				<TextBlock Name="SalesTitle" Text="{Binding Title}" ForeColor="&HB1A200" FontSize="20" FontBold="1" ScaleFont="0" Height="28"/>
+				<TextBlock Name="SalesSubtitle" Text="{Binding Subtitle}" ForeColor="&HFFFFFF" FontSize="14" FontBold="0" ScaleFont="0" Height="20"/>
+			</StackPanel>
+		</Border>
+
+		<!-- Body: LeftColumn | RightColumn -->
+		<Grid Grid.Row="1" Margin="16,12,16,8">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+
+			<Border Name="LeftColumn" Grid.Column="0" Style="{StaticResource InnerBorder}" Margin="0,0,8,0">
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="36"/>
+						<RowDefinition Height="*"/>
+						<RowDefinition Height="40"/>
+					</Grid.RowDefinitions>
+					<TextBlock Grid.Row="0" Text="Order lines" ForeColor="&HFFFFFF" FontSize="14" FontBold="1" ScaleFont="0" Margin="16,12,16,0" Height="24"/>
+					<Border Grid.Row="1" Style="{StaticResource ListWrapper}" Margin="16,8,16,8">
+						<ListView Name="LinesList" RowHeight="40" FontSize="13" FontBold="0" BorderColor="-1" Margin="4"/>
+					</Border>
+					<TextBlock Name="TotalText" Grid.Row="2" Text="{Binding TotalText}" ForeColor="&HFFFFFF" FontSize="16" FontBold="1" ScaleFont="0" Margin="16,0,16,12" Height="28"/>
+				</Grid>
+			</Border>
+
+			<Border Name="RightColumn" Grid.Column="1" Style="{StaticResource InnerBorder}" Margin="8,0,0,0">
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="36"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
+					<TextBlock Grid.Row="0" Text="Quick buttons (layout)" ForeColor="&HFFFFFF" FontSize="14" FontBold="1" ScaleFont="0" Margin="16,12,16,8" Height="24"/>
+					<!-- Fill UniformGrid cells (LoginPad pattern); Content= + Font*/ForeColor for captions. -->
+					<UniformGrid Grid.Row="1" Rows="3" Columns="2" Padding="12" ShowGridLines="0">
+						<Button Name="BtnAddLine" Style="{StaticResource ButtonSubmit}" Command="{Binding AddSampleLineCommand}" Content="Add sample line" FontSize="12" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}"/>
+						<Button Name="BtnDrink" Style="{StaticResource ButtonSubmit}" Command="{Binding AddSampleLineCommand}" CommandParameter="Drink" Content="Drink" FontSize="12" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}"/>
+						<Button Name="BtnFood" Style="{StaticResource ButtonSubmit}" Command="{Binding AddSampleLineCommand}" CommandParameter="Food" Content="Food" FontSize="12" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}"/>
+						<Button Name="BtnPay" Style="{StaticResource ButtonWarning}" Content="Pay (stub)" FontSize="12" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}"/>
+						<Button Name="BtnClear" Style="{StaticResource ButtonCancel}" Command="{Binding ClearLinesCommand}" Content="Clear lines" FontSize="12" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}"/>
+						<Button Name="BtnBackInline" Style="{StaticResource ButtonCancel}" Command="{Binding BackCommand}" Content="Back to menu" FontSize="12" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}"/>
+					</UniformGrid>
+				</Grid>
+			</Border>
+		</Grid>
+
+		<!-- Chrome row -->
+		<Grid Grid.Row="2" Margin="16,0,16,8">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="200"/>
+				<ColumnDefinition Width="200"/>
+			</Grid.ColumnDefinitions>
+			<Button Name="BtnBack" Grid.Column="1" Style="{StaticResource ButtonSubmit}" Command="{Binding BackCommand}" Content="Back to menu" FontSize="12" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Margin="0,0,16,0" Width="200" Height="72" MaxWidth="200" MaxHeight="72"/>
+			<Button Grid.Column="2" Style="{StaticResource ButtonCancel}" Command="{Binding ShutdownCommand, Source={StaticResource ResourceKey=AppCommands}}" Width="200" Height="72" MaxWidth="200" MaxHeight="72">
+				<Image ImageKey="Resources\Close.png" Margin="4,4,0,0" Width="64" Height="64"/>
+				<TextBlock Style="{StaticResource ButtonText12}" Text="{Binding Text[Exit], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}" Margin="68,4,0,0" Width="132" Height="64"/>
+			</Button>
+		</Grid>
+
+		<res:Migrated\Widgets\StatusBar Grid.Row="3" Height="25"/>
+	</Grid>
+</UserControl>

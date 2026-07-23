@@ -22,16 +22,16 @@ Public Function CreateInstance(ByVal Classname As String) As Object
             Set Splash = New HarnessScreen
             Splash.Configure "Screens\Splash\SplashView", False
             Set CreateInstance = Splash
-        Case "LoginView"
-            Dim Login As HarnessScreen
-            Set Login = New HarnessScreen
-            Login.Configure "Screens\Login\LoginView", True
-            Set CreateInstance = Login
         Case "MainMenuView"
             Dim MainMenu As HarnessScreen
             Set MainMenu = New HarnessScreen
-            MainMenu.Configure "Screens\MainMenu\MainMenuView", False
+            MainMenu.Configure MainMenuViewResourceKey(), False
             Set CreateInstance = MainMenu
+        Case "LoginView"
+            Dim Login As HarnessScreen
+            Set Login = New HarnessScreen
+            Login.Configure LoginViewResourceKey(), True
+            Set CreateInstance = Login
         Case "SplashViewModel"
             Set CreateInstance = New StubSplashViewModel
         Case "LoginViewModel"
@@ -41,7 +41,7 @@ Public Function CreateInstance(ByVal Classname As String) As Object
         Case "SalesOrderView"
             Dim Sales As HarnessScreen
             Set Sales = New HarnessScreen
-            Sales.Configure "Screens\SalesOrder\SalesOrderView", False
+            Sales.Configure SalesOrderViewResourceKey(), False
             Set CreateInstance = Sales
         Case "SalesOrderViewModel"
             Set CreateInstance = New StubSalesOrderViewModel

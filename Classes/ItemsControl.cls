@@ -175,8 +175,8 @@ Private Sub Class_Initialize()
     m_Layout.Initialize Me, Me, W
     m_Layout.RegisterLayoutProperties "ItemsControl"
 
-    m_Layout.Width = 300
-    m_Layout.Height = 300
+    m_Layout.Width = 0
+    m_Layout.Height = 0
     m_Layout.Visibility = VisibilityVisible
 
     NewUIElementBase Me, m_BaseUIElement

@@ -28,7 +28,8 @@ This is the **single entry point** for the VCF rewrite program. Read in order fo
 | 12 | [POS_INTEGRATION_SMOKE.md](./POS_INTEGRATION_SMOKE.md) | DeNovo manual smoke checklist | Phase 7 |
 | 13 | [XAML_MIGRATION_PROMPTS.md](./XAML_MIGRATION_PROMPTS.md) | Cursor prompts + script companion | Phase 7b |
 | 14 | [DENOVO_HARNESS_PROPOSAL_RESPONSE.md](./DENOVO_HARNESS_PROPOSAL_RESPONSE.md) | VCF response — harness-first Phase 1 validation | Phase 7d |
-| 15 | [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) | Legacy vs WPF resize; nested Border gap (Login finding) | Phase 7d |
+| 15 | [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) | Legacy vs WPF resize; canvas-scale **retired** (3.14.0) | Phase 7d |
+| 15a | [POS_LAYOUT_MIGRATION.md](./POS_LAYOUT_MIGRATION.md) | Migrate absolute POS XAML → Grid/Stack (Login/Sales samples) | 3.14.0 |
 | 16 | [`.Tests/DeNovoSmoke/README.md`](../.Tests/DeNovoSmoke/README.md) | DeNovo UI harness (VCF runner + DeNovo fixtures) | Phase 7d |
 | 17 | [VCF_KICKOFF_AGENDA.md](./VCF_KICKOFF_AGENDA.md) | Kickoff meeting — open items, decisions, Phase 1 | VCF lead |
 | 18 | [WINDOW_LIFECYCLE.md](./WINDOW_LIFECYCLE.md) | Window init, BorderStyle precedence, show, shutdown (7d validated) | Phase 7d+ |
@@ -224,11 +225,17 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **Min/Max layout** — ~~MinWidth/MinHeight/MaxWidth/MaxHeight clamp~~ (**3.5.0** / **P1-MINMAX-MIN** / **P1-MINMAX-MAX**)
   **SelectionChanged naming** — ~~`SelectionChanged` + `ListIndexChanged` dual-raise~~ (**3.6.0** / **P4d-SELCHG**)
   **DeNovo layout bridge + hover** — ~~canvas scale on UC/Border/Panel; TextBox layout DPs; Button hover refresh~~ (**3.7.0** / DeNovoSmoke green)
-  **Layout north star** — ~~canvas scale = bridge; Measure/Arrange epic later~~ — [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) §0
+  **Layout north star** — ~~canvas scale retired~~ (**3.14.0**) — Measure/Arrange only — [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) §0 · [POS_LAYOUT_MIGRATION.md](./POS_LAYOUT_MIGRATION.md)
   **ContentTemplate** — ~~ContentControl + ContentHost.ApplyContentVisual + P6e-CTMPL~~ (**3.8.0** / suite **70**)
+  **Measure/Arrange slice 1** — ~~Actual*/Desired* + StackPanel MeasureLayout + P2-STACK-MEAS~~ (**3.9.0** / suite **71**)
+  **Measure/Arrange slice 2** — ~~Grid MeasureLayout + Auto via MeasureElementSize + P2-GRID-MEAS~~ (**3.10.0** / suite **72**)
+  **Measure/Arrange slice 3** — ~~Border single-child MeasureLayout + P1-BORDER-MEAS~~ (**3.11.0** / suite **73**)
+  **Measure/Arrange slice 4** — ~~ContentControl MeasureLayout + P6e-CC-MEAS~~ (**3.12.0** / suite **74**)
+  **Measure/Arrange slice 5** — ~~UniformGrid MeasureLayout + P2a-UG-MEAS~~ (**3.13.0** / suite **75**)
+  **Canvas-scale retirement** — ~~remove ScaleDesignCanvas; Migrated Login/Sales; P7d-LAY-PANEL~~ (**3.14.0** / suite **75**)
   **Attached storage → DP bag** — **deferred** (accepted 2026-07-23): lazy `EnsureAttached` + `Grid.*` in per-element `DependencyProperties`; keep dict shim until green — when Change/ClearValue/binding on attached is needed
   **Full WPF DP precedence stack** — **deferred** roadmap epic (not now) — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) (~2–3 mo core)
-  **Overlaps next** — fundamentals overlaps cleared; pick up deferred attached DP-bag or other backlog when ready
+  **Overlaps next** — DeNovo.vbp full-tree migration (docs/scripts); or deferred attached DP-bag
   **B-RESZ** / **B-NAV** — ~~Phase0 benches~~
   **ListView bind hotspot** — ~~B-BIND-DENSE~~ (clone preserves bindings; 21×6 gate)
   **Margin/Padding family 1** — ~~ListView Margin=0 Padding=4,1,4,1~~ (**P2a-PAD**)
@@ -484,7 +491,8 @@ The handoff package lives under **`docs/`** (not legacy `doc/` CHM help):
 | 2026-07-21 | **B-RESZ** + **B-NAV** — Phase0 nested UniformGrid ×50 + Visibility nav / Windows registry (33 tests) |
 | 2026-07-21 | **Phase 2a.1 start** — `Window.OnChildVisibilityChanged`; harness nav drops manual Relayout/Rebuild |
 | 2026-07-20 | Deferred WPF Margin/Padding defaults (doc only) — schedule under Phase 2a after layout/nav |
-| 2026-07-18 | Layout Option B — Border Design* → LegacyScaleLayout; Phase0 **P7d-LAY-RESIZE** |
+| 2026-07-23 | **3.14.0** — retire canvas-scale bridge; Migrated Login/Sales; Phase0 **P7d-LAY-PANEL**; [POS_LAYOUT_MIGRATION.md](./POS_LAYOUT_MIGRATION.md) |
+| 2026-07-18 | Layout Option B — Border Design* → LegacyScaleLayout; Phase0 **P7d-LAY-RESIZE** (superseded by **P7d-LAY-PANEL**) |
 | 2026-07-18 | Phase 7f — XAML LoadSuperclassData batching; lazy Login; P7d-LOAD Immediate benches |
 | 2026-06-20 | Phase 7d lessons — WINDOW_LIFECYCLE.md; §3.1 L1–L5; Phase 7f/8 load perf plan; DeNovoSmoke smoke flows |
 | 2026-06-19 | Initial complete handoff package — 8 documents, full class/property inventory |

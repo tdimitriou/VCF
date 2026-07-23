@@ -1,0 +1,66 @@
+<UserControl x:Class="MainMenuView" DataContext="MainMenuViewModel" Width="1024" Height="768" Alpha="1" Margin="0,0,0,0">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="88"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="88"/>
+			<RowDefinition Height="25"/>
+		</Grid.RowDefinitions>
+
+		<!-- Brand header -->
+		<Border Grid.Row="0" CornerRadius="0" BorderColor="-1" BackColor="&HB1A200" Alpha="0" Width="400" Height="56" MaxWidth="400" MaxHeight="56" Margin="38,16,0,0">
+			<StackPanel Orientation="Vertical" Margin="5,0,0,0">
+				<TextBlock Name="MenuTitle" Text="{Binding Title}" ForeColor="&HB1A200" FontSize="20" FontBold="1" ScaleFont="0" Width="390" Height="28"/>
+				<TextBlock Text="{Binding Subtitle}" ForeColor="&HFFFFFF" FontSize="16" FontBold="0" ScaleFont="0" Width="390" Height="28"/>
+			</StackPanel>
+		</Border>
+
+		<!-- Center design-sized menu card (574x280) -->
+		<Grid Grid.Row="1">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="574"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="280"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+			<Border Grid.Row="1" Grid.Column="1" Style="{StaticResource InnerBorder}" Width="574" Height="280" MaxWidth="574" MaxHeight="280">
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
+					<TextBlock Grid.Row="0" Name="WelcomeText" Text="{Binding WelcomeMessage}" ForeColor="&HFFFFFF" FontSize="18" FontBold="1" ScaleFont="0" Margin="24,24,24,0" Height="40"/>
+					<TextBlock Grid.Row="1" Text="{Binding CurrentUser, Source={StaticResource ResourceKey=AppProperties}}" ForeColor="&HFFFFFF" FontSize="14" FontBold="0" ScaleFont="0" Margin="24,16,24,0" Height="40"/>
+					<Grid Grid.Row="2" Margin="24,24,24,24">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="*"/>
+						</Grid.ColumnDefinitions>
+						<!-- Content= needs Font*/ForeColor like LoginPad (string paint path). -->
+						<Button Name="BtnSales" Grid.Column="0" Style="{StaticResource ButtonSubmit}" Command="{Binding SalesCommand}" Content="Sales" FontSize="12" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Margin="0,0,12,0"/>
+						<Button Name="BtnLogout" Grid.Column="1" Style="{StaticResource ButtonCancel}" Command="{Binding LogoutCommand}" Content="Logout" FontSize="12" FontBold="1" ForeColor="{DynamicResource ButtonTextHighlight}" Margin="12,0,0,0"/>
+					</Grid>
+				</Grid>
+			</Border>
+		</Grid>
+
+		<!-- Chrome Exit -->
+		<Grid Grid.Row="2" Margin="16,0,16,8">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="200"/>
+			</Grid.ColumnDefinitions>
+			<Button Grid.Column="1" Style="{StaticResource ButtonCancel}" Command="{Binding ShutdownCommand, Source={StaticResource ResourceKey=AppCommands}}" Width="200" Height="72" MaxWidth="200" MaxHeight="72">
+				<Image ImageKey="Resources\Close.png" Margin="4,4,0,0" Width="64" Height="64"/>
+				<TextBlock Style="{StaticResource ButtonText12}" Text="{Binding Text[Exit], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}" Margin="68,4,0,0" Width="132" Height="64"/>
+			</Button>
+		</Grid>
+
+		<res:Migrated\Widgets\StatusBar Grid.Row="3" Height="25"/>
+	</Grid>
+</UserControl>

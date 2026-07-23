@@ -40,6 +40,10 @@ Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As List
 Private m_BaseUIElement As UIElementBase
 Private m_SyncingVisibility As Boolean
+Private m_DesiredWidth As Double
+Private m_DesiredHeight As Double
+Private m_ActualWidth As Double
+Private m_ActualHeight As Double
 
 Public Name As String
 
@@ -142,6 +146,78 @@ Public Name As String
         End If
     End Property
 
+    Public Property Get DesiredWidth() As Double
+        DesiredWidth = m_DesiredWidth
+    End Property
+
+    Public Property Get DesiredHeight() As Double
+        DesiredHeight = m_DesiredHeight
+    End Property
+
+    Public Property Get ActualWidth() As Double
+        ActualWidth = m_ActualWidth
+    End Property
+
+    Public Property Get ActualHeight() As Double
+        ActualHeight = m_ActualHeight
+    End Property
+
+    ' WPF-ish: max child cell size x Columns/Rows when Width/Height unset.
+    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+        Dim Child As Object
+        Dim Measured As LayoutRect
+        Dim MaxCW As Double
+        Dim MaxCH As Double
+        Dim ContentW As Double
+        Dim ContentH As Double
+        Dim DesiredW As Double
+        Dim DesiredH As Double
+        Dim ChildVis As Visibility
+        Dim P As Panel
+
+        MaxCW = 0#
+        MaxCH = 0#
+
+        If Not m_Children Is Nothing Then
+            For Each Child In m_Children
+                ChildVis = ReadElementVisibility(Child)
+                If IsLayoutCollapsed(ChildVis) Then GoTo NextMeasureChild
+
+                Measured = MeasureElementSize(Child, 0#, 0#)
+                If Measured.Width <= 0! Or Measured.Height <= 0! Then
+                    On Error Resume Next
+                    Err.Clear
+                    If TypeOf Child Is Panel Then
+                        Set P = Child
+                        If Measured.Width <= 0! Then Measured.Width = CSng(P.Width)
+                        If Measured.Height <= 0! Then Measured.Height = CSng(P.Height)
+                    End If
+                    Err.Clear
+                    On Error GoTo 0
+                End If
+                If CDbl(Measured.Width) > MaxCW Then MaxCW = CDbl(Measured.Width)
+                If CDbl(Measured.Height) > MaxCH Then MaxCH = CDbl(Measured.Height)
+
+NextMeasureChild:
+            Next
+        End If
+
+        ContentW = MaxCW * CDbl(m_Columns)
+        ContentH = MaxCH * CDbl(m_Rows)
+
+        DesiredW = Width
+        DesiredH = Height
+        If DesiredW <= 0 Then DesiredW = ContentW
+        If DesiredH <= 0 Then DesiredH = ContentH
+        If AvailableWidth > 0 And DesiredW > AvailableWidth Then DesiredW = AvailableWidth
+        If AvailableHeight > 0 And DesiredH > AvailableHeight Then DesiredH = AvailableHeight
+
+        DesiredW = ClampElementWidth(Me, DesiredW)
+        DesiredH = ClampElementHeight(Me, DesiredH)
+        m_DesiredWidth = DesiredW
+        m_DesiredHeight = DesiredH
+    End Sub
+
     ' ItemsPanelTemplate clone ? set metrics without MoveChildren (grid not hosted yet).
     Friend Sub ApplyItemsPanelMetrics(ByVal NewRows As Long, ByVal NewColumns As Long, ByVal Pad As Thickness)
         Dim PadCopy As Thickness
@@ -215,8 +291,8 @@ Public Name As String
             Call .Register("Margin", vbObject, "Thickness", , NewDependencyPropertyMetadata(True, False, False))
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
             .SetValue "Style", Nothing
-            .SetCurrentValue "Width", 300#
-            .SetCurrentValue "Height", 300#
+            .SetCurrentValue "Width", 0#
+            .SetCurrentValue "Height", 0#
             .SetCurrentValue "Margin", NewThickness(0)
         End With
         
@@ -334,37 +410,42 @@ Public Name As String
 
 '#Region UIElementCollection Events
     Private Sub m_Children_CollectionChanged(Sender As Object, e As CollectionChangedEventArgs)
-        On Error GoTo Catch
-            
         Dim Child As Object
+        Dim ChildControl As IControl
         Dim Key As String
-        
-Try:
-                       
+
+        On Error GoTo Catch
+
         If Not e.OldItems Is Nothing Then
             For Each Child In e.OldItems
                 If TypeOf Child Is IControl Then
+                    Set ChildControl = Child
                     Key = modLayoutEngine.ControlWidgetKey(Child)
-                    If W.Widgets.Exists(Key) Then W.Widgets.Remove Key
+                    If Not ChildControl.Widget Is Nothing Then
+                        If W.Widgets.Exists(Key) Then W.Widgets.Remove Key
+                    End If
                 End If
             Next
         End If
 
-        ' Honor LockRefresh ? ItemsControl batches AddSilent under lock then ArrangeChildren once.
+        ' Honor LockRefresh ù ItemsControl batches AddSilent under lock then ArrangeChildren once.
         If W.LockRefresh Then Exit Sub
         MoveChildren
         If Not W.LockRefresh Then W.Refresh
-        
         Exit Sub
-        
+
 Catch:
         '
     End Sub
 '#End Region
 
 '#Region Private Methods
-    ' ItemsControl post-rebuild arrange (Friend ? same project).
+    ' ItemsControl post-rebuild arrange (Friend ù same project).
     Friend Sub ArrangeChildren()
+        MoveChildren
+    End Sub
+
+    Public Sub RelayoutChildren()
         MoveChildren
     End Sub
 
@@ -375,18 +456,21 @@ Catch:
         Dim Child As Object
         Dim CellPosition As Coordinates
         Dim Cells
-        
+
+        If W Is Nothing Then Exit Sub
         If W.LockRefresh Then Exit Sub
         If m_Arranging Then Exit Sub
         m_Arranging = True
 
         On Error GoTo Clean
-        
+
+        MeasureLayout CDbl(W.Width), CDbl(W.Height)
+
         MAX_ITEMS = m_Rows * m_Columns
         If MAX_ITEMS < 1 Then GoTo Clean
         ReDim Cells(0 To MAX_ITEMS - 1) As Long
-        
-        ' Single RemoveAll per arrange (not per child add) ? avoids O(N^2) IDE hang.
+
+        ' Single RemoveAll per arrange (not per child add) ù avoids O(N^2) IDE hang.
         W.Widgets.RemoveAll
         ItemIndex = 0
         For Index = 0 To MAX_ITEMS - 1
@@ -402,17 +486,19 @@ Catch:
                 Loop
                 If ItemIndex > m_Children.Count - 1 Then Exit For
                 Set Child = m_Children(ItemIndex)
-            
+
                 CellPosition = GetGridPosition(Index)
-            
+
                 Call MoveChild(m_Children(ItemIndex), GetCoordinates(CellPosition.T, CellPosition.L), Index, CellPosition, Cells)
                 ItemIndex = ItemIndex + 1
             End If
         Next
 
 Clean:
+        m_ActualWidth = CDbl(W.Width)
+        m_ActualHeight = CDbl(W.Height)
         m_Arranging = False
-End Sub
+    End Sub
     
     Private Function GetGridPosition(ByVal Index As Long) As Coordinates
         
@@ -473,6 +559,11 @@ End Sub
             HH = .H * RowSpan - (Padding.Top + Padding.Bottom)
             
         End With
+
+        If WW < 0! Then WW = 0!
+        If HH < 0! Then HH = 0!
+        WW = CSng(ClampElementWidth(Child, CDbl(WW)))
+        HH = CSng(ClampElementHeight(Child, CDbl(HH)))
     
         Key = modLayoutEngine.ControlWidgetKey(Child)
         ChildVis = ReadElementVisibility(Child)
@@ -521,6 +612,8 @@ End Sub
                 ApplyVisibility W, CLng(Property.GetValue)
                 InvalidateParentLayout Me
             Case "Style":           ApplyStyle
+            Case "Width", "Height", "Margin", "Padding"
+                If Not W.LockRefresh Then MoveChildren
         End Select
         
         DependencyPropertiesStatic.PassPropertyValue m_Children, Property

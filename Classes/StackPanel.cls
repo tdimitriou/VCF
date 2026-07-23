@@ -173,6 +173,45 @@ End Property
         m_Layout.MaxHeight = Value
     End Property
 
+    Public Property Get DesiredWidth() As Double
+        DesiredWidth = m_Layout.DesiredWidth
+    End Property
+
+    Public Property Get DesiredHeight() As Double
+        DesiredHeight = m_Layout.DesiredHeight
+    End Property
+
+    Public Property Get ActualWidth() As Double
+        ActualWidth = m_Layout.ActualWidth
+    End Property
+
+    Public Property Get ActualHeight() As Double
+        ActualHeight = m_Layout.ActualHeight
+    End Property
+
+    ' MeasureOverride-style: content sum along stack axis; explicit Width/Height win.
+    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+        Dim ContentW As Double
+        Dim ContentH As Double
+        Dim DesiredW As Double
+        Dim DesiredH As Double
+
+        If m_Layout Is Nothing Then Exit Sub
+
+        MeasureStackPanelContent m_Children, m_Orientation, AvailableWidth, AvailableHeight, ContentW, ContentH
+
+        DesiredW = Width
+        DesiredH = Height
+        If DesiredW <= 0 Then DesiredW = ContentW
+        If DesiredH <= 0 Then DesiredH = ContentH
+        If AvailableWidth > 0 And DesiredW > AvailableWidth Then DesiredW = AvailableWidth
+        If AvailableHeight > 0 And DesiredH > AvailableHeight Then DesiredH = AvailableHeight
+
+        DesiredW = ClampElementWidth(Me, DesiredW)
+        DesiredH = ClampElementHeight(Me, DesiredH)
+        m_Layout.ReportDesiredSize DesiredW, DesiredH
+    End Sub
+
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
         
@@ -226,8 +265,8 @@ End Property
         
         m_Orientation = OrientationVertical
         
-        m_Layout.Width = 300
-        m_Layout.Height = 300
+        m_Layout.Width = 0
+        m_Layout.Height = 0
         m_Layout.Visibility = VisibilityVisible
         
         NewUIElementBase Me, m_BaseUIElement
@@ -336,7 +375,15 @@ Private Sub MoveChild(Child As Object)
 End Sub
 
     Private Sub ArrangePanel()
+        ' Orientation DP is set in Class_Initialize before W/m_Layout exist;
+        ' old ArrangeStackPanelChildren no-op'd on HostWidget Is Nothing — keep that.
+        If W Is Nothing Then Exit Sub
+        If m_Layout Is Nothing Then Exit Sub
+        If m_Children Is Nothing Then Exit Sub
+
+        MeasureLayout CDbl(W.Width), CDbl(W.Height)
         ArrangeStackPanelChildren m_Children, W, m_Orientation
+        m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
     End Sub
 
     Friend Sub RelayoutChildren()

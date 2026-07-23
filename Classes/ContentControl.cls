@@ -32,6 +32,10 @@ Private m_Bindings As List
 Private m_BaseUIElement As UIElementBase
 Private m_Layout As FrameworkElement
 Private m_ContentHost As ContentHost
+Private m_DesiredWidth As Double
+Private m_DesiredHeight As Double
+Private m_ActualWidth As Double
+Private m_ActualHeight As Double
 
 Public Name As String
 
@@ -188,15 +192,121 @@ End Sub
         Visibility = m_Layout.Visibility
     End Property
 
+    Public Property Get DesiredWidth() As Double
+        DesiredWidth = m_DesiredWidth
+    End Property
+
+    Public Property Get DesiredHeight() As Double
+        DesiredHeight = m_DesiredHeight
+    End Property
+
+    Public Property Get ActualWidth() As Double
+        ActualWidth = m_ActualWidth
+    End Property
+
+    Public Property Get ActualHeight() As Double
+        ActualHeight = m_ActualHeight
+    End Property
+
+    ' IUIElement Content child: Desired = child Width/Height (content-driven when host unset).
+    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+        Dim ContentW As Double
+        Dim ContentH As Double
+        Dim DesiredW As Double
+        Dim DesiredH As Double
+        Dim Child As Object
+
+        If m_Layout Is Nothing Then Exit Sub
+
+        If Not m_Children Is Nothing Then
+            If m_Children.Count >= 1 Then
+                Set Child = m_Children(0)
+                ContentW = ReadChildLayoutWidth(Child)
+                ContentH = ReadChildLayoutHeight(Child)
+
+                DesiredW = Width
+                DesiredH = Height
+                If DesiredW <= 0 Then DesiredW = ContentW
+                If DesiredH <= 0 Then DesiredH = ContentH
+                If AvailableWidth > 0 And DesiredW > AvailableWidth Then DesiredW = AvailableWidth
+                If AvailableHeight > 0 And DesiredH > AvailableHeight Then DesiredH = AvailableHeight
+
+                DesiredW = ClampElementWidth(Me, DesiredW)
+                DesiredH = ClampElementHeight(Me, DesiredH)
+
+                m_DesiredWidth = DesiredW
+                m_DesiredHeight = DesiredH
+                m_Layout.ReportDesiredSize DesiredW, DesiredH
+                Exit Sub
+            End If
+        End If
+
+        m_Layout.Measure AvailableWidth, AvailableHeight
+        m_DesiredWidth = m_Layout.DesiredWidth
+        m_DesiredHeight = m_Layout.DesiredHeight
+    End Sub
+
+    Private Function ReadChildLayoutWidth(ByVal Child As Object) As Double
+        Dim Dep As IDependencyObject
+        Dim P As Panel
+
+        ReadChildLayoutWidth = 0#
+        If Child Is Nothing Then Exit Function
+
+        On Error Resume Next
+        Err.Clear
+        If TypeOf Child Is Panel Then
+            Set P = Child
+            ReadChildLayoutWidth = P.Width
+            Exit Function
+        End If
+
+        Err.Clear
+        If TypeOf Child Is IDependencyObject Then
+            Set Dep = Child
+            If Not Dep.DependencyProperties Is Nothing Then
+                If Dep.DependencyProperties.Exists("Width") Then
+                    ReadChildLayoutWidth = CDbl(Dep.DependencyProperties.GetValue("Width"))
+                End If
+            End If
+        End If
+        Err.Clear
+    End Function
+
+    Private Function ReadChildLayoutHeight(ByVal Child As Object) As Double
+        Dim Dep As IDependencyObject
+        Dim P As Panel
+
+        ReadChildLayoutHeight = 0#
+        If Child Is Nothing Then Exit Function
+
+        On Error Resume Next
+        Err.Clear
+        If TypeOf Child Is Panel Then
+            Set P = Child
+            ReadChildLayoutHeight = P.Height
+            Exit Function
+        End If
+
+        Err.Clear
+        If TypeOf Child Is IDependencyObject Then
+            Set Dep = Child
+            If Not Dep.DependencyProperties Is Nothing Then
+                If Dep.DependencyProperties.Exists("Height") Then
+                    ReadChildLayoutHeight = CDbl(Dep.DependencyProperties.GetValue("Height"))
+                End If
+            End If
+        End If
+        Err.Clear
+    End Function
+
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
-        
-        'If Parent.Widgets.Exists(Widget.Key) Then Parent.Widgets.Remove Widget.Key
-        'Parent.Widgets.Add Me, "_" & ObjPtr(Me), Left, Top, Width, Height
         
         W.Move Left, Top, Width, Height
         
         ApplyVisibility W, Visibility
+        ArrangeContent
     End Sub
 
     Public Property Set Parent(ByVal Value As IControl)
@@ -233,8 +343,8 @@ End Sub
         m_Layout.Initialize Me, Me, W
         m_Layout.RegisterLayoutProperties "ContentControl"
         
-        m_Layout.Width = 300
-        m_Layout.Height = 300
+        m_Layout.Width = 0
+        m_Layout.Height = 0
         m_Layout.Visibility = VisibilityVisible
         
         NewUIElementBase Me, m_BaseUIElement
@@ -312,18 +422,22 @@ End Sub
 
 '#Region UIElementCollection Events
     Private Sub m_Children_CollectionChanged(Sender As Object, e As CollectionChangedEventArgs)
-        On Error GoTo Catch
-            
         Dim Child As Object
-        
-Try:
-        
+        Dim ChildControl As IControl
+
+        On Error GoTo Catch
+
         If Not e.OldItems Is Nothing Then
             For Each Child In e.OldItems
-                If TypeOf Child Is IControl Then If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove Child.Widget.Key
+                If TypeOf Child Is IControl Then
+                    Set ChildControl = Child
+                    If Not ChildControl.Widget Is Nothing Then
+                        If W.Widgets.Exists(ChildControl.Widget.Key) Then W.Widgets.Remove ChildControl.Widget.Key
+                    End If
+                End If
             Next
         End If
-                
+
         If Not e.NewItems Is Nothing Then
             For Each Child In e.NewItems
                 MoveChild Child
@@ -332,12 +446,11 @@ Try:
 
         SyncContentPresenter
         If Not W.LockRefresh Then W.Refresh
-        
         Exit Sub
-        
+
 Catch:
         '
-End Sub
+    End Sub
 '#End Region
 
 '#Region Private Methods
@@ -346,12 +459,26 @@ End Sub
     End Sub
 
     Private Sub ArrangeContent()
-        If m_Children.Count > 0 Then
-            ArrangeDecoratorChild m_Children(0), W
+        If W Is Nothing Then Exit Sub
+        If m_Layout Is Nothing Then Exit Sub
+
+        ' Measure Desired* even if arrange attach fails later.
+        MeasureLayout CDbl(W.Width), CDbl(W.Height)
+
+        On Error GoTo AfterArrange
+        If Not m_Children Is Nothing Then
+            If m_Children.Count > 0 Then
+                ArrangeDecoratorChild m_Children(0), W
+            End If
         End If
+
+AfterArrange:
+        m_ActualWidth = CDbl(W.Width)
+        m_ActualHeight = CDbl(W.Height)
+        m_Layout.ReportActualSize m_ActualWidth, m_ActualHeight
     End Sub
 
-    Friend Sub RelayoutChildren()
+    Public Sub RelayoutChildren()
         ArrangeContent
     End Sub
 
@@ -371,6 +498,7 @@ End Sub
             Case "Style":           ApplyStyle
             Case "Content", "ContentTemplate":
                 ApplyContentVisual
+                ArrangeContent
                 modRenderCoalescer.RequestWidgetRefresh W
             Case Else
                 If Not m_Children Is Nothing Then

@@ -18,7 +18,7 @@ Minimal VB6 exe to load **DeNovo POS XAML screens** against a pinned **`Demac.VC
 Full `DeNovo.exe` is a deep COM graph (KernelLib → Data → ADODBUtils → UILib → VCF). With Phase 1 binary/typelib churn, failures on Login XAML are indistinguishable from `Data.Dataset` or stale group `.vbg` references.
 
 **Phase 1 acceptance:** Phase0 + this harness green for agreed screens with **stub view models**.  
-**Phase 2a:** same local gates while Data/Kernel finish — currently Phase0 **70/70** + DeNovoSmoke on **3.8.0** (layout bridge **3.7.0**).  
+**Phase 2a:** same local gates while Data/Kernel finish — currently Phase0 **75/75** + DeNovoSmoke on **3.13.0** (layout bridge **3.7.0**; Measure/Arrange Stack/Grid/Border/CC/UniformGrid).  
 **Phase 2b:** re-attach full POS stack; run [POS_INTEGRATION_SMOKE.md](../../docs/POS_INTEGRATION_SMOKE.md) §3.
 
 ---
@@ -75,7 +75,7 @@ DeNovoSmoke.vbp              StdExe, Startup = Sub Main
 |--------|--------|
 | **SplashView.xml** | Parses; layout; theme; no XAML load error |
 | **LoginView.xml** | Parses; stub `DataContext`; bindings resolve; focus OK |
-| **LoginViewWpf.xml** (7e) | WPF **Grid** layout — inner panel scales on resize; toggle via `modHarnessConfig.USE_WPF_LOGIN_LAYOUT` |
+| **LoginViewWpf.xml** (7e) | Migrated root **Grid** under `Migrated/Login/` (3.14.0); toggle legacy absolute via `USE_WPF_LOGIN_LAYOUT = False` → `Screens\Login\LoginView` |
 
 **Run:** F5 in VB6 IDE, &lt; 30 s, no database.
 
@@ -151,11 +151,11 @@ See [WINDOW_LIFECYCLE.md](../../docs/WINDOW_LIFECYCLE.md).
 
 | Screen / task | Assert |
 |---------------|--------|
-| **SalesOrderView.xml** | MainMenu **Sales** / **Shift+S** → left lines + right quick buttons (Margin/Width columns); **Back to menu** (chrome + inline); stub `Lines`; no DB |
+| **SalesOrderView.xml** | MainMenu **Sales** / **Shift+S** → migrated Grid `LeftColumn`/`RightColumn` (`Migrated/SalesOrder/`); **Back to menu**; stub `Lines`; no DB |
 | **Lazy Sales load** | Loads on first `ShowSalesOrder` (`EAGER_SALES_LOAD = False`) |
 | **P7d-LOAD-SALES** | Immediate load ms + `[P7d-SALES]` named LeftColumn/RightColumn/SalesTitle |
 
-**Sales fixture:** harness-owned `Resources/XAML/Screens/SalesOrder/SalesOrderView.xml` + `StubSalesOrderViewModel` (layout-only; no DB).
+**Sales fixture:** `Resources/XAML/Migrated/SalesOrder/SalesOrderView.xml` (absolute legacy copy remains under `Screens/SalesOrder/`) + `StubSalesOrderViewModel`.
 
 **m3 config:** `EAGER_SALES_LOAD` (default `False`).
 
@@ -214,16 +214,14 @@ Both must pass before Phase 7 UI tags that affect DeNovo integration.
 
 **Pass (milestone 1):** no XAML load error; Splash layout + bindings; Login list + password pad + focus; Exit ends `Application.Run` cleanly in IDE and compiled exe.
 
-### Resize validation (7e — `LoginViewWpf.xml`)
+### Resize validation (7e — migrated Login / Sales)
 
-**Framework (post-3.0 Design* removal):** `Window` fills visible `UserControl` views to the client; each `UserControl` scales absolute `Margin`/`Width`/`Height` children from its design `Width`/`Height` DPs to the widget size (same role as former host design-canvas scale). Harness Shift+1/2/3 only changes Form client size + `RelayoutChildren`.
+**Framework (3.14.0+):** design-canvas scale is **retired**. Window fills the active UserControl; a UC with a **single root Grid** fills that root to the client. Resize via Measure/Arrange panels only — see [POS_LAYOUT_MIGRATION.md](../../docs/POS_LAYOUT_MIGRATION.md).
 
-**Hybrid layout:** outer chrome uses absolute Margin; inside `InnerBorder`, a WPF **Grid** (list | password + pad) reflows when the scaled border grows.
-
-With `USE_WPF_LOGIN_LAYOUT = True` (default), go to Login (**Shift+L**), then press **Shift+1**, **Shift+2**, **Shift+3**. Confirm the **star** column (password + numpad) grows on widescreen; list column stays ~204px (by design). Check Immediate for `[HARNESS-RESIZE]` lines.
+Default keys: `Migrated\Login\LoginViewWpf`, `Migrated\SalesOrder\SalesOrderView`. Go to Login (**Shift+L**) or Sales (**Shift+S**), then **Shift+1**, **Shift+2**, **Shift+3**. Confirm star columns/rows track the Form client. Check Immediate for `[HARNESS-RESIZE]` lines.
 
 | Size | Check |
 |------|--------|
-| 1024×768 | Layout baseline (scale 1) |
-| 800×600 | Scaled chrome; numpad usable |
-| Widescreen | List + pad share horizontal space inside scaled InnerBorder |
+| 1024×768 | Layout baseline |
+| 800×600 | Columns/rows reflow; numpad usable |
+| Widescreen | Login star column (password + pad) grows; Sales `*` columns share width |

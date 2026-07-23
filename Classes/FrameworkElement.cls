@@ -18,6 +18,10 @@ Private m_UIPtr As Long
 Private m_WidgetPtr As Long
 Private m_DesiredWidth As Double
 Private m_DesiredHeight As Double
+Private m_ActualWidth As Double
+Private m_ActualHeight As Double
+Private m_MeasureDirty As Boolean
+Private m_ArrangeDirty As Boolean
 
 Friend Sub Initialize( _
     ByVal Host As IDependencyObject, _
@@ -27,6 +31,8 @@ Friend Sub Initialize( _
     m_HostPtr = ObjPtr(Host)
     m_UIPtr = ObjPtr(UIHost)
     m_WidgetPtr = ObjPtr(W)
+    m_MeasureDirty = True
+    m_ArrangeDirty = True
 End Sub
 
 Friend Sub RegisterLayoutProperties(Optional ByVal TypeName As String = "FrameworkElement")
@@ -130,6 +136,45 @@ Public Property Get DesiredHeight() As Double
     DesiredHeight = m_DesiredHeight
 End Property
 
+Public Property Get ActualWidth() As Double
+    ActualWidth = m_ActualWidth
+End Property
+
+Public Property Get ActualHeight() As Double
+    ActualHeight = m_ActualHeight
+End Property
+
+' Panels (StackPanel MeasureOverride) report content-driven desired size.
+Friend Sub ReportDesiredSize(ByVal DesiredW As Double, ByVal DesiredH As Double)
+    m_DesiredWidth = DesiredW
+    m_DesiredHeight = DesiredH
+    m_MeasureDirty = False
+End Sub
+
+' Sync Actual* from the final widget/host slot without re-Move (parent already positioned us).
+Friend Sub ReportActualSize(ByVal ActualW As Double, ByVal ActualH As Double)
+    m_ActualWidth = ActualW
+    m_ActualHeight = ActualH
+    m_ArrangeDirty = False
+End Sub
+
+Public Sub InvalidateMeasure()
+    m_MeasureDirty = True
+    m_ArrangeDirty = True
+End Sub
+
+Public Sub InvalidateArrange()
+    m_ArrangeDirty = True
+End Sub
+
+Public Property Get IsMeasureDirty() As Boolean
+    IsMeasureDirty = m_MeasureDirty
+End Property
+
+Public Property Get IsArrangeDirty() As Boolean
+    IsArrangeDirty = m_ArrangeDirty
+End Property
+
 Public Sub Measure(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
     Dim W As Double
     Dim H As Double
@@ -147,10 +192,15 @@ Public Sub Measure(ByVal AvailableWidth As Double, ByVal AvailableHeight As Doub
 
     m_DesiredWidth = W
     m_DesiredHeight = H
+    m_MeasureDirty = False
+    m_ArrangeDirty = True
 End Sub
 
 Public Sub Arrange(ByVal FinalLeft As Single, ByVal FinalTop As Single, ByVal FinalWidth As Single, ByVal FinalHeight As Single)
     UIHost.Move FinalLeft, FinalTop, FinalWidth, FinalHeight
+    m_ActualWidth = CDbl(FinalWidth)
+    m_ActualHeight = CDbl(FinalHeight)
+    m_ArrangeDirty = False
 End Sub
 
 Public Sub ArrangeChildren( _
@@ -165,13 +215,9 @@ Public Sub ArrangeChildren( _
     Dim ChildVis As Visibility
     Dim HostWidth As Single
     Dim HostHeight As Single
-    Dim ScaleX As Double
-    Dim ScaleY As Double
-    Dim DesignW As Double
-    Dim DesignH As Double
     Dim HostObj As Object
     Dim FillWindowContent As Boolean
-    Dim ScaleDesignCanvas As Boolean
+    Dim FillUserControlRoot As Boolean
 
     If Children Is Nothing Then Exit Sub
     If HostWidget Is Nothing Then Exit Sub
@@ -188,30 +234,18 @@ Public Sub ArrangeChildren( _
     End If
 
     FillWindowContent = False
-    ScaleDesignCanvas = False
+    FillUserControlRoot = False
     On Error Resume Next
     Set HostObj = Host
     If Not HostObj Is Nothing Then
         If TypeOf HostObj Is Window Then FillWindowContent = True
-        ' Design-canvas scale: UC root and multi-child Border/Panel hosts when
-        ' the widget size differs from Width/Height DPs (nested Sales columns).
-        If TypeOf HostObj Is UserControl Then ScaleDesignCanvas = True
-        If TypeOf HostObj Is Border Then ScaleDesignCanvas = True
-        If TypeOf HostObj Is Panel Then ScaleDesignCanvas = True
+        ' Single root under UserControl fills the host (Measure/Arrange panels).
+        If TypeOf HostObj Is UserControl Then
+            If Children.Count = 1 Then FillUserControlRoot = True
+        End If
     End If
     Err.Clear
     On Error GoTo 0
-
-    ScaleX = 1#
-    ScaleY = 1#
-    If ScaleDesignCanvas Then
-        DesignW = Width
-        DesignH = Height
-        If DesignW <= 0# Then DesignW = CDbl(HostWidth)
-        If DesignH <= 0# Then DesignH = CDbl(HostHeight)
-        If DesignW > 0# And HostWidth > 0! Then ScaleX = CDbl(HostWidth) / DesignW
-        If DesignH > 0# And HostHeight > 0! Then ScaleY = CDbl(HostHeight) / DesignH
-    End If
 
     For Each Child In Children
         If Not TypeOf Child Is IUIElement Then GoTo NextChild
@@ -220,17 +254,14 @@ Public Sub ArrangeChildren( _
         ChildVis = ReadChildVisibility(Child)
         If IsLayoutCollapsed(ChildVis) Then
             If TypeOf Child Is IControl Then
-                If HostWidget.Widgets.Exists(Child.Widget.Key) Then HostWidget.Widgets.Remove Child.Widget.Key
+                DetachCollapsedChild Child, HostWidget
             End If
             GoTo NextChild
         End If
 
         If Not TypeOf Child Is IControl Then GoTo NextChild
 
-        If HostWidget.Widgets.Exists(Child.Widget.Key) Then HostWidget.Widgets.Remove Child.Widget.Key
-        If Not HostWidget.Widgets.Exists(Child.Widget.Key) Then
-            HostWidget.Widgets.Add Child, "_" & ObjPtr(Child), , , , , IsWidgetVisible(ChildVis)
-        End If
+        AttachChildWidget Child, HostWidget, ChildVis
 
         ' Window content host (WPF): visible views fill the client area.
         If FillWindowContent Then
@@ -241,20 +272,17 @@ Public Sub ArrangeChildren( _
             End If
         End If
 
+        ' UserControl single root (typically Grid/Stack): fill client; no canvas scale.
+        If FillUserControlRoot Then
+            ChildUI.Move 0!, 0!, HostWidth, HostHeight
+            ApplyChildVisibility Child, ChildVis
+            GoTo NextChild
+        End If
+
+        ' Absolute Margin/Width/Height = fixed pixels on multi-child UC/Border/Panel.
         R = LayoutRectFromMargin(ReadChildMargin(Child), ReadChildWidth(Child), ReadChildHeight(Child))
         R.Width = CSng(ClampElementWidth(Child, R.Width))
         R.Height = CSng(ClampElementHeight(Child, R.Height))
-
-        ' Design canvas: scale absolute Margin/Width children when the host
-        ' widget is resized relative to Width/Height DPs (UC + nested Border/Panel).
-        If ScaleDesignCanvas Then
-            If Abs(ScaleX - 1#) > 0.0001 Or Abs(ScaleY - 1#) > 0.0001 Then
-                R.Left = CSng(R.Left * ScaleX)
-                R.Top = CSng(R.Top * ScaleY)
-                R.Width = CSng(R.Width * ScaleX)
-                R.Height = CSng(R.Height * ScaleY)
-            End If
-        End If
 
         ApplyLayoutRectToElement ChildUI, R
         ApplyChildVisibility Child, ChildVis
@@ -269,7 +297,22 @@ Public Sub OnHostResize( _
     Optional ByVal OverrideHostWidth As Single = 0, _
     Optional ByVal OverrideHostHeight As Single = 0)
 
+    Dim AW As Single
+    Dim AH As Single
+
     ArrangeChildren Children, HostWidget, OverrideHostWidth, OverrideHostHeight
+
+    If OverrideHostWidth > 0 Then
+        AW = OverrideHostWidth
+    ElseIf Not HostWidget Is Nothing Then
+        AW = HostWidget.Width
+    End If
+    If OverrideHostHeight > 0 Then
+        AH = OverrideHostHeight
+    ElseIf Not HostWidget Is Nothing Then
+        AH = HostWidget.Height
+    End If
+    ReportActualSize CDbl(AW), CDbl(AH)
 End Sub
 
 Public Function HandlesLayoutProperty(ByVal PropertyName As String) As Boolean
@@ -291,8 +334,10 @@ Public Sub OnLayoutPropertyChanged( _
     Select Case PropertyName
         Case "Visibility"
             ApplyVisibilityToWidget
+            InvalidateMeasure
             If Not Host Is Nothing Then InvalidateParentLayout Host
         Case "Width", "Height", "Margin", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight"
+            InvalidateMeasure
             OnHostResize Children, HostWidget, OverrideHostWidth, OverrideHostHeight
             If Not Host Is Nothing Then InvalidateParentLayout Host
     End Select
@@ -300,8 +345,9 @@ End Sub
 
 Private Sub SetDefaultLayoutValues()
     With Host.DependencyProperties
-        If .Exists("Width") Then .SetCurrentValue "Width", 300#
-        If .Exists("Height") Then .SetCurrentValue "Height", 300#
+        ' Unset Width/Height = 0 so MeasureLayout uses content (Auto tracks).
+        If .Exists("Width") Then .SetCurrentValue "Width", 0#
+        If .Exists("Height") Then .SetCurrentValue "Height", 0#
         If .Exists("MinWidth") Then .SetCurrentValue "MinWidth", 0#
         If .Exists("MinHeight") Then .SetCurrentValue "MinHeight", 0#
         If .Exists("MaxWidth") Then .SetCurrentValue "MaxWidth", 0#
@@ -399,8 +445,5 @@ Private Function ReadChildHeight(ByVal Child As Object) As Double
 End Function
 
 Private Sub ApplyChildVisibility(ByVal Child As Object, ByVal Value As Visibility)
-    On Error Resume Next
-    If TypeOf Child Is IControl Then
-        ApplyVisibility Child.Widget, Value
-    End If
+    ApplyChildWidgetVisibility Child, Value
 End Sub

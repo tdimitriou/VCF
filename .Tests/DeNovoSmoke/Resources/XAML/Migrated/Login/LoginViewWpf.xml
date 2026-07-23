@@ -1,0 +1,82 @@
+<UserControl x:Class="LoginView" DataContext="LoginViewModel" Width="1024" Height="768" Alpha="1" Margin="0,0,0,0">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="88"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="88"/>
+			<RowDefinition Height="25"/>
+		</Grid.RowDefinitions>
+
+		<!-- Header: brand + Clock In/Out (design band ~1024) -->
+		<Grid Grid.Row="0" Margin="16,8,16,0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="200"/>
+			</Grid.ColumnDefinitions>
+			<Border Grid.Column="0" CornerRadius="0" BorderColor="-1" BackColor="&HB1A200" Alpha="0" Width="283" Height="56" MaxWidth="283" MaxHeight="56" Margin="22,8,0,0">
+				<StackPanel Orientation="Vertical" Margin="5,0,0,0">
+					<TextBlock Text="D e N o v o" ForeColor="&HB1A200" FontSize="20" FontBold="1" ScaleFont="0" Width="273" Height="28"/>
+					<TextBlock Text="Retail Point Of Sales" ForeColor="&HFFFFFF" FontSize="16" FontBold="0" ScaleFont="0" Width="273" Height="28"/>
+				</StackPanel>
+			</Border>
+			<Button Grid.Column="1" Command="{Binding ClockInOutCommand, Source={StaticResource ResourceKey=AppCommands}}" Enabled="False" Width="200" Height="72" MaxWidth="200" MaxHeight="72">
+				<Image ImageKey="Resources\ClockIn.png" Margin="4,4,0,0" Width="64" Height="64"/>
+				<TextBlock Style="{StaticResource ButtonText12}" Text="Clock In/Out" Margin="68,4,0,0" Width="132" Height="64"/>
+			</Button>
+		</Grid>
+
+		<!-- Center design-sized login card (574x358) — matches prior absolute layout -->
+		<Grid Grid.Row="1">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="574"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="358"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+			<Border Grid.Row="1" Grid.Column="1" Style="{StaticResource InnerBorder}" Width="574" Height="358" MaxWidth="574" MaxHeight="358">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="204"/>
+						<ColumnDefinition Width="*"/>
+					</Grid.ColumnDefinitions>
+					<Border Grid.Column="0" Style="{StaticResource ListWrapper}" Margin="16,16,8,16">
+						<ListView Name="MyList" RowHeight="50" FontSize="14" FontBold="1" BorderColor="-1" Margin="4"/>
+					</Border>
+					<Grid Grid.Column="1" Margin="8,16,16,16">
+						<Grid.RowDefinitions>
+							<RowDefinition Height="48"/>
+							<RowDefinition Height="*"/>
+						</Grid.RowDefinitions>
+						<TextBox Grid.Row="0" Style="{StaticResource PasswordBox}" Name="Pwd" CueBanner="PASSWORD / PIN / SWIPE CARD" Text="{Binding PasswordText}" Height="40" Margin="0,0,0,8"/>
+						<UniformGrid Grid.Row="1" Columns="1" Rows="1" Padding="0" ShowGridLines="0">
+							<res:Migrated\Login\LoginPad/>
+						</UniformGrid>
+					</Grid>
+				</Grid>
+			</Border>
+		</Grid>
+
+		<!-- Chrome: Restart / Exit -->
+		<Grid Grid.Row="2" Margin="16,0,16,8">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="200"/>
+				<ColumnDefinition Width="200"/>
+			</Grid.ColumnDefinitions>
+			<Button Grid.Column="1" Style="{StaticResource ButtonSubmit}" Command="{Binding RestartCommand, Source={StaticResource ResourceKey=AppCommands}}" Margin="0,0,16,0" Width="200" Height="72" MaxWidth="200" MaxHeight="72">
+				<Image ImageKey="Resources\Reboot.png" Margin="4,4,0,0" Width="64" Height="64"/>
+				<TextBlock Style="{StaticResource ButtonText12}" Text="{Binding Text[Restart], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}" Margin="68,4,0,0" Width="132" Height="64"/>
+			</Button>
+			<Button Grid.Column="2" Style="{StaticResource ButtonCancel}" Command="{Binding ShutdownCommand, Source={StaticResource ResourceKey=AppCommands}}" Width="200" Height="72" MaxWidth="200" MaxHeight="72">
+				<Image ImageKey="Resources\Close.png" Margin="4,4,0,0" Width="64" Height="64"/>
+				<TextBlock Style="{StaticResource ButtonText12}" Text="{Binding Text[Exit], Source={StaticResource ResourceKey=LanguageManager}, Converter=CaseConverter, ConverterParameter=Title}" Margin="68,4,0,0" Width="132" Height="64"/>
+			</Button>
+		</Grid>
+
+		<res:Migrated\Widgets\StatusBar Grid.Row="3" Height="25"/>
+	</Grid>
+</UserControl>

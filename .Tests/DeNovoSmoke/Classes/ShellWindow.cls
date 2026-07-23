@@ -50,13 +50,13 @@ Public Sub InitializeViews()
     End If
     
     Set m_MainMenu = New HarnessScreen
-    m_MainMenu.Configure "Screens\MainMenu\MainMenuView", False
+    m_MainMenu.Configure MainMenuViewResourceKey(), False
     If modHarnessConfig.EAGER_MAINMENU_LOAD Then
         modHarnessLoadBench.TimedLoadView m_MainMenu, "P7d-LOAD-MAINMENU"
     End If
     
     Set m_Sales = New HarnessScreen
-    m_Sales.Configure "Screens\SalesOrder\SalesOrderView", False
+    m_Sales.Configure SalesOrderViewResourceKey(), False
     If modHarnessConfig.EAGER_SALES_LOAD Then
         modHarnessLoadBench.TimedLoadView m_Sales, "P7d-LOAD-SALES"
     End If
@@ -108,7 +108,7 @@ End Sub
 Private Sub EnsureMainMenuLoaded()
     If m_MainMenu Is Nothing Then
         Set m_MainMenu = New HarnessScreen
-        m_MainMenu.Configure "Screens\MainMenu\MainMenuView", False
+        m_MainMenu.Configure MainMenuViewResourceKey(), False
     End If
     If Not m_MainMenu.IsViewLoaded Then
         modHarnessLoadBench.TimedLoadView m_MainMenu, "P7d-LOAD-MAINMENU"
@@ -118,7 +118,7 @@ End Sub
 Private Sub EnsureSalesLoaded()
     If m_Sales Is Nothing Then
         Set m_Sales = New HarnessScreen
-        m_Sales.Configure "Screens\SalesOrder\SalesOrderView", False
+        m_Sales.Configure SalesOrderViewResourceKey(), False
     End If
     If Not m_Sales.IsViewLoaded Then
         modHarnessLoadBench.TimedLoadView m_Sales, "P7d-LOAD-SALES"

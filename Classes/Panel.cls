@@ -154,6 +154,26 @@ Public Name As String
         m_Layout.MaxHeight = Value
     End Property
 
+    Public Property Get DesiredWidth() As Double
+        DesiredWidth = m_Layout.DesiredWidth
+    End Property
+
+    Public Property Get DesiredHeight() As Double
+        DesiredHeight = m_Layout.DesiredHeight
+    End Property
+
+    Public Property Get ActualWidth() As Double
+        ActualWidth = m_Layout.ActualWidth
+    End Property
+
+    Public Property Get ActualHeight() As Double
+        ActualHeight = m_Layout.ActualHeight
+    End Property
+
+    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+        m_Layout.Measure AvailableWidth, AvailableHeight
+    End Sub
+
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
         
@@ -195,8 +215,8 @@ Public Name As String
         m_Layout.Initialize Me, Me, W
         m_Layout.RegisterLayoutProperties "Panel"
         
-        m_Layout.Width = 300
-        m_Layout.Height = 300
+        m_Layout.Width = 0
+        m_Layout.Height = 0
         m_Layout.Visibility = VisibilityVisible
         
         NewUIElementBase Me, m_BaseUIElement
@@ -306,10 +326,12 @@ End Sub
 '#Region Private Methods
     Private Sub MoveChild(Child As Object)
         m_Layout.ArrangeChildren m_Children, W
+        m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
     End Sub
 
     Friend Sub RelayoutChildren()
         m_Layout.ArrangeChildren m_Children, W
+        m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
     End Sub
 '#End Region
 
