@@ -5,6 +5,47 @@
 
 ---
 
+## [3.21.0] — 2026-07-24 — Canvas panel
+
+### Added
+- **`Canvas`** — absolute child positioning via **`Canvas.Left` / `Canvas.Top`** (Double DPs, default 0).
+- **`GetLeft` / `SetLeft` / `GetTop` / `SetTop`**, Measure/Arrange bounding-box content size.
+- **`EnsureAttachedProperty`** uses registry **PropertyType** (so Canvas Left/Top register as `vbDouble`, not Long).
+- Phase0 **P2-CANVAS-XAML**, **P2-CANVAS-LAY**. Suite **83**.
+
+- DLL version **3.21.0**.
+
+## [3.20.0] — 2026-07-23 — Path=(Attached.Prop) source syntax
+
+### Added
+- **`NestedProperty`** parses WPF **`Path=(Grid.Row)`** / **`(DockPanel.Dock)`** — reads/writes the source’s attached DP bag (EnsureAttached + GetValue/SetValue).
+- Subscribes to the attached DP’s **PropertyChanged** for live OneWay updates.
+- Phase0 **P4-BIND-APATH**. Suite **81**.
+
+- DLL version **3.20.0**.
+
+## [3.19.0] — 2026-07-23 — Binding to attached DPs
+
+### Added
+- **`EnsureAttachedTargetIfRegistered`** — before binding Attach/`CreateBinding`, lazy-registers registered attached names (`Grid.Row`, `DockPanel.Dock`, …) on the target bag.
+- Enables **`Expr.Attach Target, "Grid.Row", …`** and XAML **`Grid.Row="{Binding RowIndex}"`** without a prior `SetRow`/`EnsureAttached`.
+- Phase0 **P4-BIND-ATTACH**. Suite **80**.
+
+### Notes
+- OneWay **to** attached target DPs. Source `Path=(Grid.Row)` parentheses syntax still deferred.
+
+- DLL version **3.19.0**.
+
+## [3.18.0] — 2026-07-23 — MeasureOverride / ArrangeOverride surface
+
+### Added
+- **`MeasureOverride` / `ArrangeOverride`** on layout hosts (`StackPanel`, `Grid`, `DockPanel`, `Border`, `ContentControl`, `UniformGrid`, `Panel`) — WPF-named duck-typed entry points (VB6 has no FE inheritance).
+- **`MeasureLayout`** remains a one-line **compat alias** → `MeasureOverride`.
+- **`MeasureElementSize`** prefers `CallByName` **`MeasureOverride`**, falls back to **`MeasureLayout`**.
+- Phase0 **P2-MEAS-OVR**. Suite **79**.
+
+- DLL version **3.18.0**.
+
 ## [3.17.0] — 2026-07-23 — DockPanel
 
 ### Added

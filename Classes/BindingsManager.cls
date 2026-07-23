@@ -51,6 +51,7 @@ Private Function CreateBinding(ArgList As Variant, _
     
     Set Obj = New Binding
         
+    EnsureAttachedTargetIfRegistered Target, TargetProperty
     If Not Target.DependencyProperties.Exists(TargetProperty) Then Exit Function
     
     Set Obj.TargetProperty = Target.DependencyProperties.GetProperty(TargetProperty)

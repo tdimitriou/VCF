@@ -209,7 +209,7 @@ End Sub
     End Property
 
     ' IUIElement Content child: Desired = child Width/Height (content-driven when host unset).
-    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+    Public Sub MeasureOverride(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
         Dim ContentW As Double
         Dim ContentH As Double
         Dim DesiredW As Double
@@ -244,6 +244,10 @@ End Sub
         m_Layout.Measure AvailableWidth, AvailableHeight
         m_DesiredWidth = m_Layout.DesiredWidth
         m_DesiredHeight = m_Layout.DesiredHeight
+    End Sub
+
+    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+        MeasureOverride AvailableWidth, AvailableHeight
     End Sub
 
     Private Function ReadChildLayoutWidth(ByVal Child As Object) As Double
@@ -458,12 +462,12 @@ Catch:
         ArrangeContent
     End Sub
 
-    Private Sub ArrangeContent()
+    Public Sub ArrangeOverride(ByVal FinalWidth As Double, ByVal FinalHeight As Double)
         If W Is Nothing Then Exit Sub
         If m_Layout Is Nothing Then Exit Sub
 
         ' Measure Desired* even if arrange attach fails later.
-        MeasureLayout CDbl(W.Width), CDbl(W.Height)
+        MeasureOverride FinalWidth, FinalHeight
 
         On Error GoTo AfterArrange
         If Not m_Children Is Nothing Then
@@ -473,9 +477,14 @@ Catch:
         End If
 
 AfterArrange:
-        m_ActualWidth = CDbl(W.Width)
-        m_ActualHeight = CDbl(W.Height)
+        m_ActualWidth = FinalWidth
+        m_ActualHeight = FinalHeight
         m_Layout.ReportActualSize m_ActualWidth, m_ActualHeight
+    End Sub
+
+    Private Sub ArrangeContent()
+        If W Is Nothing Then Exit Sub
+        ArrangeOverride CDbl(W.Width), CDbl(W.Height)
     End Sub
 
     Public Sub RelayoutChildren()

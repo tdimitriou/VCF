@@ -1,0 +1,4 @@
+<Canvas Width="200" Height="200">
+	<Panel Name="AtOrigin" Canvas.Left="10" Canvas.Top="20" Width="40" Height="30"/>
+	<Panel Name="Offset" Canvas.Left="80" Canvas.Top="100" Width="50" Height="40"/>
+</Canvas>

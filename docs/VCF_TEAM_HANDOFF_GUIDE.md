@@ -236,8 +236,12 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **Grid cell alignment** — ~~HorizontalAlignment/VerticalAlignment in ArrangeGridChildren + P2-GRID-ALIGN~~ (**3.15.0** / suite **76**)
   **Attached storage → DP bag** — ~~lazy EnsureAttached Grid.* + ClearValue + P2-GRID-ATTACH-DP~~ (**3.16.0** / suite **77**); dict shim retained
   **DockPanel** — ~~LastChildFill + DockPanel.Dock + Measure/Arrange + P2-DOCK-*~~ (**3.17.0** / suite **78**)
+  **MeasureOverride / ArrangeOverride** — ~~WPF-named Public surface + MeasureLayout alias + P2-MEAS-OVR~~ (**3.18.0** / suite **79**)
+  **Attached DP binding** — ~~OneWay to Grid.Row / DockPanel.Dock + P4-BIND-ATTACH~~ (**3.19.0** / suite **80**)
+  **Path=(Attached.Prop)** — ~~source parentheses + P4-BIND-APATH~~ (**3.20.0** / suite **81**)
+  **Canvas** — ~~Canvas.Left/Top + Measure/Arrange + P2-CANVAS-*~~ (**3.21.0** / suite **83**)
   **Full WPF DP precedence stack** — **deferred** roadmap epic (not now) — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) (~2–3 mo core)
-  **Overlaps next** — MeasureOverride/ArrangeOverride public surface; or attached binding expressions
+  **Overlaps next** — full DP precedence stack; or POS Phase 2b pin
   **B-RESZ** / **B-NAV** — ~~Phase0 benches~~
   **ListView bind hotspot** — ~~B-BIND-DENSE~~ (clone preserves bindings; 21×6 gate)
   **Margin/Padding family 1** — ~~ListView Margin=0 Padding=4,1,4,1~~ (**P2a-PAD**)

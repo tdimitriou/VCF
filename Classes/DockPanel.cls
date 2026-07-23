@@ -185,7 +185,7 @@ End Property
         ActualHeight = m_Layout.ActualHeight
     End Property
 
-    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+    Public Sub MeasureOverride(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
         Dim ContentW As Double
         Dim ContentH As Double
         Dim DesiredW As Double
@@ -205,6 +205,10 @@ End Property
         DesiredW = ClampElementWidth(Me, DesiredW)
         DesiredH = ClampElementHeight(Me, DesiredH)
         m_Layout.ReportDesiredSize DesiredW, DesiredH
+    End Sub
+
+    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+        MeasureOverride AvailableWidth, AvailableHeight
     End Sub
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
@@ -354,14 +358,19 @@ Private Sub MoveChild(Child As Object)
     ArrangePanel
 End Sub
 
-    Private Sub ArrangePanel()
+    Public Sub ArrangeOverride(ByVal FinalWidth As Double, ByVal FinalHeight As Double)
         If W Is Nothing Then Exit Sub
         If m_Layout Is Nothing Then Exit Sub
         If m_Children Is Nothing Then Exit Sub
 
-        MeasureLayout CDbl(W.Width), CDbl(W.Height)
-        ArrangeDockPanelChildren m_Children, W, m_LastChildFill
-        m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
+        MeasureOverride FinalWidth, FinalHeight
+        ArrangeDockPanelChildren m_Children, W, m_LastChildFill, CSng(FinalWidth), CSng(FinalHeight)
+        m_Layout.ReportActualSize FinalWidth, FinalHeight
+    End Sub
+
+    Private Sub ArrangePanel()
+        If W Is Nothing Then Exit Sub
+        ArrangeOverride CDbl(W.Width), CDbl(W.Height)
     End Sub
 
     Friend Sub RelayoutChildren()

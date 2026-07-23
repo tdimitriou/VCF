@@ -38,6 +38,7 @@ Public Sub RunAll()
     If Not Phase2Bench_StackPanelXaml() Then Failed = Failed + 1
     If Not Phase2Bench_StackPanelLayout() Then Failed = Failed + 1
     If Not Phase2Bench_StackPanelMeasure() Then Failed = Failed + 1
+    If Not Phase2Bench_MeasureOverrideAlias() Then Failed = Failed + 1
     If Not Phase2Bench_GridRowDefinitionsXaml() Then Failed = Failed + 1
     If Not Phase2Bench_GridAttachedCode() Then Failed = Failed + 1
     If Not Phase2Bench_GridAttachedXaml() Then Failed = Failed + 1
@@ -46,11 +47,15 @@ Public Sub RunAll()
     If Not Phase2Bench_GridAttachedDpBag() Then Failed = Failed + 1
     If Not Phase2Bench_DockPanelXaml() Then Failed = Failed + 1
     If Not Phase2Bench_DockPanelLayout() Then Failed = Failed + 1
+    If Not Phase2Bench_CanvasXaml() Then Failed = Failed + 1
+    If Not Phase2Bench_CanvasLayout() Then Failed = Failed + 1
     If Not Phase3Bench_MergedDictionaryLookup() Then Failed = Failed + 1
     If Not Phase3Bench_ResourceSourceLoad() Then Failed = Failed + 1
     If Not Phase3Bench_DynamicResourceExtension() Then Failed = Failed + 1
     If Not Phase3Bench_StrictUnknownProperty() Then Failed = Failed + 1
     If Not Phase4Bench_BindingOneWay() Then Failed = Failed + 1
+    If Not Phase4Bench_BindingAttached() Then Failed = Failed + 1
+    If Not Phase4Bench_BindingAttachedPath() Then Failed = Failed + 1
     If Not Phase4Bench_DataContextRebind() Then Failed = Failed + 1
     If Not Phase4Bench_BindingDetach() Then Failed = Failed + 1
     If Not Phase4Bench_DpPrecedence() Then Failed = Failed + 1
@@ -103,7 +108,7 @@ Public Sub RunAll()
 
     ' Report only ? do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (78 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (83 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -705,6 +710,63 @@ Fail:
     Err.Clear
 End Function
 
+Public Function Phase2Bench_MeasureOverrideAlias() As Boolean
+    Dim Sp As StackPanel
+    Dim P1 As Panel
+    Dim P2 As Panel
+    Dim Dw As Double
+    Dim Dh As Double
+
+    On Error GoTo Fail
+
+    Set Sp = New StackPanel
+    Sp.Orientation = OrientationVertical
+    Sp.Width = 0
+    Sp.Height = 0
+
+    Set P1 = New Panel
+    P1.Width = 100
+    P1.Height = 40
+    Set P2 = New Panel
+    P2.Width = 100
+    P2.Height = 60
+
+    Sp.Children.Add P1
+    Sp.Children.Add P2
+
+    ' Explicit MeasureOverride (WPF name / CallByName path).
+    CallByName Sp, "MeasureOverride", VbMethod, 200#, 300#
+    Dw = Sp.DesiredWidth
+    Dh = Sp.DesiredHeight
+    If Abs(Dw - 100#) > 0.5 Then Err.Raise vbObjectError, , "MeasureOverride DesiredWidth expected 100, got " & Dw
+    If Abs(Dh - 100#) > 0.5 Then Err.Raise vbObjectError, , "MeasureOverride DesiredHeight expected 100, got " & Dh
+
+    ' MeasureLayout alias must match.
+    CallByName Sp, "MeasureLayout", VbMethod, 200#, 300#
+    If Abs(Sp.DesiredWidth - Dw) > 0.01 Then Err.Raise vbObjectError, , "MeasureLayout DesiredWidth mismatch"
+    If Abs(Sp.DesiredHeight - Dh) > 0.01 Then Err.Raise vbObjectError, , "MeasureLayout DesiredHeight mismatch"
+
+    ' ArrangeOverride positions children.
+    Sp.Widget.Move 0, 0, 200, 300
+    Sp.ArrangeOverride 200#, 300#
+    If Abs(P2.Widget.Top - 40!) > 1! Then Err.Raise vbObjectError, , "ArrangeOverride P2.Top expected 40, got " & P2.Widget.Top
+    If Abs(Sp.ActualWidth - 200#) > 0.5 Then Err.Raise vbObjectError, , "ActualWidth expected 200, got " & Sp.ActualWidth
+
+    KeepAlive Sp
+    LogResult "P2-MEAS-OVR", 0, "OK MeasureOverride/MeasureLayout alias + ArrangeOverride"
+    Debug.Print "PASS  P2-MEAS-OVR MeasureOverride alias + ArrangeOverride"
+    Phase2Bench_MeasureOverrideAlias = True
+    Exit Function
+
+Fail:
+    LogResult "P2-MEAS-OVR", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-MEAS-OVR - " & Err.Description
+    Phase2Bench_MeasureOverrideAlias = False
+    On Error Resume Next
+    KeepAlive Sp
+    Err.Clear
+End Function
+
 Public Function Phase2Bench_GridRowDefinitionsXaml() As Boolean
     Dim Reader As XAMLReader
     Dim Root As Object
@@ -1167,6 +1229,101 @@ Fail:
     Err.Clear
 End Function
 
+Public Function Phase2Bench_CanvasXaml() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As Canvas
+    Dim AtOrigin As Panel
+    Dim Offset As Panel
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load(LoadTextFile(App.Path & "\Resources\LayoutCanvas.xml"))
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "LayoutCanvas returned Nothing"
+    If Root.Children.Count <> 2 Then Err.Raise vbObjectError, , "Expected 2 children, got " & Root.Children.Count
+
+    Set AtOrigin = Root.Children(0)
+    Set Offset = Root.Children(1)
+
+    If Abs(Root.GetLeft(AtOrigin) - 10#) > 0.01 Then Err.Raise vbObjectError, , "GetLeft AtOrigin expected 10"
+    If Abs(Root.GetTop(AtOrigin) - 20#) > 0.01 Then Err.Raise vbObjectError, , "GetTop AtOrigin expected 20"
+    If Abs(Root.GetLeft(Offset) - 80#) > 0.01 Then Err.Raise vbObjectError, , "GetLeft Offset expected 80"
+
+    Root.Widget.Move 0, 0, 200, 200
+
+    If Abs(AtOrigin.Widget.Left - 10!) > 2! Or Abs(AtOrigin.Widget.Top - 20!) > 2! Then
+        Err.Raise vbObjectError, , "AtOrigin expected (10,20), got (" & AtOrigin.Widget.Left & "," & AtOrigin.Widget.Top & ")"
+    End If
+    If Abs(Offset.Widget.Left - 80!) > 2! Or Abs(Offset.Widget.Top - 100!) > 2! Then
+        Err.Raise vbObjectError, , "Offset expected (80,100), got (" & Offset.Widget.Left & "," & Offset.Widget.Top & ")"
+    End If
+
+    KeepAlive Root
+    LogResult "P2-CANVAS-XAML", 0, "OK Canvas.Left/Top XAML positions"
+    Debug.Print "PASS  P2-CANVAS-XAML Canvas.Left/Top XAML positions"
+    Phase2Bench_CanvasXaml = True
+    Exit Function
+
+Fail:
+    LogResult "P2-CANVAS-XAML", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-CANVAS-XAML - " & Err.Description
+    Phase2Bench_CanvasXaml = False
+    On Error Resume Next
+    KeepAlive Root
+    Err.Clear
+End Function
+
+Public Function Phase2Bench_CanvasLayout() As Boolean
+    Dim Cv As Canvas
+    Dim A As Panel
+    Dim B As Panel
+
+    On Error GoTo Fail
+
+    Set Cv = New Canvas
+    Cv.Width = 200
+    Cv.Height = 200
+    Cv.Widget.Move 0, 0, 200, 200
+
+    Set A = New Panel
+    A.Width = 30
+    A.Height = 20
+    Set B = New Panel
+    B.Width = 40
+    B.Height = 25
+
+    Cv.SetLeft A, 15
+    Cv.SetTop A, 25
+    Cv.SetLeft B, 100
+    Cv.SetTop B, 50
+
+    Cv.Children.Add A
+    Cv.Children.Add B
+    Cv.Widget.Move 0, 0, 200, 200
+
+    If Abs(A.Widget.Left - 15!) > 2! Or Abs(A.Widget.Top - 25!) > 2! Then
+        Err.Raise vbObjectError, , "A expected (15,25), got (" & A.Widget.Left & "," & A.Widget.Top & ")"
+    End If
+    If Abs(B.Widget.Left - 100!) > 2! Or Abs(B.Widget.Top - 50!) > 2! Then
+        Err.Raise vbObjectError, , "B expected (100,50), got (" & B.Widget.Left & "," & B.Widget.Top & ")"
+    End If
+
+    KeepAlive Cv
+    LogResult "P2-CANVAS-LAY", 0, "OK SetLeft/SetTop arrange"
+    Debug.Print "PASS  P2-CANVAS-LAY Canvas SetLeft/SetTop arrange"
+    Phase2Bench_CanvasLayout = True
+    Exit Function
+
+Fail:
+    LogResult "P2-CANVAS-LAY", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-CANVAS-LAY - " & Err.Description
+    Phase2Bench_CanvasLayout = False
+    On Error Resume Next
+    KeepAlive Cv
+    Err.Clear
+End Function
+
 Public Function Phase3Bench_MergedDictionaryLookup() As Boolean
     Dim Root As ResourceDictionary
     Dim Child As ResourceDictionary
@@ -1320,6 +1477,103 @@ Fail:
     LogResult "P4-BIND", 0, "FAIL: " & Err.Description
     Debug.Print "FAIL  P4-BIND ? " & Err.Description
     Phase4Bench_BindingOneWay = False
+End Function
+
+Public Function Phase4Bench_BindingAttached() As Boolean
+    Dim Vm As Phase0ViewModel
+    Dim G As Grid
+    Dim Child As Panel
+    Dim Expr As BindingExpression
+
+    On Error GoTo Fail
+
+    Set Vm = New Phase0ViewModel
+    Vm.RowIndex = 1
+
+    Set G = New Grid
+    Set Child = New Panel
+    ' Grid.Row not EnsureAttached yet — Attach must lazy-register then bind.
+    Set Expr = New BindingExpression
+    Expr.Attach Child, "Grid.Row", Vm, "RowIndex", OneWay
+    If Expr.Binding Is Nothing Then Err.Raise vbObjectError, , "Attach to Grid.Row failed (no Binding)"
+
+    If Not Child.DependencyProperties.Exists("Grid.Row") Then
+        Err.Raise vbObjectError, , "Grid.Row not registered on target after Attach"
+    End If
+    If CLng(Child.DependencyProperties.GetValue("Grid.Row")) <> 1 Then
+        Err.Raise vbObjectError, , "Expected Grid.Row=1, got " & Child.DependencyProperties.GetValue("Grid.Row")
+    End If
+    If G.GetRow(Child) <> 1 Then Err.Raise vbObjectError, , "GetRow expected 1, got " & G.GetRow(Child)
+
+    Vm.RowIndex = 2
+    If CLng(Child.DependencyProperties.GetValue("Grid.Row")) <> 2 Then
+        Err.Raise vbObjectError, , "Expected Grid.Row=2 after INPC, got " & Child.DependencyProperties.GetValue("Grid.Row")
+    End If
+    If G.GetRow(Child) <> 2 Then Err.Raise vbObjectError, , "GetRow expected 2 after INPC, got " & G.GetRow(Child)
+
+    KeepAlive G
+    KeepAlive Child
+    LogResult "P4-BIND-ATTACH", 0, "OK OneWay Grid.Row binding + INPC"
+    Debug.Print "PASS  P4-BIND-ATTACH OneWay binding to Grid.Row + INPC"
+    Expr.Detach
+    Set Expr = Nothing
+    Phase4Bench_BindingAttached = True
+    Exit Function
+
+Fail:
+    On Error Resume Next
+    If Not Expr Is Nothing Then Expr.Detach
+    LogResult "P4-BIND-ATTACH", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4-BIND-ATTACH - " & Err.Description
+    Phase4Bench_BindingAttached = False
+    KeepAlive G
+    KeepAlive Child
+End Function
+
+Public Function Phase4Bench_BindingAttachedPath() As Boolean
+    Dim G As Grid
+    Dim Src As Panel
+    Dim Dst As Panel
+    Dim Expr As BindingExpression
+
+    On Error GoTo Fail
+
+    Set G = New Grid
+    Set Src = New Panel
+    Set Dst = New Panel
+
+    G.SetRow Src, 2
+
+    ' Source Path=(Grid.Row) reads attached DP from Src into Dst.Grid.Column
+    Set Expr = New BindingExpression
+    Expr.Attach Dst, "Grid.Column", Src, "(Grid.Row)", OneWay
+    If Expr.Binding Is Nothing Then Err.Raise vbObjectError, , "Attach Path=(Grid.Row) failed"
+
+    If G.GetColumn(Dst) <> 2 Then Err.Raise vbObjectError, , "Expected Column=2 from Path=(Grid.Row), got " & G.GetColumn(Dst)
+
+    ' Live update via attached DP PropertyChanged on source
+    G.SetRow Src, 3
+    If G.GetColumn(Dst) <> 3 Then Err.Raise vbObjectError, , "Expected Column=3 after SetRow, got " & G.GetColumn(Dst)
+
+    KeepAlive G
+    KeepAlive Src
+    KeepAlive Dst
+    LogResult "P4-BIND-APATH", 0, "OK Path=(Grid.Row) + live update"
+    Debug.Print "PASS  P4-BIND-APATH Path=(Grid.Row) source + live update"
+    Expr.Detach
+    Set Expr = Nothing
+    Phase4Bench_BindingAttachedPath = True
+    Exit Function
+
+Fail:
+    On Error Resume Next
+    If Not Expr Is Nothing Then Expr.Detach
+    LogResult "P4-BIND-APATH", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4-BIND-APATH - " & Err.Description
+    Phase4Bench_BindingAttachedPath = False
+    KeepAlive G
+    KeepAlive Src
+    KeepAlive Dst
 End Function
 
 Public Function Phase4Bench_DataContextRebind() As Boolean

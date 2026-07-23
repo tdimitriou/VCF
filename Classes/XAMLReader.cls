@@ -656,7 +656,8 @@ Private Sub SetAttachedProperty(ByVal Obj As IUIElement, ByVal PropertyName As S
     Dim FullName As String
     Dim Reg As DependencyPropertyRegistry
     Dim Dep As IDependencyObject
-    Dim Coerced As Long
+    Dim Coerced As Variant
+    Dim PropType As VbVarType
             
     PropData = Split(PropertyName, ".")
     If UBound(PropData) < 1 Then Exit Sub
@@ -697,10 +698,15 @@ Private Sub SetAttachedProperty(ByVal Obj As IUIElement, ByVal PropertyName As S
             If Dep.DependencyProperties.Exists(FullName) Then
                 If LCase$(FullName) = "dockpanel.dock" Then
                     Coerced = ParseDock(CStr(Value))
-                ElseIf IsNumeric(Value) Then
-                    Coerced = CLng(Value)
                 Else
-                    Coerced = CLng(Val(CStr(Value)))
+                    PropType = Reg.GetAttachedPropertyType(FullName)
+                    If PropType = vbDouble Then
+                        Coerced = CDbl(Val(CStr(Value)))
+                    ElseIf IsNumeric(Value) Then
+                        Coerced = CLng(Value)
+                    Else
+                        Coerced = CLng(Val(CStr(Value)))
+                    End If
                 End If
                 Dep.DependencyProperties.SetValue FullName, Coerced
             End If

@@ -56,7 +56,13 @@ These are set via XAML `CallByName` / fields — **outside** binding/style prece
 
 **3.17.0:** **`DockPanel.Dock`** (default `Left` / 0) + **`DockPanel.GetDock` / `SetDock`**.
 
-**Storage:** per-element `DependencyProperties` (`Grid.Row`, `DockPanel.Dock`, …) via lazy **`EnsureAttachedProperty`** on Set/XAML (**3.16.0**); nested `AttachedProperties("Grid"|"DockPanel")` dict kept as shim for writers/legacy.
+**3.19.0:** Binding **to** attached target DPs — `EnsureAttachedTargetIfRegistered` before Attach / XAML `{Binding}` so `Grid.Row="{Binding …}"` works without a prior Set.
+
+**3.20.0:** Binding **from** attached source — `Path=(Grid.Row)` / `(DockPanel.Dock)` via `NestedProperty` (DP bag Get/Set + live PropertyChanged).
+
+**3.21.0:** **`Canvas.Left` / `Canvas.Top`** (Double) + Canvas panel absolute arrange.
+
+**Storage:** per-element `DependencyProperties` (`Grid.Row`, `DockPanel.Dock`, `Canvas.Left`, …) via lazy **`EnsureAttachedProperty`** on Set/XAML/binding (**3.16.0** / **3.19.0**); nested `AttachedProperties` dict kept as shim for writers/legacy. EnsureAttached uses registry **PropertyType**.
 
 **Done (3.16.0):** migrate `Grid.*` into the target DP bag; layout/`Get*` read DP (ClearValue → metadata default); dict shim retained. Do **not** eager-register attached DPs on every instance.
 

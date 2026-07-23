@@ -23,9 +23,14 @@ Private m_Path                      As String
 Private m_Name                      As String
 Private m_Child                     As NestedProperty
 Attribute m_Child.VB_VarHelpID = -1
+Private m_IsAttachedPath            As Boolean
+Private m_AttachedFullName          As String
 
 Private PathList                    As Variant
 Private Param                       As Variant
+
+Private WithEvents AttachedDpNotifier As PropertyChangedEvent
+Attribute AttachedDpNotifier.VB_VarHelpID = -1
 
 Public Event ValueChanged(ByVal Sender As Object, e As Variant)
 
@@ -52,6 +57,11 @@ End Property
 Public Property Set Source(ByVal Value As Object)
     
     m_SourcePtr = ObjPtr(Value)
+
+    If m_IsAttachedPath Then
+        HookAttachedDpNotifier
+        Exit Property
+    End If
     
     If Child Is Nothing Then Exit Property
     
@@ -110,6 +120,11 @@ End Sub
 'CSEH: ErrMsgBox
 Public Function GetValue() As Variant
     If Me.Source Is Nothing Then Exit Function
+
+    If m_IsAttachedPath Then
+        Call API.CopyVariable(GetAttachedDpValue(Me.Source), GetValue)
+        Exit Function
+    End If
     
     ' Aka : (Set) GetValue = Me.Source.Name
     If IsNull(Param) Or IsEmpty(Param) Then
@@ -152,6 +167,10 @@ Friend Sub SetVal(ByVal Target As Object, Value)
     End If
     
     If Me.Child Is Nothing Then
+        If m_IsAttachedPath Then
+            SetAttachedDpValue Target, Value
+            Exit Sub
+        End If
         If IsNull(Param) Or IsEmpty(Param) Then
             If IsObject(Value) Then
                 CallByName Target, Name, VbSet, Value
@@ -187,6 +206,28 @@ Try:
     On Error GoTo Catch
     
     Dim Arg As String
+    Dim T As String
+
+    T = Trim$(vPath)
+    ' WPF attached source path: Path=(Grid.Row) — single segment, DP bag Get/Set.
+    If Len(T) >= 3 Then
+        If Left$(T, 1) = "(" And Right$(T, 1) = ")" Then
+            m_IsAttachedPath = True
+            m_AttachedFullName = Trim$(Mid$(T, 2, Len(T) - 2))
+            m_Path = T
+            Name = m_AttachedFullName
+            PathList = Array(m_AttachedFullName)
+            Set Parent = vParent
+            Set Source = vSource
+            HookAttachedDpNotifier
+            Exit Function
+        End If
+    End If
+
+    m_IsAttachedPath = False
+    m_AttachedFullName = vbNullString
+    Set AttachedDpNotifier = Nothing
+
     Arg = GetBracketedContent(vPath)
 
     vPath = Replace$(vPath, Arg, Chr(17))
@@ -212,12 +253,6 @@ Try:
     
     SetupChildSource
     
-'    Debug.Print "Name: " & Name & _
-'                ", Child: " & TypeName(Child) & _
-'                ", Path: " & Path & _
-'                ", ChildNotifier: " & TypeName(ChildNotifier) & "(" & (ChildNotifier Is Nothing) & ")" & _
-'                ", Source: " & TypeName(Source)
-
     Exit Function
     
 Catch:
@@ -225,6 +260,51 @@ Catch:
     If Err Then Err.Clear
     
 End Function
+
+Private Function GetAttachedDpValue(ByVal Src As Object) As Variant
+    Dim Dep As IDependencyObject
+
+    If Src Is Nothing Then Exit Function
+    If Not TypeOf Src Is IDependencyObject Then Exit Function
+    Set Dep = Src
+    EnsureAttachedProperty Dep, m_AttachedFullName
+    If Dep.DependencyProperties Is Nothing Then Exit Function
+    If Not Dep.DependencyProperties.Exists(m_AttachedFullName) Then Exit Function
+    Call API.CopyVariable(Dep.DependencyProperties.GetValue(m_AttachedFullName), GetAttachedDpValue)
+End Function
+
+Private Sub SetAttachedDpValue(ByVal Src As Object, Value)
+    Dim Dep As IDependencyObject
+
+    If Src Is Nothing Then Exit Sub
+    If Not TypeOf Src Is IDependencyObject Then Exit Sub
+    Set Dep = Src
+    EnsureAttachedProperty Dep, m_AttachedFullName
+    If Dep.DependencyProperties Is Nothing Then Exit Sub
+    If Not Dep.DependencyProperties.Exists(m_AttachedFullName) Then Exit Sub
+    Dep.DependencyProperties.SetValue m_AttachedFullName, Value
+End Sub
+
+Private Sub HookAttachedDpNotifier()
+    Dim Dep As IDependencyObject
+    Dim Prop As DependencyProperty
+
+    Set AttachedDpNotifier = Nothing
+    On Error Resume Next
+    If Me.Source Is Nothing Then Exit Sub
+    If Not TypeOf Me.Source Is IDependencyObject Then Exit Sub
+    Set Dep = Me.Source
+    EnsureAttachedProperty Dep, m_AttachedFullName
+    If Not Dep.DependencyProperties.Exists(m_AttachedFullName) Then Exit Sub
+    Set Prop = Dep.DependencyProperties.GetProperty(m_AttachedFullName)
+    Set AttachedDpNotifier = Prop.PropertyChangedEvent
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
+Private Sub AttachedDpNotifier_PropertyChanged(ByVal Sender As Object, e As Variant)
+    OnValueChanged Me, m_AttachedFullName
+End Sub
 
 Private Function GetBracketedContent(ByVal Path As String) As String
         
@@ -313,9 +393,12 @@ End Function
 
 Friend Sub Detach()
     If Not ChildNotifier Is Nothing Then Set ChildNotifier = Nothing
+    Set AttachedDpNotifier = Nothing
     Set m_Child = Nothing
     m_SourcePtr = 0
     m_ParentPtr = 0
+    m_IsAttachedPath = False
+    m_AttachedFullName = vbNullString
 End Sub
 
 Private Sub Class_Terminate()

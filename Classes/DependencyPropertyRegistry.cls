@@ -70,6 +70,16 @@ Public Function GetAttachedDefault(ByVal FullName As String) As Variant
     GetAttachedDefault = Entry(3)
 End Function
 
+Public Function GetAttachedPropertyType(ByVal FullName As String) As VbVarType
+    Dim Entry As Variant
+
+    GetAttachedPropertyType = vbLong
+    EnsureBuiltInTypes
+    If Not m_Attached.Exists(FullName) Then Exit Function
+    Entry = m_Attached(FullName)
+    GetAttachedPropertyType = Entry(2)
+End Function
+
 Public Sub RegisterType( _
     ByVal TypeName As String, _
     ByVal BaseTypeName As String, _
@@ -155,6 +165,7 @@ Private Sub RegisterFrameworkElementType()
         Array("Orientation", vbString, vbNullString, vbNullString, False, True, False, OneWay)
     RegisterType "DockPanel", "FrameworkElement", _
         Array("LastChildFill", vbBoolean, vbNullString, vbNullString, False, True, False, OneWay)
+    RegisterType "Canvas", "FrameworkElement"
     RegisterType "Grid", "FrameworkElement"
     RegisterType "ContentControl", "FrameworkElement", _
         Array("Content", vbVariant, vbNullString, vbNullString, False, True, False, OneWay), _
@@ -189,6 +200,8 @@ Private Sub RegisterBuiltInAttached()
     RegisterAttached "Grid", "RowSpan", vbLong, 1&
     RegisterAttached "Grid", "ColumnSpan", vbLong, 1&
     RegisterAttached "DockPanel", "Dock", vbLong, 0&
+    RegisterAttached "Canvas", "Left", vbDouble, 0#
+    RegisterAttached "Canvas", "Top", vbDouble, 0#
 End Sub
 
 Private Sub ApplyInheritedDefs(ByVal Defs As cCollection, ByVal BaseTypeName As String)

@@ -41,6 +41,7 @@ Public Function Attach( _
     Dim TargetProp As DependencyProperty
 
     If Target Is Nothing Then Exit Function
+    EnsureAttachedTargetIfRegistered Target, TargetPropertyName
     If Not Target.DependencyProperties.Exists(TargetPropertyName) Then Exit Function
 
     Set TargetProp = Target.DependencyProperties.GetProperty(TargetPropertyName)

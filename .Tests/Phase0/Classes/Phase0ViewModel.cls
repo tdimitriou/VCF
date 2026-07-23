@@ -17,6 +17,7 @@ Implements INotifyPropertyChanged
 
 Private m_Event As VCF.PropertyChangedEvent
 Private m_Title As String
+Private m_RowIndex As Long
 
 Public Property Get Title() As String
     Title = m_Title
@@ -26,6 +27,16 @@ Public Property Let Title(ByVal Value As String)
     If m_Title = Value Then Exit Property
     m_Title = Value
     m_Event.OnPropertyChanged "Title"
+End Property
+
+Public Property Get RowIndex() As Long
+    RowIndex = m_RowIndex
+End Property
+
+Public Property Let RowIndex(ByVal Value As Long)
+    If m_RowIndex = Value Then Exit Property
+    m_RowIndex = Value
+    m_Event.OnPropertyChanged "RowIndex"
 End Property
 
 Private Function INotifyPropertyChanged_PropertyChangedEvent() As VCF.PropertyChangedEvent

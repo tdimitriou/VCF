@@ -99,6 +99,7 @@ Defines **every supported XAML construct** in VCF today, the **target WPF-aligne
 | `ContentControl` | 2b | Single Content |
 | `ItemsControl` | 4 | ItemsSource + ItemTemplate |
 | `DockPanel` | **3.17.0** | `DockPanel.Dock`, `LastChildFill` |
+| `Canvas` | **3.21.0** | `Canvas.Left`, `Canvas.Top` |
 | `ComboBox`, `TabControl` | 5+ | On Selector |
 
 ### 4.3 Removed / merged

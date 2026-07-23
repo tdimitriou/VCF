@@ -170,8 +170,12 @@ Public Name As String
         ActualHeight = m_Layout.ActualHeight
     End Property
 
-    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+    Public Sub MeasureOverride(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
         m_Layout.Measure AvailableWidth, AvailableHeight
+    End Sub
+
+    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+        MeasureOverride AvailableWidth, AvailableHeight
     End Sub
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
@@ -324,14 +328,20 @@ End Sub
 '#End Region
 
 '#Region Private Methods
-    Private Sub MoveChild(Child As Object)
+    Public Sub ArrangeOverride(ByVal FinalWidth As Double, ByVal FinalHeight As Double)
+        If m_Layout Is Nothing Then Exit Sub
         m_Layout.ArrangeChildren m_Children, W
-        m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
+        m_Layout.ReportActualSize FinalWidth, FinalHeight
+    End Sub
+
+    Private Sub MoveChild(Child As Object)
+        If W Is Nothing Then Exit Sub
+        ArrangeOverride CDbl(W.Width), CDbl(W.Height)
     End Sub
 
     Friend Sub RelayoutChildren()
-        m_Layout.ArrangeChildren m_Children, W
-        m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
+        If W Is Nothing Then Exit Sub
+        ArrangeOverride CDbl(W.Width), CDbl(W.Height)
     End Sub
 '#End Region
 

@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "StackPanel"
+Attribute VB_Name = "Canvas"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -31,26 +31,25 @@ Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As List
 Private m_BaseUIElement As UIElementBase
 Private m_Layout As FrameworkElement
-Private m_Orientation As Orientation
 
 Public Name As String
 
-Public Property Get Orientation() As Orientation
-    Orientation = m_Orientation
-End Property
+' Attached Canvas.Left / Canvas.Top (WPF GetLeft/SetLeft, GetTop/SetTop).
+Public Function GetLeft(ByVal Element As IUIElement) As Double
+    GetLeft = GetCanvasAttachedDouble(Element, "Left", 0#)
+End Function
 
-Public Property Let Orientation(ByVal Value As Orientation)
-    If m_Orientation = Value Then Exit Property
-    m_Orientation = Value
-    If m_DependencyProperties.Exists("Orientation") Then
-        If Value = OrientationHorizontal Then
-            m_DependencyProperties.SetCurrentValue "Orientation", "Horizontal"
-        Else
-            m_DependencyProperties.SetCurrentValue "Orientation", "Vertical"
-        End If
-    End If
-    If Not m_Children Is Nothing Then ArrangePanel
-End Property
+Public Sub SetLeft(ByVal Element As IUIElement, ByVal Value As Double)
+    SetCanvasAttachedDouble Element, "Left", Value
+End Sub
+
+Public Function GetTop(ByVal Element As IUIElement) As Double
+    GetTop = GetCanvasAttachedDouble(Element, "Top", 0#)
+End Function
+
+Public Sub SetTop(ByVal Element As IUIElement, ByVal Value As Double)
+    SetCanvasAttachedDouble Element, "Top", Value
+End Sub
 
 '#Region Public Properties
     Public Property Get Bindings() As VCF.List
@@ -65,7 +64,6 @@ End Property
         Call m_DependencyProperties.SetValue("Style", Value)
     End Property
 '#End Region
-
 
 '#Region IDependencyObject Inheritance
     Public Property Get DependencyProperties() As DependencyProperties
@@ -94,20 +92,11 @@ End Property
     
     Public Property Set DataContext(ByVal Value As Object)
         Call m_DependencyProperties.SetValue("DataContext", Value)
-        
-        ' TO-DO: Recreate the Bindings!!!
     End Property
     
     Public Property Get DataContext() As Object
         Call API.CopyVariable(m_DependencyProperties.GetValue("DataContext"), DataContext)
     End Property
-    
-    
-    
-    
-    
-    
-    
     
     Public Property Get Width() As Double
         Width = m_Layout.Width
@@ -189,7 +178,6 @@ End Property
         ActualHeight = m_Layout.ActualHeight
     End Property
 
-    ' WPF-named measure entry (duck-typed via CallByName from MeasureElementSize).
     Public Sub MeasureOverride(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
         Dim ContentW As Double
         Dim ContentH As Double
@@ -198,7 +186,7 @@ End Property
 
         If m_Layout Is Nothing Then Exit Sub
 
-        MeasureStackPanelContent m_Children, m_Orientation, AvailableWidth, AvailableHeight, ContentW, ContentH
+        MeasureCanvasContent m_Children, AvailableWidth, AvailableHeight, ContentW, ContentH
 
         DesiredW = Width
         DesiredH = Height
@@ -212,19 +200,23 @@ End Property
         m_Layout.ReportDesiredSize DesiredW, DesiredH
     End Sub
 
-    ' Compat alias for MeasureOverride.
     Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
         MeasureOverride AvailableWidth, AvailableHeight
     End Sub
 
+    Public Sub ArrangeOverride(ByVal FinalWidth As Double, ByVal FinalHeight As Double)
+        If W Is Nothing Then Exit Sub
+        If m_Layout Is Nothing Then Exit Sub
+        If m_Children Is Nothing Then Exit Sub
+
+        MeasureOverride FinalWidth, FinalHeight
+        ArrangeCanvasChildren m_Children, W, CSng(FinalWidth), CSng(FinalHeight)
+        m_Layout.ReportActualSize FinalWidth, FinalHeight
+    End Sub
+
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
-        
-        'If Parent.Widgets.Exists(Widget.Key) Then Parent.Widgets.Remove Widget.Key
-        'Parent.Widgets.Add Me, "_" & ObjPtr(Me), Left, Top, Width, Height
-        
         W.Move Left, Top, Width, Height
-        
         ApplyVisibility W, Visibility
     End Sub
 
@@ -253,8 +245,6 @@ End Property
         With m_DependencyProperties
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
             Call .Register("ShowGridLines", vbBoolean)
-            Call .Register("Orientation", vbString)
-            .SetCurrentValue "Orientation", "Vertical"
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
             .SetValue "Style", Nothing
         End With
@@ -266,17 +256,13 @@ End Property
         
         Set m_Layout = New FrameworkElement
         m_Layout.Initialize Me, Me, W
-        m_Layout.RegisterLayoutProperties "StackPanel"
-        
-        m_Orientation = OrientationVertical
+        m_Layout.RegisterLayoutProperties "Canvas"
         
         m_Layout.Width = 0
         m_Layout.Height = 0
         m_Layout.Visibility = VisibilityVisible
         
         NewUIElementBase Me, m_BaseUIElement
-        
-        'EnumerateProperties Me
         
         Set Style = GetBaseStyle
     End Sub
@@ -310,7 +296,6 @@ End Property
     End Property
 '#End Region
 
-
 '#Region IUIElement Interface Implementation
     Private Property Get IUIElement_AttachedProperties() As ObservableDictionary
         Set IUIElement_AttachedProperties = m_BaseUIElement.AttachedProperties
@@ -328,14 +313,6 @@ End Property
         Set IUIElement_DataContext = DataContext
     End Property
         
-    
-    
-    
-    
-    
-    
-    
-    
     Private Sub IUIElement_Move(Left As Single, Optional Top As Single = 0#, Optional Width As Single, Optional Height As Single)
         Move Left, Top, Width, Height
     End Sub
@@ -379,18 +356,6 @@ Private Sub MoveChild(Child As Object)
     ArrangePanel
 End Sub
 
-    Public Sub ArrangeOverride(ByVal FinalWidth As Double, ByVal FinalHeight As Double)
-        ' Orientation DP is set in Class_Initialize before W/m_Layout exist;
-        ' old ArrangeStackPanelChildren no-op'd on HostWidget Is Nothing — keep that.
-        If W Is Nothing Then Exit Sub
-        If m_Layout Is Nothing Then Exit Sub
-        If m_Children Is Nothing Then Exit Sub
-
-        MeasureOverride FinalWidth, FinalHeight
-        ArrangeStackPanelChildren m_Children, W, m_Orientation, CSng(FinalWidth), CSng(FinalHeight)
-        m_Layout.ReportActualSize FinalWidth, FinalHeight
-    End Sub
-
     Private Sub ArrangePanel()
         If W Is Nothing Then Exit Sub
         ArrangeOverride CDbl(W.Width), CDbl(W.Height)
@@ -405,9 +370,6 @@ End Sub
     Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
         Select Case Property.Name
             Case "Style":           ApplyStyle
-            Case "Orientation"
-                m_Orientation = ParseOrientation(CStr(Property.GetValue))
-                ArrangePanel
             Case Else
                 If Not m_Children Is Nothing Then
                     If m_Layout.HandlesLayoutProperty(Property.Name) Then
@@ -426,15 +388,7 @@ End Sub
 
 '#Region Widget Events
     Private Sub W_Paint(CC As vbRichClient5.cCairoContext, ByVal xAbs As Single, ByVal yAbs As Single, ByVal dx_Aligned As Single, ByVal dy_Aligned As Single, UserObj As Object)
-        
-        Dim dx As Double, dy As Double
-        
-        dx = dx_Aligned
-        dy = dy_Aligned
-        
-        
         CC.Save
-        
         CC.Restore
     End Sub
     
@@ -445,7 +399,7 @@ End Sub
 
 Private Function GetBaseStyle() As Style
     Dim Style
-    API.CopyVariable m_BaseUIElement.TryFindResource(Typename(Me) & ".BaseStyle"), Style
+    API.CopyVariable m_BaseUIElement.TryFindResource(TypeName(Me) & ".BaseStyle"), Style
     
     If Not IsObject(Style) Then Exit Function
     If TypeOf Style Is Style Then Set GetBaseStyle = Style
@@ -459,8 +413,6 @@ Private Sub ApplyStyle()
     End With
 End Sub
 
-
     Private Sub ActiveStyle_StyleChanged()
         ApplyStyle
     End Sub
-

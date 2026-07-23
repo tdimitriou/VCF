@@ -194,7 +194,7 @@ Public Name As String
     End Property
 
     ' Single-child: child Desired + Margin insets. Multi-child: FE.Measure (explicit/Available).
-    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+    Public Sub MeasureOverride(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
         Dim ContentW As Double
         Dim ContentH As Double
         Dim DesiredW As Double
@@ -235,6 +235,10 @@ Public Name As String
         End If
 
         m_Layout.Measure AvailableWidth, AvailableHeight
+    End Sub
+
+    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+        MeasureOverride AvailableWidth, AvailableHeight
     End Sub
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
@@ -406,7 +410,7 @@ Catch:
         ArrangeBorderChild
     End Sub
 
-    Private Sub ArrangeBorderChild()
+    Public Sub ArrangeOverride(ByVal FinalWidth As Double, ByVal FinalHeight As Double)
         Dim Marg As Thickness
         Dim InsetL As Single
         Dim InsetT As Single
@@ -417,10 +421,10 @@ Catch:
         If m_Layout Is Nothing Then Exit Sub
         If m_Children Is Nothing Then Exit Sub
 
-        MeasureLayout CDbl(W.Width), CDbl(W.Height)
+        MeasureOverride FinalWidth, FinalHeight
 
         If m_Children.Count = 0 Then
-            m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
+            m_Layout.ReportActualSize FinalWidth, FinalHeight
             Exit Sub
         End If
 
@@ -438,13 +442,18 @@ Catch:
                 On Error GoTo 0
             End If
             ArrangeDecoratorChild m_Children(0), W, InsetL, InsetT, InsetR, InsetB
-            m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
+            m_Layout.ReportActualSize FinalWidth, FinalHeight
             Exit Sub
         End If
 
         ' Multi-child: fixed Margin + Width/Height pixels (no design-canvas scale).
         m_Layout.ArrangeChildren m_Children, W
-        m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
+        m_Layout.ReportActualSize FinalWidth, FinalHeight
+    End Sub
+
+    Private Sub ArrangeBorderChild()
+        If W Is Nothing Then Exit Sub
+        ArrangeOverride CDbl(W.Width), CDbl(W.Height)
     End Sub
 
     Friend Sub RelayoutChildren()

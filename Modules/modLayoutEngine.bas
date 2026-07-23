@@ -139,7 +139,7 @@ Public Function ReadElementVisibility(ByVal Child As Object) As Visibility
     End If
     If TypeOf Child Is IUIElement Then
         Select Case TypeName(Child)
-            Case "Panel", "UserControl", "StackPanel", "Grid", "DockPanel", "ContentControl", "Border", "Button"
+            Case "Panel", "UserControl", "StackPanel", "Grid", "DockPanel", "Canvas", "ContentControl", "Border", "Button"
                 ReadElementVisibility = Child.Visibility
                 Exit Function
         End Select
@@ -154,6 +154,7 @@ Public Sub InvalidateParentLayout(ByVal Child As Object)
     Dim Sp As StackPanel
     Dim G As Grid
     Dim Dp As DockPanel
+    Dim Cv As Canvas
     Dim Ug As UniformGrid
     Dim P As Panel
     Dim B As Border
@@ -179,6 +180,9 @@ Public Sub InvalidateParentLayout(ByVal Child As Object)
         Case "DockPanel"
             Set Dp = ParentObj
             Dp.RelayoutChildren
+        Case "Canvas"
+            Set Cv = ParentObj
+            Cv.RelayoutChildren
         Case "UniformGrid"
             Set Ug = ParentObj
             Ug.ArrangeChildren
@@ -549,11 +553,75 @@ Public Sub SetDockAttachedLong(ByVal Child As IUIElement, ByVal Value As Long)
     On Error GoTo 0
 End Sub
 
+Public Function GetCanvasAttachedDouble(ByVal Child As IUIElement, ByVal Key As String, Optional ByVal DefaultValue As Double = 0#) As Double
+    Dim Dict As ObservableDictionary
+    Dim Dep As IDependencyObject
+    Dim FullName As String
+    Dim V As Variant
+
+    GetCanvasAttachedDouble = DefaultValue
+    On Error Resume Next
+    If Child Is Nothing Then Exit Function
+
+    FullName = "Canvas." & Key
+    If TypeOf Child Is IDependencyObject Then
+        Set Dep = Child
+        If Not Dep.DependencyProperties Is Nothing Then
+            If Dep.DependencyProperties.Exists(FullName) Then
+                V = Dep.DependencyProperties.GetValue(FullName)
+                If IsNumeric(V) Then GetCanvasAttachedDouble = CDbl(V)
+                Exit Function
+            End If
+        End If
+    End If
+
+    If Not Child.AttachedProperties.ContainsKey("Canvas") Then Exit Function
+    Set Dict = Child.AttachedProperties("Canvas")
+    If Not Dict.ContainsKey(Key) Then Exit Function
+    V = Dict(Key)
+    If IsNumeric(V) Then GetCanvasAttachedDouble = CDbl(V)
+End Function
+
+Public Sub SetCanvasAttachedDouble(ByVal Child As IUIElement, ByVal Key As String, ByVal Value As Double)
+    Dim Dict As ObservableDictionary
+    Dim Dep As IDependencyObject
+    Dim FullName As String
+
+    If Child Is Nothing Then Exit Sub
+    If Len(Key) = 0 Then Exit Sub
+
+    If Child.AttachedProperties.ContainsKey("Canvas") Then
+        Set Dict = Child.AttachedProperties("Canvas")
+    Else
+        Set Dict = New ObservableDictionary
+        Child.AttachedProperties.Add "Canvas", Dict
+    End If
+
+    If Dict.ContainsKey(Key) Then
+        Dict.Item(Key) = Value
+    Else
+        Dict.Add Key, Value
+    End If
+
+    On Error Resume Next
+    If TypeOf Child Is IDependencyObject Then
+        Set Dep = Child
+        FullName = "Canvas." & Key
+        EnsureAttachedProperty Dep, FullName
+        If Dep.DependencyProperties.Exists(FullName) Then
+            Dep.DependencyProperties.SetValue FullName, Value
+        End If
+    End If
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
 ' Lazy-register attached DP on the target (do not eager-register on every instance).
 Public Sub EnsureAttachedProperty(ByVal Target As IDependencyObject, ByVal FullName As String)
     Dim Reg As DependencyPropertyRegistry
     Dim Def As Variant
     Dim Meta As DependencyPropertyMetadata
+    Dim PropType As VbVarType
 
     If Target Is Nothing Then Exit Sub
     If Len(FullName) = 0 Then Exit Sub
@@ -565,8 +633,24 @@ Public Sub EnsureAttachedProperty(ByVal Target As IDependencyObject, ByVal FullN
     If Not Reg.IsAttachedRegistered(FullName) Then Exit Sub
 
     Def = Reg.GetAttachedDefault(FullName)
+    PropType = Reg.GetAttachedPropertyType(FullName)
     Set Meta = NewDependencyPropertyMetadata(True, False, False, OneWay, Def)
-    Target.DependencyProperties.Register FullName, vbLong, , , , Meta
+    Target.DependencyProperties.Register FullName, PropType, , , , Meta
+End Sub
+
+' Binding / XAML: if TargetProperty is a registered attached name (Grid.Row, …),
+' ensure it exists on the bag before Exists/GetProperty.
+Public Sub EnsureAttachedTargetIfRegistered(ByVal Target As IDependencyObject, ByVal FullName As String)
+    Dim Reg As DependencyPropertyRegistry
+
+    If Target Is Nothing Then Exit Sub
+    If InStr(FullName, ".") = 0 Then Exit Sub
+
+    Set Reg = modStaticClasses.DependencyPropertyRegistry
+    Reg.EnsureBuiltInTypes
+    If Reg.IsAttachedRegistered(FullName) Then
+        EnsureAttachedProperty Target, FullName
+    End If
 End Sub
 
 Public Sub ApplyChildWidgetVisibility(ByVal Child As Object, ByVal Value As Visibility)
@@ -627,9 +711,13 @@ Public Function MeasureElementSize( _
 
     If Child Is Nothing Then Exit Function
 
-    ' Prefer control MeasureLayout (StackPanel/Panel/…) when present.
+    ' Prefer MeasureOverride (WPF name); fall back to MeasureLayout alias.
     On Error Resume Next
-    CallByName Child, "MeasureLayout", VbMethod, AvailableWidth, AvailableHeight
+    CallByName Child, "MeasureOverride", VbMethod, AvailableWidth, AvailableHeight
+    If Err.Number <> 0 Then
+        Err.Clear
+        CallByName Child, "MeasureLayout", VbMethod, AvailableWidth, AvailableHeight
+    End If
     If Err.Number = 0 Then
         Err.Clear
         W = CDbl(CallByName(Child, "DesiredWidth", VbGet))
@@ -648,7 +736,7 @@ Public Function MeasureElementSize( _
     Err.Clear
     On Error GoTo 0
 
-    ' Leaf / no MeasureLayout: explicit Width/Height DPs only (unset stays 0 —
+    ' Leaf / no MeasureOverride: explicit Width/Height DPs only (unset stays 0 —
     ' do not expand to Available*, which would break StackPanel Auto sizing).
     W = ReadElementWidth(Child)
     H = ReadElementHeight(Child)
@@ -1457,5 +1545,112 @@ Public Sub ArrangeDockPanelChildren( _
         ApplyChildWidgetVisibility Child, ChildVis
 
 NextArrangeDock:
+    Next
+End Sub
+
+' Canvas measure: bounding box of children at Canvas.Left/Top + size.
+Public Sub MeasureCanvasContent( _
+    ByVal Children As UIElementCollection, _
+    ByVal AvailableWidth As Double, _
+    ByVal AvailableHeight As Double, _
+    ByRef OutContentWidth As Double, _
+    ByRef OutContentHeight As Double)
+
+    Dim Child As Object
+    Dim ChildUI As IUIElement
+    Dim ChildVis As Visibility
+    Dim Margin As Thickness
+    Dim Measured As LayoutRect
+    Dim L As Double
+    Dim T As Double
+    Dim ExtR As Double
+    Dim ExtB As Double
+    Dim MaxR As Double
+    Dim MaxB As Double
+
+    OutContentWidth = 0#
+    OutContentHeight = 0#
+    MaxR = 0#
+    MaxB = 0#
+
+    If Children Is Nothing Then Exit Sub
+
+    For Each Child In Children
+        If Not TypeOf Child Is IUIElement Then GoTo NextMeasureCanvas
+        Set ChildUI = Child
+        ChildVis = ReadElementVisibility(Child)
+        If IsLayoutCollapsed(ChildVis) Then GoTo NextMeasureCanvas
+
+        Set Margin = ReadElementMargin(Child)
+        L = GetCanvasAttachedDouble(ChildUI, "Left", 0#)
+        T = GetCanvasAttachedDouble(ChildUI, "Top", 0#)
+        Measured = MeasureElementSize(Child, 0#, 0#)
+        ExtR = L + Margin.Left + CDbl(Measured.Width) + Margin.Right
+        ExtB = T + Margin.Top + CDbl(Measured.Height) + Margin.Bottom
+        If ExtR > MaxR Then MaxR = ExtR
+        If ExtB > MaxB Then MaxB = ExtB
+
+NextMeasureCanvas:
+    Next
+
+    OutContentWidth = MaxR
+    OutContentHeight = MaxB
+    If AvailableWidth > 0 And OutContentWidth > AvailableWidth Then OutContentWidth = AvailableWidth
+    If AvailableHeight > 0 And OutContentHeight > AvailableHeight Then OutContentHeight = AvailableHeight
+End Sub
+
+Public Sub ArrangeCanvasChildren( _
+    ByVal Children As UIElementCollection, _
+    ByVal HostWidget As cWidgetBase, _
+    Optional ByVal OverrideHostWidth As Single = 0, _
+    Optional ByVal OverrideHostHeight As Single = 0)
+
+    Dim Child As Object
+    Dim ChildUI As IUIElement
+    Dim ChildVis As Visibility
+    Dim Margin As Thickness
+    Dim R As LayoutRect
+    Dim Measured As LayoutRect
+    Dim L As Double
+    Dim T As Double
+    Dim ChildW As Double
+    Dim ChildH As Double
+
+    If Children Is Nothing Then Exit Sub
+    If HostWidget Is Nothing Then Exit Sub
+
+    For Each Child In Children
+        If Not TypeOf Child Is IUIElement Then GoTo NextArrangeCanvas
+        Set ChildUI = Child
+
+        ChildVis = ReadElementVisibility(Child)
+        If IsLayoutCollapsed(ChildVis) Then
+            DetachCollapsedChild Child, HostWidget
+            GoTo NextArrangeCanvas
+        End If
+
+        If Not TypeOf Child Is IControl Then GoTo NextArrangeCanvas
+
+        AttachChildWidget Child, HostWidget, ChildVis
+        Set Margin = ReadElementMargin(Child)
+        L = GetCanvasAttachedDouble(ChildUI, "Left", 0#)
+        T = GetCanvasAttachedDouble(ChildUI, "Top", 0#)
+        Measured = MeasureElementSize(Child, 0#, 0#)
+        ChildW = CDbl(Measured.Width)
+        ChildH = CDbl(Measured.Height)
+        If ChildW <= 0# Then ChildW = ReadElementWidth(Child)
+        If ChildH <= 0# Then ChildH = ReadElementHeight(Child)
+        ChildW = ClampElementWidth(Child, ChildW)
+        ChildH = ClampElementHeight(Child, ChildH)
+
+        R.Left = CSng(L + Margin.Left)
+        R.Top = CSng(T + Margin.Top)
+        R.Width = CSng(ChildW)
+        R.Height = CSng(ChildH)
+
+        ApplyLayoutRectToElement ChildUI, R
+        ApplyChildWidgetVisibility Child, ChildVis
+
+NextArrangeCanvas:
     Next
 End Sub

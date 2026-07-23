@@ -144,7 +144,7 @@ Public Property Get ActualHeight() As Double
     ActualHeight = m_ActualHeight
 End Property
 
-' Panels (StackPanel MeasureOverride) report content-driven desired size.
+' Panels report content-driven desired size via Public MeasureOverride.
 Friend Sub ReportDesiredSize(ByVal DesiredW As Double, ByVal DesiredH As Double)
     m_DesiredWidth = DesiredW
     m_DesiredHeight = DesiredH

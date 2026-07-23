@@ -163,7 +163,7 @@ Public Name As String
     End Property
 
     ' WPF-ish: max child cell size x Columns/Rows when Width/Height unset.
-    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+    Public Sub MeasureOverride(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
         Dim Child As Object
         Dim Measured As LayoutRect
         Dim MaxCW As Double
@@ -216,6 +216,10 @@ NextMeasureChild:
         DesiredH = ClampElementHeight(Me, DesiredH)
         m_DesiredWidth = DesiredW
         m_DesiredHeight = DesiredH
+    End Sub
+
+    Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
+        MeasureOverride AvailableWidth, AvailableHeight
     End Sub
 
     ' ItemsPanelTemplate clone ? set metrics without MoveChildren (grid not hosted yet).
@@ -428,7 +432,7 @@ NextMeasureChild:
             Next
         End If
 
-        ' Honor LockRefresh ù ItemsControl batches AddSilent under lock then ArrangeChildren once.
+        ' Honor LockRefresh ? ItemsControl batches AddSilent under lock then ArrangeChildren once.
         If W.LockRefresh Then Exit Sub
         MoveChildren
         If Not W.LockRefresh Then W.Refresh
@@ -440,8 +444,13 @@ Catch:
 '#End Region
 
 '#Region Private Methods
-    ' ItemsControl post-rebuild arrange (Friend ù same project).
+    ' ItemsControl post-rebuild arrange (Friend ? same project).
     Friend Sub ArrangeChildren()
+        MoveChildren
+    End Sub
+
+    Public Sub ArrangeOverride(ByVal FinalWidth As Double, ByVal FinalHeight As Double)
+        MeasureOverride FinalWidth, FinalHeight
         MoveChildren
     End Sub
 
@@ -464,13 +473,13 @@ Catch:
 
         On Error GoTo Clean
 
-        MeasureLayout CDbl(W.Width), CDbl(W.Height)
+        MeasureOverride CDbl(W.Width), CDbl(W.Height)
 
         MAX_ITEMS = m_Rows * m_Columns
         If MAX_ITEMS < 1 Then GoTo Clean
         ReDim Cells(0 To MAX_ITEMS - 1) As Long
 
-        ' Single RemoveAll per arrange (not per child add) ù avoids O(N^2) IDE hang.
+        ' Single RemoveAll per arrange (not per child add) ? avoids O(N^2) IDE hang.
         W.Widgets.RemoveAll
         ItemIndex = 0
         For Index = 0 To MAX_ITEMS - 1
