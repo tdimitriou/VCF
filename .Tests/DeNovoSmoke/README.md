@@ -18,7 +18,7 @@ Minimal VB6 exe to load **DeNovo POS XAML screens** against a pinned **`Demac.VC
 Full `DeNovo.exe` is a deep COM graph (KernelLib → Data → ADODBUtils → UILib → VCF). With Phase 1 binary/typelib churn, failures on Login XAML are indistinguishable from `Data.Dataset` or stale group `.vbg` references.
 
 **Phase 1 acceptance:** Phase0 + this harness green for agreed screens with **stub view models**.  
-**Phase 2a:** same local gates while Data/Kernel finish — currently Phase0 **69/69** + DeNovoSmoke on **3.7.0**.  
+**Phase 2a:** same local gates while Data/Kernel finish — currently Phase0 **70/70** + DeNovoSmoke on **3.8.0** (layout bridge **3.7.0**).  
 **Phase 2b:** re-attach full POS stack; run [POS_INTEGRATION_SMOKE.md](../../docs/POS_INTEGRATION_SMOKE.md) §3.
 
 ---

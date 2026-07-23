@@ -59,6 +59,14 @@ Public Property Set Content(ByVal Value As Object)
     Call m_DependencyProperties.SetValue("Content", Value)
 End Property
 
+Public Property Get ContentTemplate() As DataTemplate
+    Call API.CopyVariable(m_DependencyProperties.GetValue("ContentTemplate"), ContentTemplate)
+End Property
+
+Public Property Set ContentTemplate(ByVal Value As DataTemplate)
+    Call m_DependencyProperties.SetValue("ContentTemplate", Value)
+End Property
+
 ' Host ContentPresenter (shared ContentHost with Button).
 Public Property Get ContentPresenter() As ContentPresenter
     Set ContentPresenter = m_ContentHost.HostPresenter
@@ -211,7 +219,9 @@ End Sub
             Call .Register("ShowGridLines", vbBoolean)
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
             Call .Register("Content", vbVariant, , , , NewDependencyPropertyMetadata(False, True, False, OneWay, ""))
+            Call .Register("ContentTemplate", vbObject, "DataTemplate", , NewDependencyPropertyMetadata(False, True, False))
             .SetValue "Style", Nothing
+            .SetValue "ContentTemplate", Nothing
         End With
         
         Set W = Cairo.WidgetBase
@@ -346,19 +356,21 @@ End Sub
     End Sub
 
     Private Sub ApplyContentValue(ByVal Value As Variant)
-        m_ContentHost.ApplyContentValue m_Children, m_DependencyProperties, Value
+        ' Value unused — ApplyContentVisual reads Content + ContentTemplate from Props.
+        m_ContentHost.ApplyContentVisual m_Children, m_DependencyProperties, m_BaseUIElement
+    End Sub
+
+    Private Sub ApplyContentVisual()
+        m_ContentHost.ApplyContentVisual m_Children, m_DependencyProperties, m_BaseUIElement
     End Sub
 '#End Region
 
 '#Region DependencyProperties Events
     Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
-        Dim V As Variant
-
         Select Case Property.Name
             Case "Style":           ApplyStyle
-            Case "Content":
-                Call API.CopyVariable(Property.GetValue, V)
-                ApplyContentValue V
+            Case "Content", "ContentTemplate":
+                ApplyContentVisual
                 modRenderCoalescer.RequestWidgetRefresh W
             Case Else
                 If Not m_Children Is Nothing Then

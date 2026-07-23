@@ -5,6 +5,22 @@
 
 ---
 
+## [3.8.0] — 2026-07-23 — ContentTemplate on ContentControl
+
+### Added
+
+- **`ContentControl.ContentTemplate`** (`DataTemplate` DP) — clones template visual via `modItemTemplateEngine`; `Content` is the clone item/`DataContext` when object.
+- **`ContentHost.ApplyContentVisual`** — precedence: explicit children → ContentTemplate clone → string/`Content` presenter paint.
+- Phase0 **P6e-CTMPL** — suite **70**.
+
+### Notes
+
+- No `ContentTemplateSelector`; Button default chrome unchanged (self-paint). ItemContainerStyle unify / LCV sort-filter still deferred.
+- Layout contract (canvas-scale bridge vs Measure/Arrange) documented in [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) §0.
+- DLL version **3.8.0**.
+
+---
+
 ## [3.7.0] — 2026-07-23 — DeNovo layout bridge + hover / TextBox DPs
 
 ### Changed (layout)

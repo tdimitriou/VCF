@@ -16,9 +16,15 @@ Option Explicit
 ' Shared content-host implementation for ContentControl and Button (composition).
 ' Owns the host ContentPresenter; optional TemplatePresenter overrides ActivePresenter
 ' when a lookless ControlTemplate content slot is live (Button).
+'
+' Content visual precedence (3.8.0):
+'   1. Explicit UIElement children (not ContentTemplate-generated)
+'   2. Else ContentTemplate + Content as clone DataContext/item
+'   3. Else string/Content via ContentPresenter paint
 
 Private m_HostPresenter As ContentPresenter
 Private m_TemplatePresenter As ContentPresenter
+Private m_GeneratedRoot As Object
 
 Public Sub Initialize()
     If m_HostPresenter Is Nothing Then Set m_HostPresenter = New ContentPresenter
@@ -78,6 +84,59 @@ Public Sub SyncAlignment(ByVal Horizontal As Long, ByVal Vertical As Long)
     CP.VerticalContentAlignment = Vertical
 End Sub
 
+' Unified Content / ContentTemplate apply (ContentControl).
+Public Sub ApplyContentVisual( _
+    ByVal Children As UIElementCollection, _
+    ByVal Props As DependencyProperties, _
+    Optional ByVal ResourceHost As UIElementBase = Nothing)
+
+    Dim Tmpl As DataTemplate
+    Dim V As Variant
+    Dim Root As Object
+    Dim HasExplicit As Boolean
+    Dim i As Long
+
+    If Children Is Nothing Then Exit Sub
+    If Props Is Nothing Then Exit Sub
+
+    HasExplicit = False
+    For i = 0 To Children.Count - 1
+        If Not IsGeneratedRoot(Children(i)) Then
+            HasExplicit = True
+            Exit For
+        End If
+    Next
+
+    If HasExplicit Then
+        RemoveGeneratedRoots Children
+        SyncContent Props
+        SyncSuppress True
+        Exit Sub
+    End If
+
+    Set Tmpl = TryGetContentTemplate(Props)
+    Call API.CopyVariable(Props.GetValue("Content"), V)
+
+    If Not Tmpl Is Nothing Then
+        ClearAllChildren Children
+        Set m_GeneratedRoot = Nothing
+        Set Root = modItemTemplateEngine.CloneItemVisualForItem(Tmpl, V, ResourceHost)
+        If Not Root Is Nothing Then
+            If TypeOf Root Is IUIElement Then
+                Children.Add Root
+                Set m_GeneratedRoot = Root
+                SyncContent Props
+                SyncSuppress True
+                Exit Sub
+            End If
+        End If
+        ' Clone failed — fall through to string/IUIElement Content path.
+    End If
+
+    Set m_GeneratedRoot = Nothing
+    ApplyContentValue Children, Props, V
+End Sub
+
 ' ContentControl: IUIElement Content becomes the single visual child; string clears children.
 Public Sub ApplyContentValue( _
     ByVal Children As UIElementCollection, _
@@ -92,9 +151,8 @@ Public Sub ApplyContentValue( _
     If IsObject(Value) Then
         If Not Value Is Nothing Then
             If TypeOf Value Is IUIElement Then
-                For i = Children.Count - 1 To 0 Step -1
-                    Children.RemoveAt i
-                Next
+                ClearAllChildren Children
+                Set m_GeneratedRoot = Nothing
                 Set El = Value
                 Children.Add El
                 SyncContent Props
@@ -104,9 +162,8 @@ Public Sub ApplyContentValue( _
         End If
     End If
 
-    For i = Children.Count - 1 To 0 Step -1
-        Children.RemoveAt i
-    Next
+    ClearAllChildren Children
+    Set m_GeneratedRoot = Nothing
     SyncContent Props
     SyncSuppress False
 End Sub
@@ -138,6 +195,48 @@ Public Sub DrawCaption( _
     If Not CP.WouldDrawCaption Then Exit Sub
     CP.Draw CC, Left, Top, Right, Bottom, FontName, FontSize, ForeColor, _
         FontBold, FontItalic, FontUnderline, FontStrikeThrough
+End Sub
+
+Private Function TryGetContentTemplate(ByVal Props As DependencyProperties) As DataTemplate
+    Dim V As Variant
+
+    On Error Resume Next
+    If Props Is Nothing Then Exit Function
+    If Not Props.Exists("ContentTemplate") Then Exit Function
+    Call API.CopyVariable(Props.GetValue("ContentTemplate"), V)
+    If IsObject(V) Then
+        If Not V Is Nothing Then
+            If TypeOf V Is DataTemplate Then Set TryGetContentTemplate = V
+        End If
+    End If
+    Err.Clear
+End Function
+
+Private Function IsGeneratedRoot(ByVal Child As Object) As Boolean
+    If Child Is Nothing Then Exit Function
+    If m_GeneratedRoot Is Nothing Then Exit Function
+    IsGeneratedRoot = (Child Is m_GeneratedRoot)
+End Function
+
+Private Sub RemoveGeneratedRoots(ByVal Children As UIElementCollection)
+    Dim i As Long
+
+    If Children Is Nothing Then Exit Sub
+    If m_GeneratedRoot Is Nothing Then Exit Sub
+
+    For i = Children.Count - 1 To 0 Step -1
+        If Children(i) Is m_GeneratedRoot Then Children.RemoveAt i
+    Next
+    Set m_GeneratedRoot = Nothing
+End Sub
+
+Private Sub ClearAllChildren(ByVal Children As UIElementCollection)
+    Dim i As Long
+
+    If Children Is Nothing Then Exit Sub
+    For i = Children.Count - 1 To 0 Step -1
+        Children.RemoveAt i
+    Next
 End Sub
 
 Private Sub Class_Initialize()

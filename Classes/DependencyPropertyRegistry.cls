@@ -153,7 +153,8 @@ Private Sub RegisterFrameworkElementType()
         Array("Orientation", vbString, vbNullString, vbNullString, False, True, False, OneWay)
     RegisterType "Grid", "FrameworkElement"
     RegisterType "ContentControl", "FrameworkElement", _
-        Array("Content", vbObject, vbNullString, vbNullString, False, True, False, OneWay)
+        Array("Content", vbVariant, vbNullString, vbNullString, False, True, False, OneWay), _
+        Array("ContentTemplate", vbObject, "DataTemplate", vbNullString, False, True, False, OneWay)
 
     RegisterType "ItemsControl", "FrameworkElement", _
         Array("ItemsSource", vbObject, vbNullString, vbNullString, False, True, False, OneWay), _

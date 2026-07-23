@@ -224,8 +224,8 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **Min/Max layout** — ~~MinWidth/MinHeight/MaxWidth/MaxHeight clamp~~ (**3.5.0** / **P1-MINMAX-MIN** / **P1-MINMAX-MAX**)
   **SelectionChanged naming** — ~~`SelectionChanged` + `ListIndexChanged` dual-raise~~ (**3.6.0** / **P4d-SELCHG**)
   **DeNovo layout bridge + hover** — ~~canvas scale on UC/Border/Panel; TextBox layout DPs; Button hover refresh~~ (**3.7.0** / DeNovoSmoke green)
-  **Layout north star** — canvas scale = bridge; Measure/Arrange epic later — [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md)
-  **ContentTemplate** — next thin slice on ContentHost (after 3.7.0 land)
+  **Layout north star** — ~~canvas scale = bridge; Measure/Arrange epic later~~ — [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md) §0
+  **ContentTemplate** — ~~ContentControl + ContentHost.ApplyContentVisual + P6e-CTMPL~~ (**3.8.0** / suite **70**)
   **Attached storage → DP bag** — **deferred** (accepted 2026-07-23): lazy `EnsureAttached` + `Grid.*` in per-element `DependencyProperties`; keep dict shim until green — when Change/ClearValue/binding on attached is needed
   **Full WPF DP precedence stack** — **deferred** roadmap epic (not now) — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) (~2–3 mo core)
   **Overlaps next** — fundamentals overlaps cleared; pick up deferred attached DP-bag or other backlog when ready

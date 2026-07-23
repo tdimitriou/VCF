@@ -70,6 +70,7 @@ Public Sub RunAll()
     If Not Phase6eBench_ContentPresenter() Then Failed = Failed + 1
     If Not Phase6eBench_ContentAlignment() Then Failed = Failed + 1
     If Not Phase6eBench_ContentControlContent() Then Failed = Failed + 1
+    If Not Phase6eBench_ContentTemplate() Then Failed = Failed + 1
     If Not Phase6fBench_TemplateBindingSlot() Then Failed = Failed + 1
     If Not Phase6gBench_LiveTemplateChrome() Then Failed = Failed + 1
     If Not Phase6hBench_LiveContentPresenter() Then Failed = Failed + 1
@@ -93,7 +94,7 @@ Public Sub RunAll()
 
     ' Report only ? do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (69 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (70 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -2261,7 +2262,65 @@ Fail:
     Err.Clear
 End Function
 
-' ?2.11 lookless: ControlTemplate Border chrome + ContentPresenter marker (+ live clone gated in P6g).
+' ContentTemplate clones DataTemplate visual; Content is item/DataContext for bindings.
+Public Function Phase6eBench_ContentTemplate() As Boolean
+    Dim CC As ContentControl
+    Dim Tmpl As DataTemplate
+    Dim Tb As TextBlock
+    Dim Child As TextBlock
+    Dim Explicit As TextBlock
+
+    On Error GoTo Fail
+
+    Set CC = New ContentControl
+    Set Tmpl = New DataTemplate
+    Set Tb = New TextBlock
+    Tb.Text = "FromTemplate"
+    Tb.Width = 80
+    Tb.Height = 20
+    Tmpl.Children.Add Tb
+
+    Set CC.ContentTemplate = Tmpl
+    CC.Content = "payload"
+
+    If CC.Children.Count <> 1 Then Err.Raise vbObjectError, , "Expected 1 generated child, got " & CC.Children.Count
+    If TypeName(CC.Children(0)) <> "TextBlock" Then Err.Raise vbObjectError, , "Expected TextBlock, got " & TypeName(CC.Children(0))
+    Set Child = CC.Children(0)
+    If Child.Text <> "FromTemplate" Then Err.Raise vbObjectError, , "Generated Text expected FromTemplate, got " & Child.Text
+    CC.SyncContentPresenter
+    If Not CC.ContentPresenter.SuppressContent Then Err.Raise vbObjectError, , "Suppress expected True with ContentTemplate child"
+    If CC.ContentPresenter.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected False with ContentTemplate child"
+
+    ' Explicit child wins over ContentTemplate.
+    Set Explicit = New TextBlock
+    Explicit.Text = "Explicit"
+    Explicit.Width = 40
+    Explicit.Height = 16
+    CC.Children.Add Explicit
+    CC.Content = "again"
+    If CC.Children.Count < 1 Then Err.Raise vbObjectError, , "Expected children after explicit add"
+    CC.SyncContentPresenter
+    If Not CC.ContentPresenter.SuppressContent Then Err.Raise vbObjectError, , "Suppress expected True with explicit child"
+
+    ' No template: string Content paints via presenter.
+    Set CC = New ContentControl
+    CC.Content = "Plain"
+    CC.SyncContentPresenter
+    If CC.Children.Count <> 0 Then Err.Raise vbObjectError, , "Plain Content should not create children"
+    If Not CC.ContentPresenter.WouldDrawCaption Then Err.Raise vbObjectError, , "WouldDrawCaption expected True for Plain"
+
+    LogResult "P6e-CTMPL", 0, "OK ContentControl ContentTemplate clone + precedence"
+    Debug.Print "PASS  P6e-CTMPL ContentTemplate"
+    Phase6eBench_ContentTemplate = True
+    Exit Function
+
+Fail:
+    LogResult "P6e-CTMPL", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P6e-CTMPL - " & Err.Description
+    Phase6eBench_ContentTemplate = False
+End Function
+
+' Lookless: ControlTemplate Border chrome + ContentPresenter marker (+ live clone gated in P6g).
 Public Function Phase6fBench_TemplateBindingSlot() As Boolean
     Dim Tmpl As ControlTemplate
     Dim St As Style

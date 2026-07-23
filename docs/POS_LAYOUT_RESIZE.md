@@ -1,9 +1,30 @@
 # POS layout resize — legacy vs WPF (DeNovo harness finding)
 
-**Date:** 2026-06-27  
-**Status:** Known gap · tracked for VCF backlog  
-**Context:** DeNovoSmoke milestone 1 — Login screen windowed vs maximized  
-**Related:** [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md) · [`.Tests/DeNovoSmoke/README.md`](../.Tests/DeNovoSmoke/README.md)
+**Date:** 2026-06-27 · **Updated:** 2026-07-23 (3.7.0 canvas-scale bridge)  
+**Status:** Bridge shipping · Measure/Arrange north star deferred  
+**Context:** DeNovoSmoke — Login / Sales resize  
+**Related:** [POS_RUNTIME_FEEDBACK.md](./POS_RUNTIME_FEEDBACK.md) · [BREAKING_CHANGES.md](./BREAKING_CHANGES.md) **3.0.0** / **3.7.0** · [`.Tests/DeNovoSmoke/README.md`](../.Tests/DeNovoSmoke/README.md)
+
+---
+
+## 0. Locked contract (3.7.0)
+
+| Layer | Role |
+|-------|------|
+| **Bridge (shipping)** | Absolute `Margin` / `Width` / `Height` × `hostWidget / hostDP` on **UserControl**, multi-child **Border**, and **Panel** (`FrameworkElement.ArrangeChildren`) |
+| **Preferred for new XAML** | `Grid` / `StackPanel` / single-child **Border** decorator fill (LoginWpf-style) — do not rely on uniform canvas scale |
+| **North star** | Measure/Arrange pass; retire the scale branch when POS trees are panel-migrated |
+
+```text
+Width/Height/Margin DPs
+        ├──► canvas scale bridge (UC / multi-child Border / Panel)
+        └──► Grid / Stack / Border fill  ──► Measure/Arrange (later)
+                    scale branch retires after migrate ──┘
+```
+
+**Later Measure/Arrange epic (docs only — not started):** `ActualWidth`/`ActualHeight` → layout invalidation → panel `Measure` overrides → delete scale branch in `FrameworkElement.ArrangeChildren`.
+
+**P7d-LAY-RESIZE:** host widget half of design `Width`/`Height` → children positions/sizes scale by 0.5.
 
 ---
 
@@ -11,19 +32,15 @@
 
 POS XAML is authored on a **1024×768 design canvas** but must run on **800×600**, **1024×768**, **widescreen**, and other sizes. Production runs **borderless** (full display = layout host).
 
-Phase 1–6 introduced a **dual layout model**:
+**Historical (pre-3.0.0) dual model:**
 
 | Mode | Controls | Resize behavior |
 |------|----------|-----------------|
-| **Legacy scale** | `UserControl`, `Panel` (default `LegacyScaleLayout = True`) | `Design*` × `host/design` scale factors |
-| **WPF-style** | `Border`, `Grid`, `StackPanel`, … (`LegacyScaleLayout = False`) | `Margin` + `Width`/`Height` DPs in **fixed pixels** |
+| **Legacy scale** | `UserControl`, `Panel` (`LegacyScaleLayout = True`) | `Design*` × `host/design` |
+| **WPF-style** | `Border`, `Grid`, … (`LegacyScaleLayout = False`) | fixed `Margin`/`Width`/`Height` pixels |
 
-**Observed on Login (harness + expected in production when size ≠ design canvas):**
-
-- **Direct children** of the screen (`UserControl`) — side buttons (Clock In/Out, Restart, Exit) — **scale/re-anchor** with the host.
-- **Children inside `Border`** (user list, numpad, password field) — stay at **design-time pixel** positions; the Border frame may grow while content stays top-left at ~574×358 design coords.
-
-This is **not** harness-only. The v2.18 layout **load** shim does not change **resize** inside `Border`.
+**3.0.0:** `Design*` / `LegacyScaleLayout` removed.  
+**3.7.0:** canvas-scale **bridge** restored on DP-based absolute trees (same math, new property names) so DeNovo/Sales nested Borders resize again.
 
 ---
 
@@ -109,9 +126,9 @@ LoginView (UserControl, legacy scale)
 | **C** | Propagate parent scale into Border child arrange | Medium | POS parity without Design* detection |
 | **D** | Migrate inner XAML to Grid/Margin; `LegacyScaleLayout = False` | High per screen | WPF-aligned; correct long-term |
 
-**Recommendation (2026-07-22):** **Design* and LegacyScaleLayout removed in VCF 3.0.0.** Options B/C cancelled. Use Width/Height/Margin + Grid/StackPanel/Border only.
+**Recommendation (2026-07-23):** **3.0.0** removed Design*/LegacyScaleLayout. **3.7.0** ships the canvas-scale **bridge** (§0) for absolute Margin trees. Prefer Grid/Stack for new work; Measure/Arrange remains the north star.
 
-**Test:** **P7d-LAY-RESIZE** (Phase0) — Border with Design* children at 400×300 → 200×150; assert scaled positions.
+**Test:** **P7d-LAY-RESIZE** (Phase0) — Border children at 400×300 → 200×150; assert **scaled** positions (0.5×).
 
 ### Deferred — WPF Margin / Padding defaults
 
