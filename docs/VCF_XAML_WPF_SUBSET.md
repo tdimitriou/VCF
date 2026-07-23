@@ -98,7 +98,7 @@ Defines **every supported XAML construct** in VCF today, the **target WPF-aligne
 | `StackPanel` | 2 | Orientation, Vertical/Horizontal |
 | `ContentControl` | 2b | Single Content |
 | `ItemsControl` | 4 | ItemsSource + ItemTemplate |
-| `DockPanel` | P2 | Dock attached property |
+| `DockPanel` | **3.17.0** | `DockPanel.Dock`, `LastChildFill` |
 | `ComboBox`, `TabControl` | 5+ | On Selector |
 
 ### 4.3 Removed / merged

@@ -33,6 +33,9 @@ Width/Height/Margin DPs
 | `ContentControl` MeasureLayout (IUIElement Content) | **3.12.0** / **P6e-CC-MEAS** |
 | `UniformGrid` MeasureLayout (max-cell × rows/cols) | **3.13.0** / **P2a-UG-MEAS** |
 | Retire UC / multi-child Border / Panel canvas-scale | **3.14.0** / **P7d-LAY-PANEL** |
+| Grid cell `HorizontalAlignment` / `VerticalAlignment` | **3.15.0** / **P2-GRID-ALIGN** |
+| TextBlock: text align ≠ layout align; `Move` does not write Width/Height DPs | **3.15.x fix** (DeNovoSmoke MainMenu wrap) |
+| `DockPanel` + `DockPanel.Dock` + `LastChildFill` | **3.17.0** / **P2-DOCK-XAML** / **P2-DOCK-LAY** |
 
 **P7d-LAY-PANEL:** Grid star columns + nested ListView track host size on resize (not 0.5× Margin math).
 

@@ -317,7 +317,7 @@ End Sub
 
 Public Function HandlesLayoutProperty(ByVal PropertyName As String) As Boolean
     Select Case PropertyName
-        Case "Width", "Height", "Margin", "Visibility", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight"
+        Case "Width", "Height", "Margin", "Visibility", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "HorizontalAlignment", "VerticalAlignment"
             HandlesLayoutProperty = True
     End Select
 End Function
@@ -336,7 +336,7 @@ Public Sub OnLayoutPropertyChanged( _
             ApplyVisibilityToWidget
             InvalidateMeasure
             If Not Host Is Nothing Then InvalidateParentLayout Host
-        Case "Width", "Height", "Margin", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight"
+        Case "Width", "Height", "Margin", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "HorizontalAlignment", "VerticalAlignment"
             InvalidateMeasure
             OnHostResize Children, HostWidget, OverrideHostWidth, OverrideHostHeight
             If Not Host Is Nothing Then InvalidateParentLayout Host
@@ -352,6 +352,8 @@ Private Sub SetDefaultLayoutValues()
         If .Exists("MinHeight") Then .SetCurrentValue "MinHeight", 0#
         If .Exists("MaxWidth") Then .SetCurrentValue "MaxWidth", 0#
         If .Exists("MaxHeight") Then .SetCurrentValue "MaxHeight", 0#
+        If .Exists("HorizontalAlignment") Then .SetCurrentValue "HorizontalAlignment", "Stretch"
+        If .Exists("VerticalAlignment") Then .SetCurrentValue "VerticalAlignment", "Stretch"
         If .Exists("Visibility") Then .SetCurrentValue "Visibility", CLng(VisibilityVisible)
         If .Exists("Margin") Then
             Dim DefaultMargin As Thickness

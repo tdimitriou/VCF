@@ -42,6 +42,10 @@ Public Sub RunAll()
     If Not Phase2Bench_GridAttachedCode() Then Failed = Failed + 1
     If Not Phase2Bench_GridAttachedXaml() Then Failed = Failed + 1
     If Not Phase2Bench_GridMeasure() Then Failed = Failed + 1
+    If Not Phase2Bench_GridAlign() Then Failed = Failed + 1
+    If Not Phase2Bench_GridAttachedDpBag() Then Failed = Failed + 1
+    If Not Phase2Bench_DockPanelXaml() Then Failed = Failed + 1
+    If Not Phase2Bench_DockPanelLayout() Then Failed = Failed + 1
     If Not Phase3Bench_MergedDictionaryLookup() Then Failed = Failed + 1
     If Not Phase3Bench_ResourceSourceLoad() Then Failed = Failed + 1
     If Not Phase3Bench_DynamicResourceExtension() Then Failed = Failed + 1
@@ -99,7 +103,7 @@ Public Sub RunAll()
 
     ' Report only ? do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (75 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (78 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -935,6 +939,231 @@ Fail:
     Phase2Bench_GridMeasure = False
     On Error Resume Next
     KeepAlive G
+    Err.Clear
+End Function
+
+Public Function Phase2Bench_GridAlign() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As Grid
+    Dim Child As Panel
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load(LoadTextFile(App.Path & "\Resources\LayoutGridAlign.xml"))
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "LayoutGridAlign returned Nothing"
+    If Root.Children.Count <> 1 Then Err.Raise vbObjectError, , "Expected 1 child, got " & Root.Children.Count
+
+    Set Child = Root.Children(0)
+    Root.Widget.Move 0, 0, 200, 200
+
+    ' 40x40 centered in 200x200 => Left/Top ~80
+    If Abs(Child.Widget.Left - 80!) > 2! Then Err.Raise vbObjectError, , "Left expected ~80, got " & Child.Widget.Left
+    If Abs(Child.Widget.Top - 80!) > 2! Then Err.Raise vbObjectError, , "Top expected ~80, got " & Child.Widget.Top
+    If Abs(Child.Widget.Width - 40!) > 2! Then Err.Raise vbObjectError, , "Width expected ~40, got " & Child.Widget.Width
+    If Abs(Child.Widget.Height - 40!) > 2! Then Err.Raise vbObjectError, , "Height expected ~40, got " & Child.Widget.Height
+
+    ' Stretch (default): fill cell after clearing Center
+    Child.DependencyProperties.SetValue "HorizontalAlignment", "Stretch"
+    Child.DependencyProperties.SetValue "VerticalAlignment", "Stretch"
+    Child.Width = 0
+    Child.Height = 0
+    Root.Widget.Move 0, 0, 200, 200
+    If Abs(Child.Widget.Left - 0!) > 2! Then Err.Raise vbObjectError, , "Stretch Left expected 0, got " & Child.Widget.Left
+    If Abs(Child.Widget.Width - 200!) > 2! Then Err.Raise vbObjectError, , "Stretch Width expected ~200, got " & Child.Widget.Width
+    If Abs(Child.Widget.Height - 200!) > 2! Then Err.Raise vbObjectError, , "Stretch Height expected ~200, got " & Child.Widget.Height
+
+    KeepAlive Root
+    LogResult "P2-GRID-ALIGN", 0, "OK Center + Stretch in Grid cell"
+    Debug.Print "PASS  P2-GRID-ALIGN Grid Horizontal/VerticalAlignment"
+    Phase2Bench_GridAlign = True
+    Exit Function
+
+Fail:
+    LogResult "P2-GRID-ALIGN", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-GRID-ALIGN - " & Err.Description
+    Phase2Bench_GridAlign = False
+    On Error Resume Next
+    KeepAlive Root
+    Err.Clear
+End Function
+
+Public Function Phase2Bench_GridAttachedDpBag() As Boolean
+    Dim G As Grid
+    Dim P As Panel
+    Dim Unset As Variant
+
+    On Error GoTo Fail
+
+    Set G = New Grid
+    Set P = New Panel
+    P.Width = 40
+    P.Height = 40
+
+    ' Lazy EnsureAttached on SetRow — DP bag + Get*
+    G.SetRow P, 2
+    G.SetColumn P, 1
+    If Not P.DependencyProperties.Exists("Grid.Row") Then Err.Raise vbObjectError, , "Expected Grid.Row registered on target"
+    If Not P.DependencyProperties.Exists("Grid.Column") Then Err.Raise vbObjectError, , "Expected Grid.Column registered on target"
+    If G.GetRow(P) <> 2 Then Err.Raise vbObjectError, , "GetRow expected 2, got " & G.GetRow(P)
+    If CLng(P.DependencyProperties.GetValue("Grid.Row")) <> 2 Then Err.Raise vbObjectError, , "DP Grid.Row expected 2"
+
+    ' ClearValue restores metadata default (0) for layout Get*
+    P.DependencyProperties.ClearValue "Grid.Row"
+    If G.GetRow(P) <> 0 Then Err.Raise vbObjectError, , "GetRow after ClearValue expected 0, got " & G.GetRow(P)
+    If CLng(P.DependencyProperties.GetValue("Grid.Row")) <> 0 Then Err.Raise vbObjectError, , "DP GetValue after Clear expected default 0"
+
+    Unset = P.DependencyProperties.ReadLocalValue("Grid.Row")
+    ' Local slot should be unset sentinel (not the old 2)
+    If IsNumeric(Unset) Then
+        If CLng(Unset) = 2 Then Err.Raise vbObjectError, , "ReadLocalValue still holds 2 after ClearValue"
+    End If
+
+    G.SetRow P, 1
+    If G.GetRow(P) <> 1 Then Err.Raise vbObjectError, , "GetRow after re-Set expected 1"
+
+    KeepAlive G
+    KeepAlive P
+    LogResult "P2-GRID-ATTACH-DP", 0, "OK EnsureAttached + ClearValue default"
+    Debug.Print "PASS  P2-GRID-ATTACH-DP Grid.* DP bag EnsureAttached/ClearValue"
+    Phase2Bench_GridAttachedDpBag = True
+    Exit Function
+
+Fail:
+    LogResult "P2-GRID-ATTACH-DP", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-GRID-ATTACH-DP - " & Err.Description
+    Phase2Bench_GridAttachedDpBag = False
+    On Error Resume Next
+    KeepAlive G
+    KeepAlive P
+    Err.Clear
+End Function
+
+Public Function Phase2Bench_DockPanelXaml() As Boolean
+    Dim Reader As XAMLReader
+    Dim Root As DockPanel
+    Dim LeftP As Panel
+    Dim TopP As Panel
+    Dim FillP As Panel
+
+    On Error GoTo Fail
+
+    Set Reader = New XAMLReader
+    Set Root = Reader.Load(LoadTextFile(App.Path & "\Resources\LayoutDockPanel.xml"))
+
+    If Root Is Nothing Then Err.Raise vbObjectError, , "LayoutDockPanel returned Nothing"
+    If Root.Children.Count <> 3 Then Err.Raise vbObjectError, , "Expected 3 children, got " & Root.Children.Count
+    If Not Root.LastChildFill Then Err.Raise vbObjectError, , "LastChildFill expected True"
+
+    Set LeftP = Root.Children(0)
+    Set TopP = Root.Children(1)
+    Set FillP = Root.Children(2)
+
+    If Root.GetDock(LeftP) <> DockLeft Then Err.Raise vbObjectError, , "LeftDock expected DockLeft, got " & Root.GetDock(LeftP)
+    If Root.GetDock(TopP) <> DockTop Then Err.Raise vbObjectError, , "TopDock expected DockTop, got " & Root.GetDock(TopP)
+
+    Root.Widget.Move 0, 0, 200, 200
+
+    ' Left: 40x200 at (0,0); Top: 160x30 at (40,0); Fill: 160x170 at (40,30)
+    If Abs(LeftP.Widget.Left - 0!) > 2! Or Abs(LeftP.Widget.Width - 40!) > 2! Then
+        Err.Raise vbObjectError, , "LeftDock expected L=0 W=40, got L=" & LeftP.Widget.Left & " W=" & LeftP.Widget.Width
+    End If
+    If Abs(LeftP.Widget.Height - 200!) > 2! Then
+        Err.Raise vbObjectError, , "LeftDock Height expected ~200, got " & LeftP.Widget.Height
+    End If
+    If Abs(TopP.Widget.Left - 40!) > 2! Or Abs(TopP.Widget.Top - 0!) > 2! Then
+        Err.Raise vbObjectError, , "TopDock expected (40,0), got (" & TopP.Widget.Left & "," & TopP.Widget.Top & ")"
+    End If
+    If Abs(TopP.Widget.Width - 160!) > 2! Or Abs(TopP.Widget.Height - 30!) > 2! Then
+        Err.Raise vbObjectError, , "TopDock size expected 160x30, got " & TopP.Widget.Width & "x" & TopP.Widget.Height
+    End If
+    If Abs(FillP.Widget.Left - 40!) > 2! Or Abs(FillP.Widget.Top - 30!) > 2! Then
+        Err.Raise vbObjectError, , "Fill expected (40,30), got (" & FillP.Widget.Left & "," & FillP.Widget.Top & ")"
+    End If
+    If Abs(FillP.Widget.Width - 160!) > 2! Or Abs(FillP.Widget.Height - 170!) > 2! Then
+        Err.Raise vbObjectError, , "Fill size expected 160x170, got " & FillP.Widget.Width & "x" & FillP.Widget.Height
+    End If
+
+    KeepAlive Root
+    LogResult "P2-DOCK-XAML", 0, "OK DockPanel.Dock XAML + LastChildFill"
+    Debug.Print "PASS  P2-DOCK-XAML DockPanel.Dock XAML + LastChildFill"
+    Phase2Bench_DockPanelXaml = True
+    Exit Function
+
+Fail:
+    LogResult "P2-DOCK-XAML", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-DOCK-XAML - " & Err.Description
+    Phase2Bench_DockPanelXaml = False
+    On Error Resume Next
+    KeepAlive Root
+    Err.Clear
+End Function
+
+Public Function Phase2Bench_DockPanelLayout() As Boolean
+    Dim Dp As DockPanel
+    Dim LeftP As Panel
+    Dim TopP As Panel
+    Dim FillP As Panel
+
+    On Error GoTo Fail
+
+    Set Dp = New DockPanel
+    Dp.Width = 200
+    Dp.Height = 200
+    Dp.LastChildFill = True
+    Dp.Widget.Move 0, 0, 200, 200
+
+    Set LeftP = New Panel
+    LeftP.Width = 50
+    LeftP.Height = 0
+    Set TopP = New Panel
+    TopP.Width = 0
+    TopP.Height = 40
+    Set FillP = New Panel
+    FillP.Width = 0
+    FillP.Height = 0
+
+    Dp.SetDock LeftP, DockLeft
+    Dp.SetDock TopP, DockTop
+
+    Dp.Children.Add LeftP
+    Dp.Children.Add TopP
+    Dp.Children.Add FillP
+
+    Dp.Widget.Move 0, 0, 200, 200
+
+    If Abs(LeftP.Widget.Left - 0!) > 2! Or Abs(LeftP.Widget.Width - 50!) > 2! Then
+        Err.Raise vbObjectError, , "Left expected L=0 W=50, got L=" & LeftP.Widget.Left & " W=" & LeftP.Widget.Width
+    End If
+    If Abs(LeftP.Widget.Height - 200!) > 2! Then
+        Err.Raise vbObjectError, , "Left Height expected 200, got " & LeftP.Widget.Height
+    End If
+    If Abs(TopP.Widget.Left - 50!) > 2! Or Abs(TopP.Widget.Top - 0!) > 2! Then
+        Err.Raise vbObjectError, , "Top expected (50,0), got (" & TopP.Widget.Left & "," & TopP.Widget.Top & ")"
+    End If
+    If Abs(TopP.Widget.Height - 40!) > 2! Then
+        Err.Raise vbObjectError, , "Top Height expected 40, got " & TopP.Widget.Height
+    End If
+    If Abs(FillP.Widget.Left - 50!) > 2! Or Abs(FillP.Widget.Top - 40!) > 2! Then
+        Err.Raise vbObjectError, , "Fill expected (50,40), got (" & FillP.Widget.Left & "," & FillP.Widget.Top & ")"
+    End If
+    If Abs(FillP.Widget.Width - 150!) > 2! Or Abs(FillP.Widget.Height - 160!) > 2! Then
+        Err.Raise vbObjectError, , "Fill size expected 150x160, got " & FillP.Widget.Width & "x" & FillP.Widget.Height
+    End If
+
+    KeepAlive Dp
+    LogResult "P2-DOCK-LAY", 0, "OK Left+Top+Fill arrange"
+    Debug.Print "PASS  P2-DOCK-LAY DockPanel Left+Top+Fill arrange"
+    Phase2Bench_DockPanelLayout = True
+    Exit Function
+
+Fail:
+    LogResult "P2-DOCK-LAY", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P2-DOCK-LAY - " & Err.Description
+    Phase2Bench_DockPanelLayout = False
+    On Error Resume Next
+    KeepAlive Dp
     Err.Clear
 End Function
 

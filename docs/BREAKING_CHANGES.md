@@ -5,6 +5,43 @@
 
 ---
 
+## [3.17.0] — 2026-07-23 — DockPanel
+
+### Added
+- **`DockPanel`** — WPF-style dock layout with **`LastChildFill`** (default **True**).
+- **`DockPanel.Dock`** attached (`Left` / `Top` / `Right` / `Bottom`, default **Left**) — DP bag + dict shim (same pattern as Grid.*).
+- **`Dock` enum**, `ParseDock`, `GetDock` / `SetDock`, `MeasureDockPanelContent` / `ArrangeDockPanelChildren`.
+- XAML `DockPanel.Dock="Top"` coerced via `ParseDock` (not `Val`).
+- Phase0 **P2-DOCK-XAML**, **P2-DOCK-LAY**. Suite **78**.
+
+- DLL version **3.17.0**.
+
+## [3.16.0] — 2026-07-23 — Grid attached props in per-element DP bag
+
+### Added
+- **`EnsureAttachedProperty`** — lazy-registers `Grid.Row` / `Column` / `RowSpan` / `ColumnSpan` on the target’s `DependencyProperties` (metadata default from `RegisterAttached`).
+- **`SetGridAttachedLong` / XAML `Grid.*`** — write DP bag + keep nested `AttachedProperties("Grid")` shim.
+- **`GetGridAttachedLong`** — prefers DP `GetValue` (supports **`ClearValue`** → default) then falls back to dict.
+- Phase0 **P2-GRID-ATTACH-DP**. Suite **77**.
+
+### Notes
+- Not eager-registered on every instance; no full attached-binding epic yet.
+
+- DLL version **3.16.0**.
+
+## [3.15.0] — 2026-07-23 — Grid cell Horizontal/VerticalAlignment
+
+### Added
+- **`HorizontalAlignment` / `VerticalAlignment`** on FrameworkElement layout hosts (string: `Left`/`Center`/`Right`/`Stretch`, `Top`/`Center`/`Bottom`/`Stretch`; default **Stretch**).
+- **`ArrangeGridChildren`** positions non-Stretch children from Desired/explicit size within the cell (WPF-style).
+- TextBlock keeps Long text-align DPs; **layout always Stretch** in Grid (text align ≠ layout align).
+- **`TextBlock.Move`** no longer writes arranged size into Width/Height DPs (avoids sticky narrow wrap / one-glyph-per-row).
+- Stretch + explicit Width/Height keeps author size (does not expand fixed children to the cell).
+- **`Button`** default Width/Height is **0** (unset), not 100×30 — Stretch in Grid/UniformGrid fills the slot.
+- Phase0 **P2-GRID-ALIGN**. Suite **76**.
+
+- DLL version **3.15.0**.
+
 ## [3.14.0] — 2026-07-23 — Retire design-canvas scale bridge
 
 ### Breaking

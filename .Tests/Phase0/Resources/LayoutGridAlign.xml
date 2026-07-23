@@ -1,0 +1,9 @@
+<Grid Width="200" Height="200">
+	<Grid.RowDefinitions>
+		<RowDefinition Height="*"/>
+	</Grid.RowDefinitions>
+	<Grid.ColumnDefinitions>
+		<ColumnDefinition Width="*"/>
+	</Grid.ColumnDefinitions>
+	<Panel Name="Centered" Width="40" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0"/>
+</Grid>

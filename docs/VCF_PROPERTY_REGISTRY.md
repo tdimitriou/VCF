@@ -45,7 +45,7 @@ These are set via XAML `CallByName` / fields — **outside** binding/style prece
 
 **Rewrite rule:** Migrate to DPs on `FrameworkElement` or remove in favor of templates.
 
-### 1.3 Attached properties (RegisterAttached — Grid)
+### 1.3 Attached properties (RegisterAttached — Grid / DockPanel)
 
 **3.4.0:** `DependencyPropertyRegistry.RegisterAttached` metadata + typed **`Grid.Get*` / `Set*`** for:
 
@@ -54,9 +54,11 @@ These are set via XAML `CallByName` / fields — **outside** binding/style prece
 - `Grid.RowSpan` (default 1)
 - `Grid.ColumnSpan` (default 1)
 
-**Storage:** still `AttachedProperties("Grid")` nested dictionary (XAML `Grid.Row="…"` unchanged). Not yet a per-element DP-bag attached store.
+**3.17.0:** **`DockPanel.Dock`** (default `Left` / 0) + **`DockPanel.GetDock` / `SetDock`**.
 
-**Deferred (accepted 2026-07-23):** migrate `Grid.*` values into the target’s `DependencyProperties` bag via lazy `EnsureAttached` on Set; layout/`Get*` read DP with metadata default; keep nested-dict shim until Phase0 + POS XAML green. Do **not** eager-register attached DPs on every instance. Queue after Min/Max unless Change/`ClearValue`/attached binding is needed sooner — see handoff Phase 2a deferred list.
+**Storage:** per-element `DependencyProperties` (`Grid.Row`, `DockPanel.Dock`, …) via lazy **`EnsureAttachedProperty`** on Set/XAML (**3.16.0**); nested `AttachedProperties("Grid"|"DockPanel")` dict kept as shim for writers/legacy.
+
+**Done (3.16.0):** migrate `Grid.*` into the target DP bag; layout/`Get*` read DP (ClearValue → metadata default); dict shim retained. Do **not** eager-register attached DPs on every instance.
 
 **UniformGrid** reads spans via `GetGridAttachedLong`.
 

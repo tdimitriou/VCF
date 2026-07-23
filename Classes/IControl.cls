@@ -37,6 +37,14 @@ Public Enum Orientation
     OrientationHorizontal = 1
 End Enum
 
+' WPF DockPanel.Dock attached values.
+Public Enum Dock
+    DockLeft = 0
+    DockTop = 1
+    DockRight = 2
+    DockBottom = 3
+End Enum
+
 Public Property Get Widget() As cWidgetBase: End Property
 Public Property Get Widgets() As cWidgets: End Property
 Public Property Get Children() As UIElementCollection: End Property

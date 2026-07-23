@@ -218,8 +218,9 @@ End Function
         m_Top = 0 'Top
         m_Width = Width
         m_Height = Height
-        If m_DependencyProperties.Exists("Width") Then m_DependencyProperties.SetCurrentValue "Width", CDbl(Width)
-        If m_DependencyProperties.Exists("Height") Then m_DependencyProperties.SetCurrentValue "Height", CDbl(Height)
+        ' Do not write arranged size into Width/Height DPs (WPF: Actual* vs author size).
+        ' Overwriting DPs made Grid treat text HorizontalAlignment=Left as layout Left
+        ' with a sticky narrow width (CalcTextRowsInfo → one glyph per row).
         
         If W Is Nothing Then Exit Sub
         W.Move Left, Top, Width, Height

@@ -31,7 +31,7 @@ Public Sub EnsureBuiltInTypes()
     m_Initialized = True
 End Sub
 
-' WPF-shaped attached metadata (storage remains AttachedProperties dict).
+' WPF-shaped attached metadata + lazy EnsureAttached into per-element DP bag.
 Public Sub RegisterAttached( _
     ByVal OwnerType As String, _
     ByVal Name As String, _
@@ -144,13 +144,17 @@ Private Sub RegisterFrameworkElementType()
         Array("MinWidth", vbDouble, vbNullString, vbNullString, True, False, False, OneWay), _
         Array("MinHeight", vbDouble, vbNullString, vbNullString, True, False, False, OneWay), _
         Array("MaxWidth", vbDouble, vbNullString, vbNullString, True, False, False, OneWay), _
-        Array("MaxHeight", vbDouble, vbNullString, vbNullString, True, False, False, OneWay)
+        Array("MaxHeight", vbDouble, vbNullString, vbNullString, True, False, False, OneWay), _
+        Array("HorizontalAlignment", vbString, vbNullString, vbNullString, True, False, False, OneWay), _
+        Array("VerticalAlignment", vbString, vbNullString, vbNullString, True, False, False, OneWay)
 
     RegisterType "Panel", "FrameworkElement", _
         Array("ShowGridLines", vbBoolean, vbNullString, vbNullString, False, True, False, OneWay)
 
     RegisterType "StackPanel", "FrameworkElement", _
         Array("Orientation", vbString, vbNullString, vbNullString, False, True, False, OneWay)
+    RegisterType "DockPanel", "FrameworkElement", _
+        Array("LastChildFill", vbBoolean, vbNullString, vbNullString, False, True, False, OneWay)
     RegisterType "Grid", "FrameworkElement"
     RegisterType "ContentControl", "FrameworkElement", _
         Array("Content", vbVariant, vbNullString, vbNullString, False, True, False, OneWay), _
@@ -184,6 +188,7 @@ Private Sub RegisterBuiltInAttached()
     RegisterAttached "Grid", "Column", vbLong, 0&
     RegisterAttached "Grid", "RowSpan", vbLong, 1&
     RegisterAttached "Grid", "ColumnSpan", vbLong, 1&
+    RegisterAttached "DockPanel", "Dock", vbLong, 0&
 End Sub
 
 Private Sub ApplyInheritedDefs(ByVal Defs As cCollection, ByVal BaseTypeName As String)

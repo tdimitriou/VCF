@@ -14,10 +14,39 @@ Public Enum GridUnitType
     GridUnitAuto = 2
 End Enum
 
+' WPF FrameworkElement alignment in panel slots (Grid cells).
+Public Enum LayoutHorizontalAlignment
+    LayoutHAlignLeft = 0
+    LayoutHAlignCenter = 1
+    LayoutHAlignRight = 2
+    LayoutHAlignStretch = 3
+End Enum
+
+Public Enum LayoutVerticalAlignment
+    LayoutVAlignTop = 0
+    LayoutVAlignCenter = 1
+    LayoutVAlignBottom = 2
+    LayoutVAlignStretch = 3
+End Enum
+
 Public Type GridLength
     Value As Double
     Unit As GridUnitType
 End Type
+
+Public Function ParseDock(ByVal Spec As String) As Dock
+    Select Case LCase$(Trim$(Spec))
+        Case "top", "1"
+            ParseDock = DockTop
+        Case "right", "2"
+            ParseDock = DockRight
+        Case "bottom", "3"
+            ParseDock = DockBottom
+        Case Else
+            ' left, 0, empty, unknown
+            ParseDock = DockLeft
+    End Select
+End Function
 
 Public Function LayoutRectFromMargin( _
     ByVal Margin As Thickness, _
@@ -110,7 +139,7 @@ Public Function ReadElementVisibility(ByVal Child As Object) As Visibility
     End If
     If TypeOf Child Is IUIElement Then
         Select Case TypeName(Child)
-            Case "Panel", "UserControl", "StackPanel", "Grid", "ContentControl", "Border", "Button"
+            Case "Panel", "UserControl", "StackPanel", "Grid", "DockPanel", "ContentControl", "Border", "Button"
                 ReadElementVisibility = Child.Visibility
                 Exit Function
         End Select
@@ -124,6 +153,7 @@ Public Sub InvalidateParentLayout(ByVal Child As Object)
     Dim ParentObj As Object
     Dim Sp As StackPanel
     Dim G As Grid
+    Dim Dp As DockPanel
     Dim Ug As UniformGrid
     Dim P As Panel
     Dim B As Border
@@ -146,6 +176,9 @@ Public Sub InvalidateParentLayout(ByVal Child As Object)
         Case "Grid"
             Set G = ParentObj
             G.RelayoutChildren
+        Case "DockPanel"
+            Set Dp = ParentObj
+            Dp.RelayoutChildren
         Case "UniformGrid"
             Set Ug = ParentObj
             Ug.ArrangeChildren
@@ -232,21 +265,193 @@ End Function
 
 Public Function GetGridAttachedLong(ByVal Child As IUIElement, ByVal Key As String, Optional ByVal DefaultValue As Long = 0) As Long
     Dim Dict As ObservableDictionary
+    Dim Dep As IDependencyObject
+    Dim FullName As String
+    Dim V As Variant
 
     GetGridAttachedLong = DefaultValue
     On Error Resume Next
     If Child Is Nothing Then Exit Function
+
+    FullName = "Grid." & Key
+    If TypeOf Child Is IDependencyObject Then
+        Set Dep = Child
+        If Not Dep.DependencyProperties Is Nothing Then
+            If Dep.DependencyProperties.Exists(FullName) Then
+                V = Dep.DependencyProperties.GetValue(FullName)
+                If IsNumeric(V) Then GetGridAttachedLong = CLng(V)
+                Exit Function
+            End If
+        End If
+    End If
+
     If Not Child.AttachedProperties.ContainsKey("Grid") Then Exit Function
     Set Dict = Child.AttachedProperties("Grid")
     If Dict.ContainsKey(Key) Then GetGridAttachedLong = CLng(Dict(Key))
 End Function
 
+Public Function ParseLayoutHorizontalAlignment(ByVal Spec As String) As LayoutHorizontalAlignment
+    Select Case LCase$(Trim$(Spec))
+        Case "left": ParseLayoutHorizontalAlignment = LayoutHAlignLeft
+        Case "center": ParseLayoutHorizontalAlignment = LayoutHAlignCenter
+        Case "right": ParseLayoutHorizontalAlignment = LayoutHAlignRight
+        Case Else: ParseLayoutHorizontalAlignment = LayoutHAlignStretch
+    End Select
+End Function
+
+Public Function ParseLayoutVerticalAlignment(ByVal Spec As String) As LayoutVerticalAlignment
+    Select Case LCase$(Trim$(Spec))
+        Case "top": ParseLayoutVerticalAlignment = LayoutVAlignTop
+        Case "center": ParseLayoutVerticalAlignment = LayoutVAlignCenter
+        Case "bottom": ParseLayoutVerticalAlignment = LayoutVAlignBottom
+        Case Else: ParseLayoutVerticalAlignment = LayoutVAlignStretch
+    End Select
+End Function
+
+' TextBlock.HorizontalAlignment / VerticalAlignment are text-box aligns, not
+' FrameworkElement layout aligns. Always Stretch in panel slots (WPF: layout
+' Stretch by default; TextAlignment is separate).
+Public Function ReadLayoutHorizontalAlignment(ByVal Child As Object) As LayoutHorizontalAlignment
+    Dim V As Variant
+
+    ReadLayoutHorizontalAlignment = LayoutHAlignStretch
+    On Error Resume Next
+    If Child Is Nothing Then Exit Function
+    If TypeOf Child Is TextBlock Then Exit Function
+    If Not TypeOf Child Is IDependencyObject Then Exit Function
+    If Child.DependencyProperties Is Nothing Then Exit Function
+    If Not Child.DependencyProperties.Exists("HorizontalAlignment") Then Exit Function
+
+    V = Child.DependencyProperties.GetValue("HorizontalAlignment")
+    If VarType(V) = vbString Then
+        ReadLayoutHorizontalAlignment = ParseLayoutHorizontalAlignment(CStr(V))
+    ElseIf IsNumeric(V) Then
+        Select Case CLng(V)
+            Case LayoutHAlignLeft, LayoutHAlignCenter, LayoutHAlignRight, LayoutHAlignStretch
+                ReadLayoutHorizontalAlignment = CLng(V)
+            Case Else
+                ReadLayoutHorizontalAlignment = LayoutHAlignStretch
+        End Select
+    End If
+End Function
+
+Public Function ReadLayoutVerticalAlignment(ByVal Child As Object) As LayoutVerticalAlignment
+    Dim V As Variant
+
+    ReadLayoutVerticalAlignment = LayoutVAlignStretch
+    On Error Resume Next
+    If Child Is Nothing Then Exit Function
+    If TypeOf Child Is TextBlock Then Exit Function
+    If Not TypeOf Child Is IDependencyObject Then Exit Function
+    If Child.DependencyProperties Is Nothing Then Exit Function
+    If Not Child.DependencyProperties.Exists("VerticalAlignment") Then Exit Function
+
+    V = Child.DependencyProperties.GetValue("VerticalAlignment")
+    If VarType(V) = vbString Then
+        ReadLayoutVerticalAlignment = ParseLayoutVerticalAlignment(CStr(V))
+    ElseIf IsNumeric(V) Then
+        Select Case CLng(V)
+            Case LayoutVAlignTop, LayoutVAlignCenter, LayoutVAlignBottom, LayoutVAlignStretch
+                ReadLayoutVerticalAlignment = CLng(V)
+            Case Else
+                ReadLayoutVerticalAlignment = LayoutVAlignStretch
+        End Select
+    End If
+End Function
+
+Public Function AlignElementInSlot( _
+    ByVal Child As Object, _
+    ByVal SlotLeft As Single, _
+    ByVal SlotTop As Single, _
+    ByVal SlotWidth As Single, _
+    ByVal SlotHeight As Single, _
+    ByVal HAlign As LayoutHorizontalAlignment, _
+    ByVal VAlign As LayoutVerticalAlignment) As LayoutRect
+
+    Dim Measured As LayoutRect
+    Dim ChildW As Double
+    Dim ChildH As Double
+    Dim AvailW As Double
+    Dim AvailH As Double
+
+    AvailW = CDbl(SlotWidth)
+    AvailH = CDbl(SlotHeight)
+    If AvailW < 0# Then AvailW = 0#
+    If AvailH < 0# Then AvailH = 0#
+
+    AlignElementInSlot.Left = SlotLeft
+    AlignElementInSlot.Top = SlotTop
+    AlignElementInSlot.Width = SlotWidth
+    AlignElementInSlot.Height = SlotHeight
+
+    ' Stretch + unset size → fill slot. Stretch + explicit Width/Height → keep
+    ' author size (WPF); do not expand fixed-size children to the cell.
+    If HAlign = LayoutHAlignStretch Then
+        ChildW = ReadElementWidth(Child)
+        If ChildW <= 0# Then
+            AlignElementInSlot.Width = CSng(ClampElementWidth(Child, AvailW))
+        Else
+            ChildW = ClampElementWidth(Child, ChildW)
+            If ChildW > AvailW Then ChildW = AvailW
+            AlignElementInSlot.Width = CSng(ChildW)
+            AlignElementInSlot.Left = SlotLeft
+        End If
+    Else
+        Measured = MeasureElementSize(Child, AvailW, 0#)
+        ChildW = CDbl(Measured.Width)
+        If ChildW <= 0# Then ChildW = ReadElementWidth(Child)
+        If ChildW <= 0# Then ChildW = AvailW
+        ChildW = ClampElementWidth(Child, ChildW)
+        If ChildW > AvailW Then ChildW = AvailW
+        AlignElementInSlot.Width = CSng(ChildW)
+        Select Case HAlign
+            Case LayoutHAlignCenter
+                AlignElementInSlot.Left = SlotLeft + CSng((AvailW - ChildW) / 2#)
+            Case LayoutHAlignRight
+                AlignElementInSlot.Left = SlotLeft + CSng(AvailW - ChildW)
+            Case Else
+                AlignElementInSlot.Left = SlotLeft
+        End Select
+    End If
+
+    If VAlign = LayoutVAlignStretch Then
+        ChildH = ReadElementHeight(Child)
+        If ChildH <= 0# Then
+            AlignElementInSlot.Height = CSng(ClampElementHeight(Child, AvailH))
+        Else
+            ChildH = ClampElementHeight(Child, ChildH)
+            If ChildH > AvailH Then ChildH = AvailH
+            AlignElementInSlot.Height = CSng(ChildH)
+            AlignElementInSlot.Top = SlotTop
+        End If
+    Else
+        Measured = MeasureElementSize(Child, 0#, AvailH)
+        ChildH = CDbl(Measured.Height)
+        If ChildH <= 0# Then ChildH = ReadElementHeight(Child)
+        If ChildH <= 0# Then ChildH = AvailH
+        ChildH = ClampElementHeight(Child, ChildH)
+        If ChildH > AvailH Then ChildH = AvailH
+        AlignElementInSlot.Height = CSng(ChildH)
+        Select Case VAlign
+            Case LayoutVAlignCenter
+                AlignElementInSlot.Top = SlotTop + CSng((AvailH - ChildH) / 2#)
+            Case LayoutVAlignBottom
+                AlignElementInSlot.Top = SlotTop + CSng(AvailH - ChildH)
+            Case Else
+                AlignElementInSlot.Top = SlotTop
+        End Select
+    End If
+End Function
+
 Public Sub SetGridAttachedLong(ByVal Child As IUIElement, ByVal Key As String, ByVal Value As Long)
     Dim Dict As ObservableDictionary
+    Dim Dep As IDependencyObject
+    Dim FullName As String
 
     If Child Is Nothing Then Exit Sub
     If Len(Key) = 0 Then Exit Sub
 
+    ' Nested-dict shim (XAML writer / legacy readers).
     If Child.AttachedProperties.ContainsKey("Grid") Then
         Set Dict = Child.AttachedProperties("Grid")
     Else
@@ -259,6 +464,109 @@ Public Sub SetGridAttachedLong(ByVal Child As IUIElement, ByVal Key As String, B
     Else
         Dict.Add Key, Value
     End If
+
+    ' Per-element DP bag (ClearValue / GetValue / future binding).
+    On Error Resume Next
+    If TypeOf Child Is IDependencyObject Then
+        Set Dep = Child
+        FullName = "Grid." & Key
+        EnsureAttachedProperty Dep, FullName
+        If Dep.DependencyProperties.Exists(FullName) Then
+            Dep.DependencyProperties.SetValue FullName, Value
+        End If
+    End If
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
+Public Function GetDockAttachedLong(ByVal Child As IUIElement, Optional ByVal DefaultValue As Long = DockLeft) As Long
+    Dim Dict As ObservableDictionary
+    Dim Dep As IDependencyObject
+    Dim FullName As String
+    Dim V As Variant
+
+    GetDockAttachedLong = DefaultValue
+    On Error Resume Next
+    If Child Is Nothing Then Exit Function
+
+    FullName = "DockPanel.Dock"
+    If TypeOf Child Is IDependencyObject Then
+        Set Dep = Child
+        If Not Dep.DependencyProperties Is Nothing Then
+            If Dep.DependencyProperties.Exists(FullName) Then
+                V = Dep.DependencyProperties.GetValue(FullName)
+                If VarType(V) = vbString Then
+                    GetDockAttachedLong = ParseDock(CStr(V))
+                ElseIf IsNumeric(V) Then
+                    GetDockAttachedLong = CLng(V)
+                End If
+                Exit Function
+            End If
+        End If
+    End If
+
+    If Not Child.AttachedProperties.ContainsKey("DockPanel") Then Exit Function
+    Set Dict = Child.AttachedProperties("DockPanel")
+    If Not Dict.ContainsKey("Dock") Then Exit Function
+    V = Dict("Dock")
+    If VarType(V) = vbString Then
+        GetDockAttachedLong = ParseDock(CStr(V))
+    ElseIf IsNumeric(V) Then
+        GetDockAttachedLong = CLng(V)
+    End If
+End Function
+
+Public Sub SetDockAttachedLong(ByVal Child As IUIElement, ByVal Value As Long)
+    Dim Dict As ObservableDictionary
+    Dim Dep As IDependencyObject
+    Dim FullName As String
+
+    If Child Is Nothing Then Exit Sub
+
+    If Child.AttachedProperties.ContainsKey("DockPanel") Then
+        Set Dict = Child.AttachedProperties("DockPanel")
+    Else
+        Set Dict = New ObservableDictionary
+        Child.AttachedProperties.Add "DockPanel", Dict
+    End If
+
+    If Dict.ContainsKey("Dock") Then
+        Dict.Item("Dock") = Value
+    Else
+        Dict.Add "Dock", Value
+    End If
+
+    On Error Resume Next
+    If TypeOf Child Is IDependencyObject Then
+        Set Dep = Child
+        FullName = "DockPanel.Dock"
+        EnsureAttachedProperty Dep, FullName
+        If Dep.DependencyProperties.Exists(FullName) Then
+            Dep.DependencyProperties.SetValue FullName, Value
+        End If
+    End If
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
+' Lazy-register attached DP on the target (do not eager-register on every instance).
+Public Sub EnsureAttachedProperty(ByVal Target As IDependencyObject, ByVal FullName As String)
+    Dim Reg As DependencyPropertyRegistry
+    Dim Def As Variant
+    Dim Meta As DependencyPropertyMetadata
+
+    If Target Is Nothing Then Exit Sub
+    If Len(FullName) = 0 Then Exit Sub
+    If Target.DependencyProperties Is Nothing Then Exit Sub
+    If Target.DependencyProperties.Exists(FullName) Then Exit Sub
+
+    Set Reg = modStaticClasses.DependencyPropertyRegistry
+    Reg.EnsureBuiltInTypes
+    If Not Reg.IsAttachedRegistered(FullName) Then Exit Sub
+
+    Def = Reg.GetAttachedDefault(FullName)
+    Set Meta = NewDependencyPropertyMetadata(True, False, False, OneWay, Def)
+    Target.DependencyProperties.Register FullName, vbLong, , , , Meta
 End Sub
 
 Public Sub ApplyChildWidgetVisibility(ByVal Child As Object, ByVal Value As Visibility)
@@ -663,9 +971,6 @@ Public Sub ArrangeGridChildren( _
 
         Set Margin = ReadElementMargin(Child)
 
-        R.Left = ColOffsets(Col) + CSng(Margin.Left)
-        R.Top = RowOffsets(Row) + CSng(Margin.Top)
-
         CellWidth = 0!
         For i = Col To Col + ColSpan - 1
             CellWidth = CellWidth + ColSizes(i)
@@ -675,12 +980,23 @@ Public Sub ArrangeGridChildren( _
             CellHeight = CellHeight + RowSizes(i)
         Next
 
-        R.Width = CellWidth - CSng(Margin.Left + Margin.Right)
-        R.Height = CellHeight - CSng(Margin.Top + Margin.Bottom)
-        If R.Width < 0! Then R.Width = 0!
-        If R.Height < 0! Then R.Height = 0!
-        R.Width = CSng(ClampElementWidth(Child, R.Width))
-        R.Height = CSng(ClampElementHeight(Child, R.Height))
+        Dim SlotL As Single
+        Dim SlotT As Single
+        Dim SlotW As Single
+        Dim SlotH As Single
+        Dim HAlign As LayoutHorizontalAlignment
+        Dim VAlign As LayoutVerticalAlignment
+
+        SlotL = ColOffsets(Col) + CSng(Margin.Left)
+        SlotT = RowOffsets(Row) + CSng(Margin.Top)
+        SlotW = CellWidth - CSng(Margin.Left + Margin.Right)
+        SlotH = CellHeight - CSng(Margin.Top + Margin.Bottom)
+        If SlotW < 0! Then SlotW = 0!
+        If SlotH < 0! Then SlotH = 0!
+
+        HAlign = ReadLayoutHorizontalAlignment(Child)
+        VAlign = ReadLayoutVerticalAlignment(Child)
+        R = AlignElementInSlot(Child, SlotL, SlotT, SlotW, SlotH, HAlign, VAlign)
 
         ApplyLayoutRectToElement ChildUI, R
         ApplyChildWidgetVisibility Child, ChildVis
@@ -890,3 +1206,256 @@ NextChild:
 
     GridAutoTrackSize = MaxDesired
 End Function
+
+' Content-driven DockPanel measure (no widget Move).
+' Width  = Left+Right docked + max(Top/Bottom/fill widths)
+' Height = Top+Bottom docked + max(Left/Right/fill heights)
+Public Sub MeasureDockPanelContent( _
+    ByVal Children As UIElementCollection, _
+    ByVal LastChildFill As Boolean, _
+    ByVal AvailableWidth As Double, _
+    ByVal AvailableHeight As Double, _
+    ByRef OutContentWidth As Double, _
+    ByRef OutContentHeight As Double)
+
+    Dim Child As Object
+    Dim ChildUI As IUIElement
+    Dim Kids() As Object
+    Dim N As Long
+    Dim i As Long
+    Dim ChildVis As Visibility
+    Dim Margin As Thickness
+    Dim Measured As LayoutRect
+    Dim ChildW As Double
+    Dim ChildH As Double
+    Dim AccLR As Double
+    Dim AccTB As Double
+    Dim MaxCrossLR As Double
+    Dim MaxCrossTB As Double
+    Dim FillW As Double
+    Dim FillH As Double
+    Dim DockSide As Dock
+    Dim IsFill As Boolean
+    Dim SlotW As Double
+    Dim SlotH As Double
+
+    OutContentWidth = 0#
+    OutContentHeight = 0#
+    AccLR = 0#
+    AccTB = 0#
+    MaxCrossLR = 0#
+    MaxCrossTB = 0#
+    FillW = 0#
+    FillH = 0#
+    N = 0
+
+    If Children Is Nothing Then Exit Sub
+
+    For Each Child In Children
+        ReDim Preserve Kids(0 To N)
+        Set Kids(N) = Child
+        N = N + 1
+    Next
+
+    For i = 0 To N - 1
+        Set Child = Kids(i)
+        If Not TypeOf Child Is IUIElement Then GoTo NextMeasureDock
+        Set ChildUI = Child
+        ChildVis = ReadElementVisibility(Child)
+        If IsLayoutCollapsed(ChildVis) Then GoTo NextMeasureDock
+
+        Set Margin = ReadElementMargin(Child)
+        IsFill = LastChildFill And (i = N - 1)
+
+        SlotW = AvailableWidth - Margin.Left - Margin.Right
+        SlotH = AvailableHeight - Margin.Top - Margin.Bottom
+        If SlotW < 0# Then SlotW = 0#
+        If SlotH < 0# Then SlotH = 0#
+        ' Unconstrained when available is 0: leaf uses explicit Width/Height only.
+        Measured = MeasureElementSize(Child, SlotW, SlotH)
+        ChildW = CDbl(Measured.Width) + Margin.Left + Margin.Right
+        ChildH = CDbl(Measured.Height) + Margin.Top + Margin.Bottom
+
+        If IsFill Then
+            FillW = ChildW
+            FillH = ChildH
+        Else
+            DockSide = GetDockAttachedLong(ChildUI, DockLeft)
+            Select Case DockSide
+                Case DockTop, DockBottom
+                    AccTB = AccTB + ChildH
+                    If ChildW > MaxCrossTB Then MaxCrossTB = ChildW
+                Case Else
+                    AccLR = AccLR + ChildW
+                    If ChildH > MaxCrossLR Then MaxCrossLR = ChildH
+            End Select
+        End If
+
+NextMeasureDock:
+    Next
+
+    If FillW > MaxCrossTB Then
+        OutContentWidth = AccLR + FillW
+    Else
+        OutContentWidth = AccLR + MaxCrossTB
+    End If
+
+    If FillH > MaxCrossLR Then
+        OutContentHeight = AccTB + FillH
+    Else
+        OutContentHeight = AccTB + MaxCrossLR
+    End If
+End Sub
+
+Public Sub ArrangeDockPanelChildren( _
+    ByVal Children As UIElementCollection, _
+    ByVal HostWidget As cWidgetBase, _
+    ByVal LastChildFill As Boolean, _
+    Optional ByVal OverrideHostWidth As Single = 0, _
+    Optional ByVal OverrideHostHeight As Single = 0)
+
+    Dim Child As Object
+    Dim ChildUI As IUIElement
+    Dim Kids() As Object
+    Dim N As Long
+    Dim i As Long
+    Dim ChildVis As Visibility
+    Dim Margin As Thickness
+    Dim R As LayoutRect
+    Dim Measured As LayoutRect
+    Dim HostWidth As Single
+    Dim HostHeight As Single
+    Dim RemL As Double
+    Dim RemT As Double
+    Dim RemW As Double
+    Dim RemH As Double
+    Dim ChildW As Double
+    Dim ChildH As Double
+    Dim SlotW As Double
+    Dim SlotH As Double
+    Dim DockSide As Dock
+    Dim IsFill As Boolean
+
+    If Children Is Nothing Then Exit Sub
+    If HostWidget Is Nothing Then Exit Sub
+
+    If OverrideHostWidth > 0 Then
+        HostWidth = OverrideHostWidth
+    Else
+        HostWidth = HostWidget.Width
+    End If
+    If OverrideHostHeight > 0 Then
+        HostHeight = OverrideHostHeight
+    Else
+        HostHeight = HostWidget.Height
+    End If
+
+    RemL = 0#
+    RemT = 0#
+    RemW = CDbl(HostWidth)
+    RemH = CDbl(HostHeight)
+    N = 0
+
+    For Each Child In Children
+        ReDim Preserve Kids(0 To N)
+        Set Kids(N) = Child
+        N = N + 1
+    Next
+
+    For i = 0 To N - 1
+        Set Child = Kids(i)
+        If Not TypeOf Child Is IUIElement Then GoTo NextArrangeDock
+        Set ChildUI = Child
+
+        ChildVis = ReadElementVisibility(Child)
+        If IsLayoutCollapsed(ChildVis) Then
+            DetachCollapsedChild Child, HostWidget
+            GoTo NextArrangeDock
+        End If
+
+        If Not TypeOf Child Is IControl Then GoTo NextArrangeDock
+
+        AttachChildWidget Child, HostWidget, ChildVis
+        Set Margin = ReadElementMargin(Child)
+        IsFill = LastChildFill And (i = N - 1)
+
+        SlotW = RemW - Margin.Left - Margin.Right
+        SlotH = RemH - Margin.Top - Margin.Bottom
+        If SlotW < 0# Then SlotW = 0#
+        If SlotH < 0# Then SlotH = 0#
+
+        If IsFill Then
+            R.Left = CSng(RemL + Margin.Left)
+            R.Top = CSng(RemT + Margin.Top)
+            ChildW = ReadElementWidth(Child)
+            ChildH = ReadElementHeight(Child)
+            If ChildW <= 0# Then ChildW = SlotW Else If ChildW > SlotW Then ChildW = SlotW
+            If ChildH <= 0# Then ChildH = SlotH Else If ChildH > SlotH Then ChildH = SlotH
+            R.Width = CSng(ClampElementWidth(Child, ChildW))
+            R.Height = CSng(ClampElementHeight(Child, ChildH))
+            ApplyLayoutRectToElement ChildUI, R
+            ApplyChildWidgetVisibility Child, ChildVis
+            GoTo NextArrangeDock
+        End If
+
+        DockSide = GetDockAttachedLong(ChildUI, DockLeft)
+        Measured = MeasureElementSize(Child, SlotW, SlotH)
+        ChildW = CDbl(Measured.Width)
+        ChildH = CDbl(Measured.Height)
+
+        Select Case DockSide
+            Case DockTop
+                If ChildW <= 0# Then ChildW = SlotW
+                If ChildH <= 0# Then ChildH = SlotH
+                If ChildW > SlotW Then ChildW = SlotW
+                If ChildH > SlotH Then ChildH = SlotH
+                ' Stretch horizontally in remaining width.
+                ChildW = SlotW
+                R.Left = CSng(RemL + Margin.Left)
+                R.Top = CSng(RemT + Margin.Top)
+                R.Width = CSng(ClampElementWidth(Child, ChildW))
+                R.Height = CSng(ClampElementHeight(Child, ChildH))
+                RemT = RemT + Margin.Top + CDbl(R.Height) + Margin.Bottom
+                RemH = RemH - (Margin.Top + CDbl(R.Height) + Margin.Bottom)
+            Case DockBottom
+                If ChildH <= 0# Then ChildH = SlotH
+                If ChildH > SlotH Then ChildH = SlotH
+                ChildW = SlotW
+                ChildH = ClampElementHeight(Child, ChildH)
+                R.Width = CSng(ClampElementWidth(Child, ChildW))
+                R.Height = CSng(ChildH)
+                R.Left = CSng(RemL + Margin.Left)
+                R.Top = CSng(RemT + RemH - Margin.Bottom - CDbl(R.Height))
+                RemH = RemH - (Margin.Top + CDbl(R.Height) + Margin.Bottom)
+            Case DockRight
+                If ChildW <= 0# Then ChildW = SlotW
+                If ChildW > SlotW Then ChildW = SlotW
+                ChildH = SlotH
+                ChildW = ClampElementWidth(Child, ChildW)
+                R.Width = CSng(ChildW)
+                R.Height = CSng(ClampElementHeight(Child, ChildH))
+                R.Left = CSng(RemL + RemW - Margin.Right - CDbl(R.Width))
+                R.Top = CSng(RemT + Margin.Top)
+                RemW = RemW - (Margin.Left + CDbl(R.Width) + Margin.Right)
+            Case Else ' DockLeft
+                If ChildW <= 0# Then ChildW = SlotW
+                If ChildW > SlotW Then ChildW = SlotW
+                ChildH = SlotH
+                ChildW = ClampElementWidth(Child, ChildW)
+                R.Left = CSng(RemL + Margin.Left)
+                R.Top = CSng(RemT + Margin.Top)
+                R.Width = CSng(ChildW)
+                R.Height = CSng(ClampElementHeight(Child, ChildH))
+                RemL = RemL + Margin.Left + CDbl(R.Width) + Margin.Right
+                RemW = RemW - (Margin.Left + CDbl(R.Width) + Margin.Right)
+        End Select
+
+        If RemW < 0# Then RemW = 0#
+        If RemH < 0# Then RemH = 0#
+
+        ApplyLayoutRectToElement ChildUI, R
+        ApplyChildWidgetVisibility Child, ChildVis
+
+NextArrangeDock:
+    Next
+End Sub

@@ -655,6 +655,8 @@ Private Sub SetAttachedProperty(ByVal Obj As IUIElement, ByVal PropertyName As S
     Dim PropData
     Dim FullName As String
     Dim Reg As DependencyPropertyRegistry
+    Dim Dep As IDependencyObject
+    Dim Coerced As Long
             
     PropData = Split(PropertyName, ".")
     If UBound(PropData) < 1 Then Exit Sub
@@ -662,9 +664,10 @@ Private Sub SetAttachedProperty(ByVal Obj As IUIElement, ByVal PropertyName As S
     PropKey = PropData(1)
     FullName = PropDict & "." & PropKey
 
+    Set Reg = modStaticClasses.DependencyPropertyRegistry
+    Reg.EnsureBuiltInTypes
+
     If modConstructors.StrictXamlLoad Then
-        Set Reg = modStaticClasses.DependencyPropertyRegistry
-        Reg.EnsureBuiltInTypes
         If Reg.HasAttachedOwner(PropDict) Then
             If Not Reg.IsAttachedRegistered(FullName) Then
                 RaiseXamlLoad "Unknown attached property '" & FullName & "'.", TypeName(Obj), FullName
@@ -685,6 +688,26 @@ Private Sub SetAttachedProperty(ByVal Obj As IUIElement, ByVal PropertyName As S
         Dict.Add PropKey, Value
     End If
 
+    ' Registered attached → also land in per-element DP bag (lazy EnsureAttached).
+    On Error Resume Next
+    If Reg.IsAttachedRegistered(FullName) Then
+        If TypeOf Obj Is IDependencyObject Then
+            Set Dep = Obj
+            EnsureAttachedProperty Dep, FullName
+            If Dep.DependencyProperties.Exists(FullName) Then
+                If LCase$(FullName) = "dockpanel.dock" Then
+                    Coerced = ParseDock(CStr(Value))
+                ElseIf IsNumeric(Value) Then
+                    Coerced = CLng(Value)
+                Else
+                    Coerced = CLng(Val(CStr(Value)))
+                End If
+                Dep.DependencyProperties.SetValue FullName, Coerced
+            End If
+        End If
+    End If
+    Err.Clear
+    On Error GoTo 0
 End Sub
 
 Private Sub SetDependencyProperty(ByVal Obj As IDependencyObject, ByVal PropertyName As String, Value)

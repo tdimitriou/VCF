@@ -1,0 +1,5 @@
+<DockPanel Width="200" Height="200" LastChildFill="True">
+	<Panel Name="LeftDock" DockPanel.Dock="Left" Width="40" Height="50"/>
+	<Panel Name="TopDock" DockPanel.Dock="Top" Width="80" Height="30"/>
+	<Panel Name="FillCenter"/>
+</DockPanel>

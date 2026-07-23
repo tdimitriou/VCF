@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "Grid"
+Attribute VB_Name = "DockPanel"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -31,59 +31,31 @@ Attribute m_DependencyProperties.VB_VarHelpID = -1
 Private m_Bindings As List
 Private m_BaseUIElement As UIElementBase
 Private m_Layout As FrameworkElement
-Private m_RowDefinitions As ObservableCollection
-Private m_ColumnDefinitions As ObservableCollection
+Private m_LastChildFill As Boolean
 
 Public Name As String
 
-Public Property Get RowDefinitions() As ObservableCollection
-    Set RowDefinitions = m_RowDefinitions
+' Attached DockPanel.Dock (WPF GetDock / SetDock).
+Public Function GetDock(ByVal Element As IUIElement) As Dock
+    GetDock = GetDockAttachedLong(Element, DockLeft)
+End Function
+
+Public Sub SetDock(ByVal Element As IUIElement, ByVal Value As Dock)
+    SetDockAttachedLong Element, CLng(Value)
+End Sub
+
+Public Property Get LastChildFill() As Boolean
+    LastChildFill = m_LastChildFill
 End Property
 
-Public Property Get ColumnDefinitions() As ObservableCollection
-    Set ColumnDefinitions = m_ColumnDefinitions
+Public Property Let LastChildFill(ByVal Value As Boolean)
+    If m_LastChildFill = Value Then Exit Property
+    m_LastChildFill = Value
+    If m_DependencyProperties.Exists("LastChildFill") Then
+        m_DependencyProperties.SetCurrentValue "LastChildFill", Value
+    End If
+    If Not m_Children Is Nothing Then ArrangePanel
 End Property
-
-' Attached property accessors (WPF Grid.Get*/Set*).
-' Storage: per-element DependencyProperties ("Grid.Row", …) via lazy EnsureAttached;
-' nested AttachedProperties("Grid") dict kept as shim.
-Public Function GetRow(ByVal Element As IUIElement) As Long
-    GetRow = GetGridAttachedLong(Element, "Row", 0)
-End Function
-
-Public Sub SetRow(ByVal Element As IUIElement, ByVal Value As Long)
-    If Value < 0 Then Value = 0
-    SetGridAttachedLong Element, "Row", Value
-End Sub
-
-Public Function GetColumn(ByVal Element As IUIElement) As Long
-    GetColumn = GetGridAttachedLong(Element, "Column", 0)
-End Function
-
-Public Sub SetColumn(ByVal Element As IUIElement, ByVal Value As Long)
-    If Value < 0 Then Value = 0
-    SetGridAttachedLong Element, "Column", Value
-End Sub
-
-Public Function GetRowSpan(ByVal Element As IUIElement) As Long
-    GetRowSpan = GetGridAttachedLong(Element, "RowSpan", 1)
-    If GetRowSpan < 1 Then GetRowSpan = 1
-End Function
-
-Public Sub SetRowSpan(ByVal Element As IUIElement, ByVal Value As Long)
-    If Value < 1 Then Value = 1
-    SetGridAttachedLong Element, "RowSpan", Value
-End Sub
-
-Public Function GetColumnSpan(ByVal Element As IUIElement) As Long
-    GetColumnSpan = GetGridAttachedLong(Element, "ColumnSpan", 1)
-    If GetColumnSpan < 1 Then GetColumnSpan = 1
-End Function
-
-Public Sub SetColumnSpan(ByVal Element As IUIElement, ByVal Value As Long)
-    If Value < 1 Then Value = 1
-    SetGridAttachedLong Element, "ColumnSpan", Value
-End Sub
 
 '#Region Public Properties
     Public Property Get Bindings() As VCF.List
@@ -127,20 +99,11 @@ End Sub
     
     Public Property Set DataContext(ByVal Value As Object)
         Call m_DependencyProperties.SetValue("DataContext", Value)
-        
-        ' TO-DO: Recreate the Bindings!!!
     End Property
     
     Public Property Get DataContext() As Object
         Call API.CopyVariable(m_DependencyProperties.GetValue("DataContext"), DataContext)
     End Property
-    
-    
-    
-    
-    
-    
-    
     
     Public Property Get Width() As Double
         Width = m_Layout.Width
@@ -222,7 +185,6 @@ End Sub
         ActualHeight = m_Layout.ActualHeight
     End Property
 
-    ' MeasureOverride-style: sum of resolved track sizes for Available*.
     Public Sub MeasureLayout(ByVal AvailableWidth As Double, ByVal AvailableHeight As Double)
         Dim ContentW As Double
         Dim ContentH As Double
@@ -231,8 +193,7 @@ End Sub
 
         If m_Layout Is Nothing Then Exit Sub
 
-        MeasureGridContent m_Children, m_RowDefinitions, m_ColumnDefinitions, _
-            AvailableWidth, AvailableHeight, ContentW, ContentH
+        MeasureDockPanelContent m_Children, m_LastChildFill, AvailableWidth, AvailableHeight, ContentW, ContentH
 
         DesiredW = Width
         DesiredH = Height
@@ -248,11 +209,8 @@ End Sub
 
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
-        
         W.Move Left, Top, Width, Height
-        
         ApplyVisibility W, Visibility
-        ArrangePanel
     End Sub
 
     Public Property Set Parent(ByVal Value As IControl)
@@ -280,6 +238,8 @@ End Sub
         With m_DependencyProperties
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
             Call .Register("ShowGridLines", vbBoolean)
+            Call .Register("LastChildFill", vbBoolean)
+            .SetCurrentValue "LastChildFill", True
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
             .SetValue "Style", Nothing
         End With
@@ -288,20 +248,18 @@ End Sub
         W.CanGetFocus = False
         
         Set m_Children = NewUIElementCollection(Me)
-        Set m_RowDefinitions = New ObservableCollection
-        Set m_ColumnDefinitions = New ObservableCollection
         
         Set m_Layout = New FrameworkElement
         m_Layout.Initialize Me, Me, W
-        m_Layout.RegisterLayoutProperties "Grid"
+        m_Layout.RegisterLayoutProperties "DockPanel"
+        
+        m_LastChildFill = True
         
         m_Layout.Width = 0
         m_Layout.Height = 0
         m_Layout.Visibility = VisibilityVisible
         
         NewUIElementBase Me, m_BaseUIElement
-        
-        'EnumerateProperties Me
         
         Set Style = GetBaseStyle
     End Sub
@@ -353,14 +311,6 @@ End Sub
         Set IUIElement_DataContext = DataContext
     End Property
         
-    
-    
-    
-    
-    
-    
-    
-    
     Private Sub IUIElement_Move(Left As Single, Optional Top As Single = 0#, Optional Width As Single, Optional Height As Single)
         Move Left, Top, Width, Height
     End Sub
@@ -376,37 +326,33 @@ End Sub
 
 '#Region UIElementCollection Events
     Private Sub m_Children_CollectionChanged(Sender As Object, e As CollectionChangedEventArgs)
-        On Error GoTo Catch
-            
         Dim Child As Object
-        
-Try:
-        
+
         If Not e.OldItems Is Nothing Then
             For Each Child In e.OldItems
-                If TypeOf Child Is IControl Then If W.Widgets.Exists(Child.Widget.Key) Then W.Widgets.Remove Child.Widget.Key
+                If TypeOf Child Is IControl Then
+                    If W.Widgets.Exists(modLayoutEngine.ControlWidgetKey(Child)) Then
+                        W.Widgets.Remove modLayoutEngine.ControlWidgetKey(Child)
+                    End If
+                End If
             Next
         End If
-                
+
         If Not e.NewItems Is Nothing Then
             For Each Child In e.NewItems
                 MoveChild Child
             Next
         End If
-        
+
         If Not W.LockRefresh Then W.Refresh
-        
-        Exit Sub
-        
-Catch:
-        '
 End Sub
 '#End Region
 
 '#Region Private Methods
-    Private Sub MoveChild(Child As Object)
-        ArrangePanel
-    End Sub
+Private Sub MoveChild(Child As Object)
+    If W.LockRefresh Then Exit Sub
+    ArrangePanel
+End Sub
 
     Private Sub ArrangePanel()
         If W Is Nothing Then Exit Sub
@@ -414,7 +360,7 @@ End Sub
         If m_Children Is Nothing Then Exit Sub
 
         MeasureLayout CDbl(W.Width), CDbl(W.Height)
-        ArrangeGridChildren m_Children, W, m_RowDefinitions, m_ColumnDefinitions
+        ArrangeDockPanelChildren m_Children, W, m_LastChildFill
         m_Layout.ReportActualSize CDbl(W.Width), CDbl(W.Height)
     End Sub
 
@@ -427,6 +373,9 @@ End Sub
     Private Sub m_DependencyProperties_DependencyPropertyChanged(ByVal Property As DependencyProperty, PreviousValue As Variant)
         Select Case Property.Name
             Case "Style":           ApplyStyle
+            Case "LastChildFill"
+                m_LastChildFill = CBool(Property.GetValue)
+                ArrangePanel
             Case Else
                 If Not m_Children Is Nothing Then
                     If m_Layout.HandlesLayoutProperty(Property.Name) Then
@@ -445,15 +394,7 @@ End Sub
 
 '#Region Widget Events
     Private Sub W_Paint(CC As vbRichClient5.cCairoContext, ByVal xAbs As Single, ByVal yAbs As Single, ByVal dx_Aligned As Single, ByVal dy_Aligned As Single, UserObj As Object)
-        
-        Dim dx As Double, dy As Double
-        
-        dx = dx_Aligned
-        dy = dy_Aligned
-        
-        
         CC.Save
-        
         CC.Restore
     End Sub
     
@@ -464,7 +405,7 @@ End Sub
 
 Private Function GetBaseStyle() As Style
     Dim Style
-    API.CopyVariable m_BaseUIElement.TryFindResource(Typename(Me) & ".BaseStyle"), Style
+    API.CopyVariable m_BaseUIElement.TryFindResource(TypeName(Me) & ".BaseStyle"), Style
     
     If Not IsObject(Style) Then Exit Function
     If TypeOf Style Is Style Then Set GetBaseStyle = Style
@@ -478,8 +419,6 @@ Private Sub ApplyStyle()
     End With
 End Sub
 
-
     Private Sub ActiveStyle_StyleChanged()
         ApplyStyle
     End Sub
-

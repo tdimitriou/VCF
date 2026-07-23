@@ -401,9 +401,8 @@ Attribute TmrRelease.VB_VarHelpID = -1
         Set m_Layout = New FrameworkElement
         m_Layout.Initialize Me, Me, W
         m_Layout.RegisterLayoutProperties "Button"
-        
-        m_Layout.Width = 100
-        m_Layout.Height = 30
+        ' Width/Height stay 0 (unset) so Grid Stretch fills the cell ? do not
+        ' force 100x30 local values (that pinned MainMenu Sales/Logout small).
                 
         NewUIElementBase Me, m_BaseUIElement
                 

@@ -233,9 +233,11 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **Measure/Arrange slice 4** — ~~ContentControl MeasureLayout + P6e-CC-MEAS~~ (**3.12.0** / suite **74**)
   **Measure/Arrange slice 5** — ~~UniformGrid MeasureLayout + P2a-UG-MEAS~~ (**3.13.0** / suite **75**)
   **Canvas-scale retirement** — ~~remove ScaleDesignCanvas; Migrated Login/Sales; P7d-LAY-PANEL~~ (**3.14.0** / suite **75**)
-  **Attached storage → DP bag** — **deferred** (accepted 2026-07-23): lazy `EnsureAttached` + `Grid.*` in per-element `DependencyProperties`; keep dict shim until green — when Change/ClearValue/binding on attached is needed
+  **Grid cell alignment** — ~~HorizontalAlignment/VerticalAlignment in ArrangeGridChildren + P2-GRID-ALIGN~~ (**3.15.0** / suite **76**)
+  **Attached storage → DP bag** — ~~lazy EnsureAttached Grid.* + ClearValue + P2-GRID-ATTACH-DP~~ (**3.16.0** / suite **77**); dict shim retained
+  **DockPanel** — ~~LastChildFill + DockPanel.Dock + Measure/Arrange + P2-DOCK-*~~ (**3.17.0** / suite **78**)
   **Full WPF DP precedence stack** — **deferred** roadmap epic (not now) — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) (~2–3 mo core)
-  **Overlaps next** — DeNovo.vbp full-tree migration (docs/scripts); or deferred attached DP-bag
+  **Overlaps next** — MeasureOverride/ArrangeOverride public surface; or attached binding expressions
   **B-RESZ** / **B-NAV** — ~~Phase0 benches~~
   **ListView bind hotspot** — ~~B-BIND-DENSE~~ (clone preserves bindings; 21×6 gate)
   **Margin/Padding family 1** — ~~ListView Margin=0 Padding=4,1,4,1~~ (**P2a-PAD**)
