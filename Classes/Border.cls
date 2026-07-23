@@ -373,7 +373,7 @@ Catch:
             Exit Sub
         End If
 
-        ' Multi-child: Margin + Width/Height absolute arrange (no Design* scale).
+        ' Multi-child: Margin + Width/Height with design-canvas scale when host resized.
         m_Layout.ArrangeChildren m_Children, W
     End Sub
 

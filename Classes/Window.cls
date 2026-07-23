@@ -467,7 +467,9 @@ NextChild:
 Try:
     On Error GoTo Catch
      
-    If Len(Name) Then m_NamedChildren.Add Name, Obj
+    If Len(Name) Then
+        If Not m_NamedChildren.ContainsKey(Name) Then m_NamedChildren.Add Name, Obj
+    End If
           
     If Children Is Nothing Then Exit Sub
      
@@ -479,8 +481,11 @@ Try:
 
 Catch:
         
-        Err.Raise Err.Number, TypeName(Me), Err.Description, Err.HelpFile, Err.HelpContext
-    
+        Err.Clear
+        If Children Is Nothing Then Exit Sub
+        For Each Obj In Children
+            AddNamedItem Obj
+        Next
     End Sub
 '#End Region
 

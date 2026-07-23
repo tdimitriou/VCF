@@ -168,8 +168,8 @@ End Sub
 
 Private Sub Class_Initialize()
     NewWindow Me, Win
-    Win.DesignWidth = 1024
-    Win.DesignHeight = 768
+    Win.Width = 1024
+    Win.Height = 768
     Set Form = Win.Form
     Form.Width = 1024
     Form.Height = 768

@@ -62,6 +62,17 @@ Private AccentedCharacters As cSortedDictionary
         
         RemoveAccentedCharacters = Value
     End Function
+    
+    Private Sub AddAccentMap(ByVal FromChar As Long, ByVal ToChar As Long)
+        Dim FromS As String
+        Dim ToS As String
+        
+        FromS = ChrW$(FromChar)
+        ToS = ChrW$(ToChar)
+        If Len(FromS) = 0 Then Exit Sub
+        If AccentedCharacters.Exists(FromS) Then Exit Sub
+        AccentedCharacters.Add FromS, ToS
+    End Sub
 '#End Region
 
 '#Region Class Events
@@ -69,19 +80,14 @@ Private AccentedCharacters As cSortedDictionary
         m_LocaleID = 1033
                 
         Set AccentedCharacters = New_c.SortedDictionary
-        With AccentedCharacters
-            .Add "?", "?"       ' 'A
-            .Add "?", "?"       ' 'E
-            .Add "?", "?"       ' 'H
-            .Add "?", "?"       ' 'I
-            .Add "?", "?"       ' 'O
-            .Add "?", "?"       ' 'Y
-            .Add "?", "?"       ' Capital 'Omega' with accent
-            .Add "?", "?"       ' Final 'Sigma' (put in accented characters as an exception
-                                ' because it must always been replaced in Uppercase,
-                                ' (the same rule as accented chars in Uppercase)
-        End With
+        ' Greek tonos / final sigma (Unicode) — avoid ANSI file corruption of literals.
+        AddAccentMap &H386, &H391   ' Ά → Α
+        AddAccentMap &H388, &H395   ' Έ → Ε
+        AddAccentMap &H389, &H397   ' Ή → Η
+        AddAccentMap &H38A, &H399   ' Ί → Ι
+        AddAccentMap &H38C, &H39F   ' Ό → Ο
+        AddAccentMap &H38E, &H3A5   ' Ύ → Υ
+        AddAccentMap &H38F, &H3A9   ' Ώ → Ω
+        AddAccentMap &H3C2, &H3A3   ' ς → Σ
     End Sub
 '#End Region
-
-

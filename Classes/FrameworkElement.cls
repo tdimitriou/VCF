@@ -36,9 +36,7 @@ Friend Sub RegisterLayoutProperties(Optional ByVal TypeName As String = "Framewo
 End Sub
 
 Public Property Get Width() As Double
-    If Host.DependencyProperties.Exists("Width") Then
-        Width = CDbl(Host.DependencyProperties.GetValue("Width"))
-    End If
+    Width = CoerceLayoutDouble(Host.DependencyProperties, "Width", 0#)
 End Property
 
 Public Property Let Width(ByVal Value As Double)
@@ -48,9 +46,7 @@ Public Property Let Width(ByVal Value As Double)
 End Property
 
 Public Property Get Height() As Double
-    If Host.DependencyProperties.Exists("Height") Then
-        Height = CDbl(Host.DependencyProperties.GetValue("Height"))
-    End If
+    Height = CoerceLayoutDouble(Host.DependencyProperties, "Height", 0#)
 End Property
 
 Public Property Let Height(ByVal Value As Double)
@@ -87,9 +83,7 @@ Public Property Let Visibility(ByVal Value As Visibility)
 End Property
 
 Public Property Get MinWidth() As Double
-    If Host.DependencyProperties.Exists("MinWidth") Then
-        MinWidth = CDbl(Host.DependencyProperties.GetValue("MinWidth"))
-    End If
+    MinWidth = CoerceLayoutDouble(Host.DependencyProperties, "MinWidth", 0#)
 End Property
 
 Public Property Let MinWidth(ByVal Value As Double)
@@ -99,9 +93,7 @@ Public Property Let MinWidth(ByVal Value As Double)
 End Property
 
 Public Property Get MinHeight() As Double
-    If Host.DependencyProperties.Exists("MinHeight") Then
-        MinHeight = CDbl(Host.DependencyProperties.GetValue("MinHeight"))
-    End If
+    MinHeight = CoerceLayoutDouble(Host.DependencyProperties, "MinHeight", 0#)
 End Property
 
 Public Property Let MinHeight(ByVal Value As Double)
@@ -111,9 +103,7 @@ Public Property Let MinHeight(ByVal Value As Double)
 End Property
 
 Public Property Get MaxWidth() As Double
-    If Host.DependencyProperties.Exists("MaxWidth") Then
-        MaxWidth = CDbl(Host.DependencyProperties.GetValue("MaxWidth"))
-    End If
+    MaxWidth = CoerceLayoutDouble(Host.DependencyProperties, "MaxWidth", 0#)
 End Property
 
 Public Property Let MaxWidth(ByVal Value As Double)
@@ -123,9 +113,7 @@ Public Property Let MaxWidth(ByVal Value As Double)
 End Property
 
 Public Property Get MaxHeight() As Double
-    If Host.DependencyProperties.Exists("MaxHeight") Then
-        MaxHeight = CDbl(Host.DependencyProperties.GetValue("MaxHeight"))
-    End If
+    MaxHeight = CoerceLayoutDouble(Host.DependencyProperties, "MaxHeight", 0#)
 End Property
 
 Public Property Let MaxHeight(ByVal Value As Double)
@@ -177,6 +165,13 @@ Public Sub ArrangeChildren( _
     Dim ChildVis As Visibility
     Dim HostWidth As Single
     Dim HostHeight As Single
+    Dim ScaleX As Double
+    Dim ScaleY As Double
+    Dim DesignW As Double
+    Dim DesignH As Double
+    Dim HostObj As Object
+    Dim FillWindowContent As Boolean
+    Dim ScaleDesignCanvas As Boolean
 
     If Children Is Nothing Then Exit Sub
     If HostWidget Is Nothing Then Exit Sub
@@ -190,6 +185,32 @@ Public Sub ArrangeChildren( _
         HostHeight = OverrideHostHeight
     Else
         HostHeight = HostWidget.Height
+    End If
+
+    FillWindowContent = False
+    ScaleDesignCanvas = False
+    On Error Resume Next
+    Set HostObj = Host
+    If Not HostObj Is Nothing Then
+        If TypeOf HostObj Is Window Then FillWindowContent = True
+        ' Design-canvas scale: UC root and multi-child Border/Panel hosts when
+        ' the widget size differs from Width/Height DPs (nested Sales columns).
+        If TypeOf HostObj Is UserControl Then ScaleDesignCanvas = True
+        If TypeOf HostObj Is Border Then ScaleDesignCanvas = True
+        If TypeOf HostObj Is Panel Then ScaleDesignCanvas = True
+    End If
+    Err.Clear
+    On Error GoTo 0
+
+    ScaleX = 1#
+    ScaleY = 1#
+    If ScaleDesignCanvas Then
+        DesignW = Width
+        DesignH = Height
+        If DesignW <= 0# Then DesignW = CDbl(HostWidth)
+        If DesignH <= 0# Then DesignH = CDbl(HostHeight)
+        If DesignW > 0# And HostWidth > 0! Then ScaleX = CDbl(HostWidth) / DesignW
+        If DesignH > 0# And HostHeight > 0! Then ScaleY = CDbl(HostHeight) / DesignH
     End If
 
     For Each Child In Children
@@ -211,9 +232,29 @@ Public Sub ArrangeChildren( _
             HostWidget.Widgets.Add Child, "_" & ObjPtr(Child), , , , , IsWidgetVisible(ChildVis)
         End If
 
+        ' Window content host (WPF): visible views fill the client area.
+        If FillWindowContent Then
+            If TypeOf Child Is IUserControl Or TypeOf Child Is UserControl Then
+                ChildUI.Move 0!, 0!, HostWidth, HostHeight
+                ApplyChildVisibility Child, ChildVis
+                GoTo NextChild
+            End If
+        End If
+
         R = LayoutRectFromMargin(ReadChildMargin(Child), ReadChildWidth(Child), ReadChildHeight(Child))
         R.Width = CSng(ClampElementWidth(Child, R.Width))
         R.Height = CSng(ClampElementHeight(Child, R.Height))
+
+        ' Design canvas: scale absolute Margin/Width children when the host
+        ' widget is resized relative to Width/Height DPs (UC + nested Border/Panel).
+        If ScaleDesignCanvas Then
+            If Abs(ScaleX - 1#) > 0.0001 Or Abs(ScaleY - 1#) > 0.0001 Then
+                R.Left = CSng(R.Left * ScaleX)
+                R.Top = CSng(R.Top * ScaleY)
+                R.Width = CSng(R.Width * ScaleX)
+                R.Height = CSng(R.Height * ScaleY)
+            End If
+        End If
 
         ApplyLayoutRectToElement ChildUI, R
         ApplyChildVisibility Child, ChildVis
@@ -245,13 +286,15 @@ Public Sub OnLayoutPropertyChanged( _
     Optional ByVal OverrideHostWidth As Single = 0, _
     Optional ByVal OverrideHostHeight As Single = 0)
 
+    On Error Resume Next
+
     Select Case PropertyName
         Case "Visibility"
             ApplyVisibilityToWidget
-            InvalidateParentLayout Host
+            If Not Host Is Nothing Then InvalidateParentLayout Host
         Case "Width", "Height", "Margin", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight"
             OnHostResize Children, HostWidget, OverrideHostWidth, OverrideHostHeight
-            InvalidateParentLayout Host
+            If Not Host Is Nothing Then InvalidateParentLayout Host
     End Select
 End Sub
 
@@ -287,6 +330,19 @@ End Property
 Private Property Get Widget() As cWidgetBase
     Set Widget = API.ObjFromPtr(m_WidgetPtr)
 End Property
+
+Private Function CoerceLayoutDouble(ByVal Props As DependencyProperties, ByVal Name As String, ByVal DefaultValue As Double) As Double
+    Dim V As Variant
+
+    CoerceLayoutDouble = DefaultValue
+    On Error Resume Next
+    If Props Is Nothing Then Exit Function
+    If Not Props.Exists(Name) Then Exit Function
+    Call API.CopyVariable(Props.GetValue(Name), V)
+    If IsNull(V) Or IsEmpty(V) Then Exit Function
+    If Not IsNumeric(V) Then Exit Function
+    CoerceLayoutDouble = CDbl(V)
+End Function
 
 Private Function ReadChildVisibility(ByVal Child As Object) As Visibility
     On Error Resume Next
@@ -325,16 +381,20 @@ Private Function ReadChildMargin(ByVal Child As Object) As Thickness
 End Function
 
 Private Function ReadChildWidth(ByVal Child As Object) As Double
+    Dim V As Variant
     On Error Resume Next
     If Child.DependencyProperties.Exists("Width") Then
-        ReadChildWidth = CDbl(Child.DependencyProperties.GetValue("Width"))
+        Call API.CopyVariable(Child.DependencyProperties.GetValue("Width"), V)
+        If Not IsNull(V) And Not IsEmpty(V) And IsNumeric(V) Then ReadChildWidth = CDbl(V)
     End If
 End Function
 
 Private Function ReadChildHeight(ByVal Child As Object) As Double
+    Dim V As Variant
     On Error Resume Next
     If Child.DependencyProperties.Exists("Height") Then
-        ReadChildHeight = CDbl(Child.DependencyProperties.GetValue("Height"))
+        Call API.CopyVariable(Child.DependencyProperties.GetValue("Height"), V)
+        If Not IsNull(V) And Not IsEmpty(V) And IsNumeric(V) Then ReadChildHeight = CDbl(V)
     End If
 End Function
 

@@ -2931,19 +2931,19 @@ Public Function Phase7dBench_BorderDesignResize() As Boolean
     Set A = Root.Children(0)
     Set B = Root.Children(1)
 
-    ' WPF absolute Margin/Width ? positions do not scale with host (Design* scale removed).
+    ' Design-canvas scale when host widget size differs from Width/Height DPs.
     Root.Widget.Move 0, 0, 400, 300
     If Abs(A.Widget.Left - 40!) > 2! Then Err.Raise vbObjectError, , "A.Left expected ~40, got " & A.Widget.Left
     If Abs(A.Widget.Width - 200!) > 2! Then Err.Raise vbObjectError, , "A.Width expected ~200, got " & A.Widget.Width
     If Abs(B.Widget.Left - 100!) > 2! Then Err.Raise vbObjectError, , "B.Left expected ~100, got " & B.Widget.Left
 
     Root.Widget.Move 0, 0, 200, 150
-    If Abs(A.Widget.Left - 40!) > 2! Then Err.Raise vbObjectError, , "A.Left must stay ~40 after resize, got " & A.Widget.Left
-    If Abs(A.Widget.Width - 200!) > 2! Then Err.Raise vbObjectError, , "A.Width must stay ~200 after resize, got " & A.Widget.Width
-    If Abs(B.Widget.Left - 100!) > 2! Then Err.Raise vbObjectError, , "B.Left must stay ~100 after resize, got " & B.Widget.Left
+    If Abs(A.Widget.Left - 20!) > 2! Then Err.Raise vbObjectError, , "A.Left expected ~20 after half-size, got " & A.Widget.Left
+    If Abs(A.Widget.Width - 100!) > 2! Then Err.Raise vbObjectError, , "A.Width expected ~100 after half-size, got " & A.Widget.Width
+    If Abs(B.Widget.Left - 50!) > 2! Then Err.Raise vbObjectError, , "B.Left expected ~50 after half-size, got " & B.Widget.Left
 
-    LogResult "P7d-LAY-RESIZE", 0, "OK Margin absolute layout (no Design* scale)"
-    Debug.Print "PASS  P7d-LAY-RESIZE Border Margin/Width absolute (no Design* scale)"
+    LogResult "P7d-LAY-RESIZE", 0, "OK Border design-canvas scale on widget resize"
+    Debug.Print "PASS  P7d-LAY-RESIZE Border Margin/Width design-canvas scale"
     Phase7dBench_BorderDesignResize = True
     Exit Function
 

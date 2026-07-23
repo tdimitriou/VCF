@@ -42,6 +42,7 @@ Public Name As String
         End With
     
         Set W = Cairo.WidgetBase
+        ' Hit-test enabled + HitResultHit=False → events forward to parent (Button).
         W.ImplementsHitTest = True
         W.Visible = True
         

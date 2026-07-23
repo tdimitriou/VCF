@@ -5,6 +5,7 @@ Minimal VB6 exe to load **DeNovo POS XAML screens** against a pinned **`Demac.VC
 **Status:** VB6 project checked in — open `DeNovoSmoke.vbp` in IDE (build `Demac.VCF.dll` first). Borderless shell **1024×768** client (`BorderStyle=0`).  
 **Phase 1 (UI/XAML):** **complete** on tag **`v2.23.0-wpf-alignment-phase1-complete`** — Splash → Login → MainMenu → Sales layout-only.  
 **Phase 2a (VCF parallel):** continue here — Phase0 + this harness only (no KernelLib / Data). **2a.1 done** (validated): auto RelayoutChildren on Visibility ([WINDOW_LIFECYCLE.md](../../docs/WINDOW_LIFECYCLE.md) §9).  
+**Aligned for VCF 3.7.0:** fixtures use **`Margin` / `Width` / `Height`** (no `Design*`); canvas-scale resize bridge on UC/Border/Panel; nav uses **`Visibility` Collapsed/Visible**; Login list uses **`SelectedIndex`**. Pin tag **`v3.7.0-denovo-layout-hover`** (when tagged).  
 **Phase 2b (full POS):** deferred until Data + Kernel + UI are ready — [POS_INTEGRATION_SMOKE.md](../../docs/POS_INTEGRATION_SMOKE.md) §3.  
 **VCF response:** [docs/DENOVO_HARNESS_PROPOSAL_RESPONSE.md](../../docs/DENOVO_HARNESS_PROPOSAL_RESPONSE.md)  
 **DeNovo proposal:** denovo monorepo → `docs/migration/VCF_TEAM_HANDOFF_HARNESS_PROPOSAL.md`  
@@ -16,8 +17,8 @@ Minimal VB6 exe to load **DeNovo POS XAML screens** against a pinned **`Demac.VC
 
 Full `DeNovo.exe` is a deep COM graph (KernelLib → Data → ADODBUtils → UILib → VCF). With Phase 1 binary/typelib churn, failures on Login XAML are indistinguishable from `Data.Dataset` or stale group `.vbg` references.
 
-**Phase 1 acceptance:** Phase0 **31/31** + this harness green for agreed screens with **stub view models**.  
-**Phase 2a:** same local gates while Data/Kernel finish.  
+**Phase 1 acceptance:** Phase0 + this harness green for agreed screens with **stub view models**.  
+**Phase 2a:** same local gates while Data/Kernel finish — currently Phase0 **69/69** + DeNovoSmoke on **3.7.0**.  
 **Phase 2b:** re-attach full POS stack; run [POS_INTEGRATION_SMOKE.md](../../docs/POS_INTEGRATION_SMOKE.md) §3.
 
 ---
@@ -42,7 +43,7 @@ VCF does **not** duplicate the full POS XAML tree. DeNovo does **not** own the h
 
 **No references:** KernelLib, Demac.Data, UILib, ADODBUtils, POSWidgets (except types registered via minimal local `ObjectConstructor` stubs if required for `res:`).
 
-**Pin for harness / Phase 1 complete:** **`v2.23.0-wpf-alignment-phase1-complete`** (Splash → Login → MainMenu → Sales layout-only; includes 8b + m2/m3)
+**Pin for current harness validation:** **`v3.6.0-wpf-alignment-selectionchanged`** (or rebuild `master` / **3.6.0** DLL).
 
 ---
 
@@ -94,6 +95,8 @@ Copy into `Resources/XAML/` (preserve `res:` paths):
 | `MyApp.xml` | `UI/Resources/XAML/MyApp.xml` (styles / theme slice) |
 | PNG assets | `Resources/ClockIn.png`, `Reboot.png`, `Close.png` (under `XAML/Resources/` after sync) |
 
+**After sync from denovo:** if fixtures still contain `DesignLeft`/`DesignTop`/`DesignWidth`/`DesignHeight`, convert to **`Margin` / `Width` / `Height`** before F5 (VCF **3.0.0+** rejects `Design*`).
+
 #### Stub VM contracts (milestone 1)
 
 | Context | Members |
@@ -106,7 +109,7 @@ Copy into `Resources/XAML/` (preserve `res:` paths):
 | **LanguageManager** (static) | Keys: `Loading`, `Clear`, `Login`, `Restart`, `Exit` |
 | **AppProperties** (static) | `TerminalID`, `CurrentUser`, `CurrentTime` (StatusBar) |
 
-**Harness-only:** assign `MyList.ItemsSource = UserList` after Login parse (production does this in code-behind). Navigation: visibility swap only — framework auto Relayout/RebuildNamedItems (2a.1); no Friend APIs.
+**Harness-only:** assign `MyList.ItemsSource = UserList` after Login parse (production does this in code-behind). Navigation: visibility swap only — framework auto Relayout/RebuildNamedItems (2a.1); no Friend APIs. Prefer **`SelectedIndex`** / **`SelectionChanged`** over `ListIndex` / `ListIndexChanged`.
 
 ### Milestone 2
 
@@ -140,7 +143,7 @@ Copy into `Resources/XAML/` (preserve `res:` paths):
 | **Shift+3** | Resize shell to **1366×768** (widescreen) |
 | **Exit** | `Shutdown` → `RemoveAll` |
 
-Borderless shell cannot be drag-resized (matches production POS). Use **Shift+1/2/3** for Test 5 — presets change **client** size only; host design canvas stays **1024×768** so legacy scale matches drag-resize. Or set `USE_SIZABLE_SHELL_BORDER = True` for manual edge drag (adds title bar temporarily).
+Borderless shell cannot be drag-resized (matches production POS). Use **Shift+1/2/3** for Test 5 — presets change **client** size; `Win.Width`/`Height` stay **1024×768**. Or set `USE_SIZABLE_SHELL_BORDER = True` for manual edge drag (adds title bar temporarily).
 
 See [WINDOW_LIFECYCLE.md](../../docs/WINDOW_LIFECYCLE.md).
 
@@ -148,7 +151,7 @@ See [WINDOW_LIFECYCLE.md](../../docs/WINDOW_LIFECYCLE.md).
 
 | Screen / task | Assert |
 |---------------|--------|
-| **SalesOrderView.xml** | MainMenu **Sales** / **Shift+S** → left lines + right quick buttons (Design* columns); **Back to menu** (chrome + inline); stub `Lines`; no DB |
+| **SalesOrderView.xml** | MainMenu **Sales** / **Shift+S** → left lines + right quick buttons (Margin/Width columns); **Back to menu** (chrome + inline); stub `Lines`; no DB |
 | **Lazy Sales load** | Loads on first `ShowSalesOrder` (`EAGER_SALES_LOAD = False`) |
 | **P7d-LOAD-SALES** | Immediate load ms + `[P7d-SALES]` named LeftColumn/RightColumn/SalesTitle |
 
@@ -158,7 +161,7 @@ See [WINDOW_LIFECYCLE.md](../../docs/WINDOW_LIFECYCLE.md).
 
 ---
 
-## Supported host-app APIs (2.18.x)
+## Supported host-app APIs (2.18.x+)
 
 Documented for visibility-based navigation — **do not add new public methods from DeNovo**:
 
@@ -172,7 +175,7 @@ Documented for visibility-based navigation — **do not add new public methods f
 
 **Shutdown (smoke):** `AppCommands.ShutdownCommand` → `modHarnessAppManager.Shutdown` — mirrors DeNovo `AppManager.Shutdown` for Cairo widget forms only (`RemoveAll` ends `EnterMessageLoop`). `modApp.ResetSession` runs after `Run` returns (IDE second-F5 globals). Do not use `End` from command handlers.
 
-**Layout shim (load time):** `ApplyLegacyLayoutProperty` in XAMLReader — not a consumer API. See [POS_RUNTIME_FEEDBACK.md](../../docs/POS_RUNTIME_FEEDBACK.md).
+**Layout:** absolute `Margin`/`Width`/`Height` + panels — see [BREAKING_CHANGES.md](../../docs/BREAKING_CHANGES.md) **3.0.0**. No `Design*` / `LegacyScaleLayout`.
 
 **Load performance:** Milestone 1 preloads Splash + Login before show. Phase **7f** adds lazy Login + timed benchmarks — [VCF_PERFORMANCE_BENCHMARKS.md](../../docs/VCF_PERFORMANCE_BENCHMARKS.md) §7f.
 
@@ -182,7 +185,7 @@ Documented for visibility-based navigation — **do not add new public methods f
 
 When filing upstream:
 
-1. **Tag pinned** (e.g. `v2.18.0-wpf-alignment-p7c-layout-shim`)
+1. **Tag pinned** (e.g. `v3.6.0-wpf-alignment-selectionchanged`)
 2. **Screen name** (e.g. `LoginView.xml`)
 3. **XAML fragment** (minimal repro)
 4. **Stub VM** properties bound in that fragment
@@ -194,7 +197,7 @@ When filing upstream:
 
 | Suite | Scope |
 |-------|--------|
-| **Phase0** | Framework unit/regression benchmarks (31 tests); runs on every tag |
+| **Phase0** | Framework unit/regression benchmarks (**69** tests on **3.6.0**); runs on every tag |
 | **DeNovoSmoke** | Real POS XAML + stub VMs; consumer contract validation |
 
 Both must pass before Phase 7 UI tags that affect DeNovo integration.
@@ -203,26 +206,24 @@ Both must pass before Phase 7 UI tags that affect DeNovo integration.
 
 ## Run (VB6 IDE)
 
-1. Build/register **`Demac.VCF.dll`** from repo root (pin **`v2.18.0-wpf-alignment-p7c-layout-shim`** or later).
+1. Build/register **`Demac.VCF.dll`** from repo root (pin **`v3.6.0-wpf-alignment-selectionchanged`** or later **3.6.0**).
 2. Open **`.Tests/DeNovoSmoke/DeNovoSmoke.vbp`**.
 3. Fix reference paths if needed (`vbRichClient5.dll`, `Demac.VCF.dll` — same layout as Phase0).
-4. Sync fixtures when denovo XAML changes — [Resources/README.md](Resources/README.md) (`Sync-DeNovoSmokeFixtures.ps1`).
+4. Sync fixtures when denovo XAML changes — [Resources/README.md](Resources/README.md) (`Sync-DeNovoSmokeFixtures.ps1`); re-apply **Design* → Margin/Width/Height** if sync reintroduces Design*.
 5. **F5** — Splash ~2.5 s, then Login. **Shift+L** skips to Login early. **Shift+B** opens a bordered test dialog (`BorderTestWindow.xml`, `BorderStyle=2`) to verify window chrome lifecycle — open **View → Immediate Window** (`Ctrl+G`) and look for `[BORDER-DIAG]` (toggle `ENABLE_BORDER_CHROME_DIAG` in `modHarnessConfig.bas`). **Exit** → `modHarnessAppManager.Shutdown` (stop timers + `Cairo.WidgetForms.RemoveAll`, same core as DeNovo `AppManager.Shutdown` without the VB6 `Forms` loop).
 
 **Pass (milestone 1):** no XAML load error; Splash layout + bindings; Login list + password pad + focus; Exit ends `Application.Run` cleanly in IDE and compiled exe.
 
 ### Resize validation (7e — `LoginViewWpf.xml`)
 
-**Hybrid layout:** outer shell (branding, `InnerBorder` frame, side buttons, status bar) uses legacy **`Design*`** on the `UserControl` — same positions as production `LoginView.xml`. Only **inside** `InnerBorder` uses a WPF **Grid** (list | password + pad) for resize-friendly content.
+**Framework (post-3.0 Design* removal):** `Window` fills visible `UserControl` views to the client; each `UserControl` scales absolute `Margin`/`Width`/`Height` children from its design `Width`/`Height` DPs to the widget size (same role as former host design-canvas scale). Harness Shift+1/2/3 only changes Form client size + `RelayoutChildren`.
 
-With `USE_WPF_LOGIN_LAYOUT = True`, go to Login (**Shift+L**), then press **Shift+1**, **Shift+2**, **Shift+3**. Confirm the **star** column (password + numpad) grows on widescreen; list column stays ~204px (by design). Check Immediate for `[HARNESS-RESIZE]` lines.
+**Hybrid layout:** outer chrome uses absolute Margin; inside `InnerBorder`, a WPF **Grid** (list | password + pad) reflows when the scaled border grows.
 
-With `USE_WPF_LOGIN_LAYOUT = False` (legacy `LoginView.xml`), the same presets should scale **inner** Design* content inside `InnerBorder` via **Option B** (`Border` auto-enables `LegacyScaleLayout` when children use Design*) — see [docs/POS_LAYOUT_RESIZE.md](../../docs/POS_LAYOUT_RESIZE.md).
+With `USE_WPF_LOGIN_LAYOUT = True` (default), go to Login (**Shift+L**), then press **Shift+1**, **Shift+2**, **Shift+3**. Confirm the **star** column (password + numpad) grows on widescreen; list column stays ~204px (by design). Check Immediate for `[HARNESS-RESIZE]` lines.
 
 | Size | Check |
 |------|--------|
-| 1024×768 | Design baseline |
-| 800×600 | Inner panel scales; no clipped numpad |
-| Widescreen | List + pad share horizontal space |
-
-**Out of scope (legacy LoginView):** nested Border + `Design*` does not scale — use WPF layout for production migration.
+| 1024×768 | Layout baseline (scale 1) |
+| 800×600 | Scaled chrome; numpad usable |
+| Widescreen | List + pad share horizontal space inside scaled InnerBorder |

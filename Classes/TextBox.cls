@@ -170,6 +170,22 @@ Public Name As String
         Visibility = m_Visibility
     End Property
 
+    Public Property Get Width() As Double
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Width"), Width)
+    End Property
+
+    Public Property Let Width(ByVal Value As Double)
+        Call m_DependencyProperties.SetValue("Width", Value)
+    End Property
+
+    Public Property Get Height() As Double
+        Call API.CopyVariable(m_DependencyProperties.GetValue("Height"), Height)
+    End Property
+
+    Public Property Let Height(ByVal Value As Double)
+        Call m_DependencyProperties.SetValue("Height", Value)
+    End Property
+
     Public Sub Move(Left As Single, Optional Top As Single = 0, Optional Width As Single, Optional Height As Single)
         If Parent Is Nothing Then Exit Sub
         
@@ -212,12 +228,25 @@ Public Name As String
             Call .Register("Margin", vbObject, "Thickness")
             Call .Register("Padding", vbObject, "Thickness")
             Call .Register("Style", vbObject, "Style", , NewDependencyPropertyMetadata(False, True, False))
+            ' Layout DPs required for Grid Auto/* track measure (Height="40" etc.).
+            Call .Register("Width", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
+            Call .Register("Height", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
+            Call .Register("MinWidth", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
+            Call .Register("MinHeight", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
+            Call .Register("MaxWidth", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
+            Call .Register("MaxHeight", vbDouble, , , , NewDependencyPropertyMetadata(True, False, False))
             .SetValue "Style", Nothing
         
             .SetCurrentValue "Alignment", m_Base.Alignment
             .SetCurrentValue "VCenter", m_Base.VCenter
             .SetCurrentValue "Margin", NewThickness(0)
             .SetCurrentValue "Padding", NewThickness(1) ' Aero2 TextBox; matches legacy InnerSpace=1
+            .SetCurrentValue "Width", 0#
+            .SetCurrentValue "Height", 0#
+            .SetCurrentValue "MinWidth", 0#
+            .SetCurrentValue "MinHeight", 0#
+            .SetCurrentValue "MaxWidth", 0#
+            .SetCurrentValue "MaxHeight", 0#
             
         End With
         

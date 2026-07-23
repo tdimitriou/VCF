@@ -178,8 +178,15 @@ Attribute TmrRelease.VB_VarHelpID = -1
     Public Property Let IsMouseOver(ByVal Value As Boolean)
         If m_IsMouseOver = Value Then Exit Property
         m_IsMouseOver = Value
-        ' Non-DP trigger condition ? same path as DP conditions (Notify ? ReapplyStyleValues).
+        ' Non-DP trigger condition (3.2.1). Replaces ApplyStyle on hover ù that path
+        ' reapplied the full style and refreshed as a side effect; Notify alone no-ops
+        ' when no PropertyTrigger watches IsMouseOver, so Refresh here restores enter paint.
         modStyleTriggerEngine.NotifyConditionPropertyChanged Me, "IsMouseOver"
+        On Error Resume Next
+        If Not W Is Nothing Then
+            If Not W.LockRefresh Then W.Refresh
+        End If
+        Err.Clear
     End Property
 
     Public Property Get BorderWidth() As Double
@@ -737,9 +744,30 @@ End Sub
     Private Sub W_MouseLeave(ByVal MouseEnterWidget As vbRichClient5.cWidgetBase)
         If Not W.Enabled Then Exit Sub
         
+        ' Still over Image/TextBlock/overlay content ó do not clear hover/click chrome.
+        If WidgetIsUnderThisButton(MouseEnterWidget) Then Exit Sub
+        
         IsMouseOver = False
         W.Refresh
     End Sub
+    
+    ' True when Other is this Button's widget or a descendant (content children).
+    Private Function WidgetIsUnderThisButton(ByVal Other As vbRichClient5.cWidgetBase) As Boolean
+        Dim Cur As vbRichClient5.cWidgetBase
+        
+        On Error Resume Next
+        If Other Is Nothing Then Exit Function
+        Set Cur = Other
+        Do While Not Cur Is Nothing
+            If Cur Is W Then
+                WidgetIsUnderThisButton = True
+                Exit Function
+            End If
+            Set Cur = Cur.Parent
+            If Err.Number <> 0 Then Exit Function
+        Loop
+        Err.Clear
+    End Function
     
     Private Sub W_MouseMove(Button As Integer, Shift As Integer, ByVal x As Single, ByVal y As Single)
         If Not W.Enabled Then Exit Sub

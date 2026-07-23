@@ -49,7 +49,9 @@ Option Explicit
 Try:
     On Error GoTo Catch
      
-    If Len(Name) Then Dict.Add Name, Obj
+    If Len(Name) Then
+        If Not Dict.ContainsKey(Name) Then Dict.Add Name, Obj
+    End If
           
     If Children Is Nothing Then Exit Sub
      
@@ -61,8 +63,12 @@ Try:
 
 Catch:
         
-        Err.Raise Err.Number, TypeName(Me), Err.Description, Err.HelpFile, Err.HelpContext
-    
+        ' Duplicate names across collapsed/visible trees — skip, keep first.
+        Err.Clear
+        If Children Is Nothing Then Exit Sub
+        For Each Obj In Children
+            AddNamedItem Obj, Dict
+        Next
     End Sub
 '#End Region
 

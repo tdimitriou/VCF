@@ -5,6 +5,36 @@
 
 ---
 
+## [3.7.0] — 2026-07-23 — DeNovo layout bridge + hover / TextBox DPs
+
+### Changed (layout)
+
+- **Design-canvas scale bridge** — `FrameworkElement.ArrangeChildren` scales absolute `Margin`/`Width`/`Height` children when the host widget size differs from host `Width`/`Height` DPs, for **UserControl**, multi-child **Border**, and **Panel**. Restores proportional resize for absolute POS/DeNovo trees after **3.0.0** removed `Design*` / `LegacyScaleLayout`.
+- **P7d-LAY-RESIZE** — expects half-size scaled positions (400×300 → 200×150), not frozen absolute pixels.
+- Preferred long-term path remains Grid / StackPanel / single-child Border fill — see [POS_LAYOUT_RESIZE.md](./POS_LAYOUT_RESIZE.md).
+
+### Added
+
+- **`TextBox`** — `Width` / `Height` / Min/Max layout DPs (Grid `Auto` track measure; fixes Login password vs numpad overlap when only widget `Height` was set).
+
+### Fixed
+
+- **`Button.IsMouseOver`** — `W.Refresh` on change (3.2.1 Notify no-ops without triggers; enter paint was delayed vs leave).
+- **`Button` MouseLeave** — ignore leave when pointer enters a descendant content widget (Image/TextBlock).
+- **`StringConversion`** — Greek accent maps via `ChrW` (corrupted `?` maps caused duplicate-key spam).
+- **`NamingManager` / `Window.AddNamedItem`** — soft-skip duplicate names.
+
+### DeNovoSmoke
+
+- Harness XAML migrated off `Design*`; LoginPad uses `Content=` captions; Pay stub enabled for no-Command hover check; Clock In stays `Enabled="False"`.
+
+### Notes
+
+- DLL version **3.7.0**.
+- Suggested tag: `v3.7.0-denovo-layout-hover`.
+
+---
+
 ## [3.6.0] — 2026-07-23 — SelectionChanged naming
 
 ### Added

@@ -4,9 +4,9 @@ Option Explicit
 ' Borderless shell (BorderStyle=0) has no resize grips — use preset sizes (Shift+1/2/3)
 ' or set USE_SIZABLE_SHELL_BORDER=True for drag-resize with title bar (dev only).
 '
-' Host design canvas stays 1024×768 (ShellWindow Class_Initialize). Only Form client
-' size changes — same as drag-resize. Do NOT update Win.DesignWidth/DesignHeight here;
-' that breaks legacy scale (hostDesign would match hostWidth → scale factor 1.0).
+' Framework (3.6.x+): Window fills visible UserControl views to the client; UserControl
+' scales absolute Margin/Width children from Width/Height design canvas → widget size.
+' Harness only changes Form client size + RelayoutChildren.
 
 Private Const SHELL_DESIGN_W As Long = 1024
 Private Const SHELL_DESIGN_H As Long = 768
@@ -18,9 +18,7 @@ Public Sub ApplyShellClientSize(ByVal Win As VCF.Window, ByVal Form As cWidgetFo
 
     SetFormClientSize Form, ClientW, ClientH
 
-    ' Sync ScaleWidth/Height before layout pass (Cairo may defer until refresh).
     Form.WidgetRoot.Refresh
-
     Win.RelayoutChildren
     Form.WidgetRoot.Refresh
 

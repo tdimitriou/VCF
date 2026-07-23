@@ -172,16 +172,20 @@ Public Function ReadElementMargin(ByVal Child As Object) As Thickness
 End Function
 
 Public Function ReadElementWidth(ByVal Child As Object) As Double
+    Dim V As Variant
     On Error Resume Next
     If Child.DependencyProperties.Exists("Width") Then
-        ReadElementWidth = CDbl(Child.DependencyProperties.GetValue("Width"))
+        Call API.CopyVariable(Child.DependencyProperties.GetValue("Width"), V)
+        If Not IsNull(V) And Not IsEmpty(V) And IsNumeric(V) Then ReadElementWidth = CDbl(V)
     End If
 End Function
 
 Public Function ReadElementHeight(ByVal Child As Object) As Double
+    Dim V As Variant
     On Error Resume Next
     If Child.DependencyProperties.Exists("Height") Then
-        ReadElementHeight = CDbl(Child.DependencyProperties.GetValue("Height"))
+        Call API.CopyVariable(Child.DependencyProperties.GetValue("Height"), V)
+        If Not IsNull(V) And Not IsEmpty(V) And IsNumeric(V) Then ReadElementHeight = CDbl(V)
     End If
 End Function
 

@@ -5,6 +5,8 @@ Milestone 1 screens synced from denovo `pos-v1/UI/Resources/XAML/` per [DENOVO_H
 **Milestone 2:** `Screens/MainMenu/MainMenuView.xml` is **harness-owned** until denovo publishes a MainMenu sync target.  
 **Milestone 3:** `Screens/SalesOrder/SalesOrderView.xml` is **harness-owned** (layout-only shell; not a full POS SalesOrder sync).
 
+**VCF 3.0.0+:** fixtures must not use `Design*`. After sync, convert any `DesignLeft`/`DesignTop`/`DesignWidth`/`DesignHeight` to `Margin`/`Width`/`Height` (harness copy already migrated for **3.6.0**).
+
 ## Re-sync (preferred)
 
 From denovo `pos-v1`:

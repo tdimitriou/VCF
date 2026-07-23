@@ -79,38 +79,6 @@ End Sub
         Set DataContext = m_Base.DataContext
     End Property
     
-    Public Property Let DesignHeight(ByVal Value As Double)
-        m_Base.DesignHeight = Value
-    End Property
-    
-    Public Property Get DesignHeight() As Double
-        DesignHeight = m_Base.DesignHeight
-    End Property
-    
-    Public Property Let DesignLeft(ByVal Value As Double)
-        m_Base.DesignLeft = Value
-    End Property
-    
-    Public Property Get DesignLeft() As Double
-        DesignLeft = m_Base.DesignLeft
-    End Property
-    
-    Public Property Let DesignTop(ByVal Value As Double)
-        m_Base.DesignTop = Value
-    End Property
-    
-    Public Property Get DesignTop() As Double
-        DesignTop = m_Base.DesignTop
-    End Property
-    
-    Public Property Let DesignWidth(ByVal Value As Double)
-        m_Base.DesignWidth = Value
-    End Property
-    
-    Public Property Get DesignWidth() As Double
-        DesignWidth = m_Base.DesignWidth
-    End Property
-
     Public Property Let Visibility(ByVal Value As Visibility)
         m_Base.Visibility = Value
     End Property
@@ -183,38 +151,6 @@ End Sub
     Private Property Get IUIElement_DataContext() As Object
         Set IUIElement_DataContext = DataContext
     End Property
-        
-    Private Property Let IUIElement_DesignHeight(ByVal RHS As Double)
-        DesignHeight = RHS
-    End Property
-    
-    Private Property Get IUIElement_DesignHeight() As Double
-        IUIElement_DesignHeight = DesignHeight
-    End Property
-    
-    Private Property Let IUIElement_DesignLeft(ByVal RHS As Double)
-        DesignLeft = RHS
-    End Property
-    
-    Private Property Get IUIElement_DesignLeft() As Double
-        IUIElement_DesignLeft = DesignLeft
-    End Property
-    
-    Private Property Let IUIElement_DesignTop(ByVal RHS As Double)
-        DesignTop = RHS
-    End Property
-    
-    Private Property Get IUIElement_DesignTop() As Double
-        IUIElement_DesignTop = DesignTop
-    End Property
-    
-    Private Property Let IUIElement_DesignWidth(ByVal RHS As Double)
-        DesignWidth = RHS
-    End Property
-    
-    Private Property Get IUIElement_DesignWidth() As Double
-        IUIElement_DesignWidth = DesignWidth
-    End Property
     
     Private Sub IUIElement_Move(Left As Single, Optional Top As Single = 0#, Optional Width As Single, Optional Height As Single)
         Move Left, Top, Width, Height
@@ -258,38 +194,6 @@ End Sub
     
     Private Property Get IUserControl_DataContext() As Object
         Set IUserControl_DataContext = DataContext
-    End Property
-    
-    Private Property Let IUserControl_DesignHeight(ByVal Value As Double)
-        DesignHeight = Value
-    End Property
-    
-    Private Property Get IUserControl_DesignHeight() As Double
-        IUserControl_DesignHeight = DesignHeight
-    End Property
-    
-    Private Property Let IUserControl_DesignLeft(ByVal Value As Double)
-        DesignLeft = Value
-    End Property
-    
-    Private Property Get IUserControl_DesignLeft() As Double
-        IUserControl_DesignLeft = DesignLeft
-    End Property
-    
-    Private Property Let IUserControl_DesignTop(ByVal Value As Double)
-        DesignTop = Value
-    End Property
-    
-    Private Property Get IUserControl_DesignTop() As Double
-        IUserControl_DesignTop = DesignTop
-    End Property
-    
-    Private Property Let IUserControl_DesignWidth(ByVal Value As Double)
-        DesignWidth = Value
-    End Property
-    
-    Private Property Get IUserControl_DesignWidth() As Double
-        IUserControl_DesignWidth = DesignWidth
     End Property
     
     Private Sub IUserControl_InitializeComponent()
