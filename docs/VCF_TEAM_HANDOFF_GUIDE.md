@@ -240,6 +240,7 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **Attached DP binding** — ~~OneWay to Grid.Row / DockPanel.Dock + P4-BIND-ATTACH~~ (**3.19.0** / suite **80**)
   **Path=(Attached.Prop)** — ~~source parentheses + P4-BIND-APATH~~ (**3.20.0** / suite **81**)
   **Canvas** — ~~Canvas.Left/Top + Measure/Arrange + P2-CANVAS-*~~ (**3.21.0** / suite **83**)
+  **Attached layout invalidate** — ~~SetValue/binding → InvalidateParentLayout + P4-BIND-LAY~~ (**3.22.0** / suite **85**)
   **Full WPF DP precedence stack** — **deferred** roadmap epic (not now) — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) (~2–3 mo core)
   **Overlaps next** — full DP precedence stack; or POS Phase 2b pin
   **B-RESZ** / **B-NAV** — ~~Phase0 benches~~

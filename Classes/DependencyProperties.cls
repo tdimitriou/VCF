@@ -116,6 +116,11 @@ Public Event DependencyPropertyChanged(ByVal Property As DependencyProperty, Pre
         ' PropertyTrigger conditions on DPs: reapply setters + active triggers (3.2.1+).
         ' Pass coclass Object (not IDependencyObject-typed Target) so StyleManager can QI Widget.
         modStyleTriggerEngine.NotifyConditionPropertyChanged API.ObjFromPtr(m_TargetPtr), Property.Name
+
+        ' Attached layout DPs (Grid.Row, Canvas.Left, ...) must relayout the parent panel.
+        If IsAttachedLayoutProperty(Property.Name) Then
+            InvalidateParentLayout API.ObjFromPtr(m_TargetPtr)
+        End If
     End Sub
     
     Friend Property Get RegisteredProperties() As cSortedDictionary

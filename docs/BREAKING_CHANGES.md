@@ -5,6 +5,15 @@
 
 ---
 
+## [3.22.0] — 2026-07-24 — Attached layout DP invalidation
+
+### Added
+- Changing attached layout DPs (`Grid.Row`/`Column`/`Span`, `DockPanel.Dock`, `Canvas.Left`/`Top`) via **SetValue** / binding now calls **`InvalidateParentLayout`** so the parent panel rearranges.
+- **`IsAttachedLayoutProperty`** in `modLayoutEngine` — central name list for the hook in `DependencyProperties.OnDependencyPropertyChanged`.
+- Phase0 **P4-BIND-LAY** (bind `Grid.Row`, INPC, assert widget **Top** moves). Suite **85**.
+
+- DLL version **3.22.0**.
+
 ## [3.21.0] — 2026-07-24 — Canvas panel
 
 ### Added

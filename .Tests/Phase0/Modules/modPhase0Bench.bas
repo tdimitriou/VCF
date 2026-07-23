@@ -56,6 +56,7 @@ Public Sub RunAll()
     If Not Phase4Bench_BindingOneWay() Then Failed = Failed + 1
     If Not Phase4Bench_BindingAttached() Then Failed = Failed + 1
     If Not Phase4Bench_BindingAttachedPath() Then Failed = Failed + 1
+    If Not Phase4Bench_BindingAttachedLayout() Then Failed = Failed + 1
     If Not Phase4Bench_DataContextRebind() Then Failed = Failed + 1
     If Not Phase4Bench_BindingDetach() Then Failed = Failed + 1
     If Not Phase4Bench_DpPrecedence() Then Failed = Failed + 1
@@ -108,7 +109,7 @@ Public Sub RunAll()
 
     ' Report only ? do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (83 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (85 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1574,6 +1575,71 @@ Fail:
     KeepAlive G
     KeepAlive Src
     KeepAlive Dst
+End Function
+
+' Binding Grid.Row + INPC must rearrange the parent (widget Top), not only bag GetValue.
+Public Function Phase4Bench_BindingAttachedLayout() As Boolean
+    Dim Vm As Phase0ViewModel
+    Dim G As Grid
+    Dim Rd As RowDefinition
+    Dim Child As Panel
+    Dim Expr As BindingExpression
+
+    On Error GoTo Fail
+
+    Set Vm = New Phase0ViewModel
+    Vm.RowIndex = 0
+
+    Set G = New Grid
+    G.Width = 100
+    G.Height = 200
+    Set Rd = New RowDefinition
+    Rd.Height = "*"
+    G.RowDefinitions.Add Rd
+    Set Rd = New RowDefinition
+    Rd.Height = "*"
+    G.RowDefinitions.Add Rd
+
+    Set Child = New Panel
+    Child.Width = 40
+    Child.Height = 40
+
+    Set Expr = New BindingExpression
+    Expr.Attach Child, "Grid.Row", Vm, "RowIndex", OneWay
+    If Expr.Binding Is Nothing Then Err.Raise vbObjectError, , "Attach to Grid.Row failed"
+
+    G.Children.Add Child
+    G.Widget.Move 0, 0, 100, 200
+
+    If Abs(Child.Widget.Top - 0!) > 2! Then
+        Err.Raise vbObjectError, , "Row0 Top expected 0, got " & Child.Widget.Top
+    End If
+
+    Vm.RowIndex = 1
+    If CLng(Child.DependencyProperties.GetValue("Grid.Row")) <> 1 Then
+        Err.Raise vbObjectError, , "Expected Grid.Row=1 after INPC, got " & Child.DependencyProperties.GetValue("Grid.Row")
+    End If
+    If Abs(Child.Widget.Top - 100!) > 2! Then
+        Err.Raise vbObjectError, , "Row1 Top expected 100 after INPC, got " & Child.Widget.Top
+    End If
+
+    KeepAlive G
+    KeepAlive Child
+    LogResult "P4-BIND-LAY", 0, "OK Grid.Row binding rearranges Top"
+    Debug.Print "PASS  P4-BIND-LAY Grid.Row INPC rearranges widget Top"
+    Expr.Detach
+    Set Expr = Nothing
+    Phase4Bench_BindingAttachedLayout = True
+    Exit Function
+
+Fail:
+    On Error Resume Next
+    If Not Expr Is Nothing Then Expr.Detach
+    LogResult "P4-BIND-LAY", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P4-BIND-LAY - " & Err.Description
+    Phase4Bench_BindingAttachedLayout = False
+    KeepAlive G
+    KeepAlive Child
 End Function
 
 Public Function Phase4Bench_DataContextRebind() As Boolean

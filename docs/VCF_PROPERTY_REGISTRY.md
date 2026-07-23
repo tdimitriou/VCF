@@ -62,6 +62,8 @@ These are set via XAML `CallByName` / fields — **outside** binding/style prece
 
 **3.21.0:** **`Canvas.Left` / `Canvas.Top`** (Double) + Canvas panel absolute arrange.
 
+**3.22.0:** Attached layout DP changes (`Grid.*`, `DockPanel.Dock`, `Canvas.Left`/`Top`) invalidate the parent panel via **`InvalidateParentLayout`** (binding INPC rearranges geometry).
+
 **Storage:** per-element `DependencyProperties` (`Grid.Row`, `DockPanel.Dock`, `Canvas.Left`, …) via lazy **`EnsureAttachedProperty`** on Set/XAML/binding (**3.16.0** / **3.19.0**); nested `AttachedProperties` dict kept as shim for writers/legacy. EnsureAttached uses registry **PropertyType**.
 
 **Done (3.16.0):** migrate `Grid.*` into the target DP bag; layout/`Get*` read DP (ClearValue → metadata default); dict shim retained. Do **not** eager-register attached DPs on every instance.

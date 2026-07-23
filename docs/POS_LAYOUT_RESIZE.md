@@ -38,6 +38,7 @@ Width/Height/Margin DPs
 | `DockPanel` + `DockPanel.Dock` + `LastChildFill` | **3.17.0** / **P2-DOCK-XAML** / **P2-DOCK-LAY** |
 | `MeasureOverride` / `ArrangeOverride` (+ `MeasureLayout` alias) | **3.18.0** / **P2-MEAS-OVR** |
 | `Canvas` + `Canvas.Left` / `Canvas.Top` | **3.21.0** / **P2-CANVAS-XAML** / **P2-CANVAS-LAY** |
+| Attached layout DP → parent Relayout | **3.22.0** / **P4-BIND-LAY** |
 
 **P7d-LAY-PANEL:** Grid star columns + nested ListView track host size on resize (not 0.5× Margin math).
 

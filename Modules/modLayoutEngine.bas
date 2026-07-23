@@ -653,6 +653,17 @@ Public Sub EnsureAttachedTargetIfRegistered(ByVal Target As IDependencyObject, B
     End If
 End Sub
 
+' Attached DPs that affect parent panel geometry (binding / SetValue must RelayoutChildren).
+Public Function IsAttachedLayoutProperty(ByVal FullName As String) As Boolean
+    Select Case LCase$(FullName)
+        Case "grid.row", "grid.column", "grid.rowspan", "grid.columnspan", _
+             "dockpanel.dock", "canvas.left", "canvas.top"
+            IsAttachedLayoutProperty = True
+        Case Else
+            IsAttachedLayoutProperty = False
+    End Select
+End Function
+
 Public Sub ApplyChildWidgetVisibility(ByVal Child As Object, ByVal Value As Visibility)
     Dim ChildControl As IControl
 
