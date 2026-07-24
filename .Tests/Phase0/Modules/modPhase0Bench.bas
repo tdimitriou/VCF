@@ -102,6 +102,7 @@ Public Sub RunAll()
     If Not Phase8Bench_InheritanceBatch() Then Failed = Failed + 1
     If Not Phase2aBench_NestedUniformGridResize() Then Failed = Failed + 1
     If Not Phase2aBench_ViewNavLeak() Then Failed = Failed + 1
+    If Not Phase2aBench_WindowChrome() Then Failed = Failed + 1
     If Not Phase2aBench_ListViewBindHotspot() Then Failed = Failed + 1
     If Not Phase2aBench_ListViewPaddingDefaults() Then Failed = Failed + 1
     If Not Phase2aBench_TextBoxButtonPaddingDefaults() Then Failed = Failed + 1
@@ -112,7 +113,7 @@ Public Sub RunAll()
 
     ' Report only ? do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (88 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (89 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -1209,7 +1210,7 @@ Public Function Phase2Bench_GridAttachedDpBag() As Boolean
     P.Width = 40
     P.Height = 40
 
-    ' Lazy EnsureAttached on SetRow — DP bag + Get*
+    ' Lazy EnsureAttached on SetRow - DP bag + Get*
     G.SetRow P, 2
     G.SetColumn P, 1
     If Not P.DependencyProperties.Exists("Grid.Row") Then Err.Raise vbObjectError, , "Expected Grid.Row registered on target"
@@ -1638,7 +1639,7 @@ Public Function Phase4Bench_BindingAttached() As Boolean
 
     Set G = New Grid
     Set Child = New Panel
-    ' Grid.Row not EnsureAttached yet — Attach must lazy-register then bind.
+    ' Grid.Row not EnsureAttached yet - Attach must lazy-register then bind.
     Set Expr = New BindingExpression
     Expr.Attach Child, "Grid.Row", Vm, "RowIndex", OneWay
     If Expr.Binding Is Nothing Then Err.Raise vbObjectError, , "Attach to Grid.Row failed (no Binding)"
@@ -4144,6 +4145,77 @@ Fail:
     LogResult "B-NAV", 0, "FAIL: " & FailDesc
     Debug.Print "FAIL  B-NAV ? " & FailDesc
     Phase2aBench_ViewNavLeak = False
+End Function
+
+' First-frame chrome: after NewWindow (before Show), Form.BorderStyle matches local DP
+' (Create(0) + SyncFormBorderStyle) - borderless shell and bordered dialog.
+Public Function Phase2aBench_WindowChrome() As Boolean
+    Dim AppHost As Phase0App
+    Dim Borderless As Phase0Shell
+    Dim Bordered As Phase0BorderedShell
+    Dim Win As Window
+
+    On Error GoTo Fail
+
+    VCF.ClearApplication
+    Set AppHost = New Phase0App
+
+    Set Borderless = New Phase0Shell
+    Set Win = Borderless.Base
+    If Win Is Nothing Then Err.Raise vbObjectError, , "Phase0Shell.Base is Nothing"
+    If CLng(Win.DependencyProperties.GetValue("BorderStyle")) <> 0 Then
+        Err.Raise vbObjectError, , "Borderless DP BorderStyle expected 0, got " & Win.DependencyProperties.GetValue("BorderStyle")
+    End If
+    If Win.Form Is Nothing Then Err.Raise vbObjectError, , "Borderless Form is Nothing"
+    If Win.Form.BorderStyle <> 0 Then
+        Err.Raise vbObjectError, , "Borderless Form.BorderStyle expected 0 after NewWindow, got " & Win.Form.BorderStyle
+    End If
+
+    Win.Dispose
+    Set Borderless = Nothing
+    Set Win = Nothing
+    On Error Resume Next
+    Cairo.WidgetForms.RemoveAll
+    On Error GoTo Fail
+    Err.Clear
+
+    Set Bordered = New Phase0BorderedShell
+    Set Win = Bordered.Base
+    If Win Is Nothing Then Err.Raise vbObjectError, , "Phase0BorderedShell.Base is Nothing"
+    If CLng(Win.DependencyProperties.GetValue("BorderStyle")) <> 2 Then
+        Err.Raise vbObjectError, , "Bordered DP BorderStyle expected 2, got " & Win.DependencyProperties.GetValue("BorderStyle")
+    End If
+    If Win.Form Is Nothing Then Err.Raise vbObjectError, , "Bordered Form is Nothing"
+    If Win.Form.BorderStyle <> 2 Then
+        Err.Raise vbObjectError, , "Bordered Form.BorderStyle expected 2 after NewWindow, got " & Win.Form.BorderStyle
+    End If
+
+    Win.Dispose
+    Set Bordered = Nothing
+    Set AppHost = Nothing
+    On Error Resume Next
+    Cairo.WidgetForms.RemoveAll
+    On Error GoTo Fail
+    VCF.ClearApplication
+
+    LogResult "B-CHROME", 0, "OK borderless=0 + bordered=2 after NewWindow"
+    Debug.Print "PASS  B-CHROME first-frame BorderStyle sync (0 + 2)"
+    Phase2aBench_WindowChrome = True
+    Exit Function
+
+Fail:
+    Dim FailDesc As String
+    FailDesc = Err.Description
+    On Error Resume Next
+    If Not Win Is Nothing Then Win.Dispose
+    Cairo.WidgetForms.RemoveAll
+    Set Borderless = Nothing
+    Set Bordered = Nothing
+    Set AppHost = Nothing
+    VCF.ClearApplication
+    LogResult "B-CHROME", 0, "FAIL: " & FailDesc
+    Debug.Print "FAIL  B-CHROME - " & FailDesc
+    Phase2aBench_WindowChrome = False
 End Function
 
 ' ListView bind hotspot (framework-first): menu-like density = 21 rows ? 6 DataContext bindings/cell.

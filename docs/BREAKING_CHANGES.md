@@ -5,6 +5,14 @@
 
 ---
 
+## [3.25.0] — 2026-07-24 — B-CHROME Phase0 gate
+
+### Added
+- Phase0 **B-CHROME** — after `NewWindow` (before `Show`), `Form.BorderStyle` matches local DP for **borderless (0)** and **bordered (2)** shells (`Phase0Shell` / `Phase0BorderedShell`). Locks the Create(0) + `SyncFormBorderStyle` contract that prevents first-frame chrome flash.
+- Visual Shift+B check remains available in DeNovoSmoke. Suite **89**.
+
+- DLL version **3.25.0**.
+
 ## [3.24.0] — 2026-07-24 — IsHitTestVisible
 
 ### Added

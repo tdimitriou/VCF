@@ -6,6 +6,7 @@ Gates: Phase0 + DeNovoSmoke (Phase 2a). Full POS pin = Phase 2b (deferred).
 
 | Version | Tag | Summary |
 |---------|-----|---------|
+| **3.25.0** | `v3.25.0-b-chrome` | Phase0 **B-CHROME** first-frame BorderStyle sync; suite **89** |
 | **3.24.0** | `v3.24.0-is-hit-test-visible` | IsHitTestVisible → ImplementsHitTest; **P1-HITTEST**; suite **88** |
 | **3.23.0** | `v3.23.0-textblock-image-visibility` | TextBlock/Image Visibility + Visible bool; doc drift cleanup; suite **87** |
 | **3.22.0** | `v3.22.0-attach-layout-inv` | Attached layout DP → InvalidateParentLayout; **P4-BIND-LAY** |

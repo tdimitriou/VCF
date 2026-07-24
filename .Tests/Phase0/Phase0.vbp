@@ -12,6 +12,7 @@ Class=Phase0MeasureRowHost; Classes\Phase0MeasureRowHost.cls
 Class=Phase0SelectionHost; Classes\Phase0SelectionHost.cls
 Class=Phase0App; Classes\Phase0App.cls
 Class=Phase0Shell; Classes\Phase0Shell.cls
+Class=Phase0BorderedShell; Classes\Phase0BorderedShell.cls
 Startup="Sub Main"
 HelpFile=""
 ExeName32="Phase0.exe"

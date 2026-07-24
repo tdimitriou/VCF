@@ -246,8 +246,9 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **TextBlock / Image Visibility** — ~~Hidden/Collapsed + Visible bool sync + P1-VIS-TB / P1-VIS-IMG~~ (**3.23.0** / suite **87**)
   **Doc drift cleanup** — ~~stale “still deferred” notes + thin CHANGELOG~~ (**3.23.0** docs)
   **IsHitTestVisible** — ~~FE DP + ImplementsHitTest + P1-HITTEST~~ (**3.24.0** / suite **88**)
+  **B-CHROME** — ~~Phase0 first-frame BorderStyle sync 0+2~~ (**3.25.0** / suite **89**)
   **Full WPF DP precedence stack** — **deferred** roadmap epic (not now) — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) (~2–3 mo core)
-  **Overlaps next** — full DP precedence stack; or POS Phase 2b pin; or **B-CHROME**
+  **Overlaps next** — full DP precedence stack; or POS Phase 2b pin
   **B-RESZ** / **B-NAV** — ~~Phase0 benches~~
   **ListView bind hotspot** — ~~B-BIND-DENSE~~ (clone preserves bindings; 21×6 gate)
   **Margin/Padding family 1** — ~~ListView Margin=0 Padding=4,1,4,1~~ (**P2a-PAD**)
@@ -337,7 +338,7 @@ Each **major** or **breaking minor** release MUST include:
 - **P7d-SHUTDOWN** — `RemoveAll` after full harness session (no error 91) — validated in m1; keep as regression check
 - ~~**B-RESZ**~~ — nested UniformGrid 50× (`Phase2aBench_NestedUniformGridResize`)
 - ~~**B-NAV**~~ — 50× Visibility nav + Windows registry (`Phase2aBench_ViewNavLeak`)
-- **B-CHROME** — first-frame borderless shell + bordered dialog (manual or screenshot)
+- **B-CHROME** — ~~first-frame borderless shell + bordered dialog (manual or screenshot)~~ → Phase0 **B-CHROME** (**3.25.0**); DeNovoSmoke Shift+B remains visual
 
 **Profiling split (7f):** time separately — `InitializeApplication` (MyApp/resources), per-screen `LoadView`, first `Show`/`Refresh`.
 

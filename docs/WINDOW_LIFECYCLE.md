@@ -111,6 +111,7 @@ Exit command or Form X (shell)
 |--------|-----------|-----------|
 | Skip to Login | **Shift+L** | Navigation + Login load |
 | Bordered window | **Shift+B** | `BorderTestWindow.xml` `BorderStyle=2` chrome |
+| First-frame chrome gate | Phase0 **B-CHROME** (**3.25.0**) | `Form.BorderStyle` matches DP after `NewWindow` (0 + 2) |
 | Border diag | **Shift+B** + Immediate (`Ctrl+G`) | `[BORDER-DIAG]` lines + VERDICT — `ENABLE_BORDER_CHROME_DIAG` in `modHarnessConfig.bas` |
 | Exit | Exit button / shell X | Shutdown without error 91 |
 

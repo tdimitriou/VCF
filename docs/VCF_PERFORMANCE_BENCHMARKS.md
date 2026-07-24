@@ -100,7 +100,7 @@ Timed gates for **real POS fixtures**. Logs to Immediate window when `ENABLE_LOA
 | P7d-LAY-RESIZE | Border Design* children scale with host | Phase0 `BorderDesignChildren.xml` | **pass** (Option B) | Half size → ~0.5 child geometry (±2 px) |
 | P8-INHERIT | Lazy GetValue inherit + DataContext | Phase0 `InheritanceNestedBorder.xml` | **pass** | PassPropertyValueCalls during load = 0; Mid/Inner DataContext pull from root |
 | P7d-SHUTDOWN | Full harness session → `RemoveAll` | DeNovoSmoke E2E | **pass** (2026-07-18) | No error 91; IDE second F5 |
-| B-CHROME | First-frame window chrome | Manual / screenshot | — | Borderless shell + bordered dialog, no flash |
+| B-CHROME | First-frame window chrome | Phase0 `Phase2aBench_WindowChrome` | **pass** (**3.25.0**) | After `NewWindow`: Form.BorderStyle 0 (shell) + 2 (bordered); Shift+B visual still in DeNovoSmoke |
 
 **Notes (2026-07-18 first 7f run):** Splash-only startup is cheap; Login dominates (~13× Splash) because of nested Border/Grid/ListView/LoginPad + bindings. Lazy policy confirmed — `[P7d-LOAD-LOGIN]` appears only after ShowLogin. Shutdown tears down Binding/`UIElementBase` terminations orderly (HarnessScreen → StubLoginViewModel last among views). **`VCF_SHUTDOWN_DIAG` instrumentation has been removed.**
 
