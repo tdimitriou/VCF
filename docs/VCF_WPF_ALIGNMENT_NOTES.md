@@ -1319,7 +1319,7 @@ Selector (§2.13)
 
 ## 2.15 Visibility / Collapsed and StackPanel
 
-**Status (2026-07-23 — 3.3.0; TextBlock/Image **3.23.0**):** WPF **Visible / Hidden / Collapsed** layout semantics are gated in Phase0 (`P1-VIS-HIDDEN`, `P1-VIS-COLLAPSE`, `P1-VIS-BOOL`, **`P1-VIS-TB`**, **`P1-VIS-IMG`**). `IsLayoutCollapsed` / `IsWidgetVisible` + panel arrange skip Collapsed only; **Hidden** keeps the slot with `W.Visible=False`. **Button** / **UniformGrid** / **TextBlock** / **Image** sync legacy **`Visible` bool** to **`Visibility`** (`False`→**Collapsed**). **`InvalidateParentLayout`** rearranges parents on child Visibility change. **Still open:** remove `Visible` bool entirely; `IsHitTestVisible`. StackPanel **exists** (Phase 2).
+**Status (2026-07-23 — 3.3.0; TextBlock/Image **3.23.0**):** WPF **Visible / Hidden / Collapsed** layout semantics are gated in Phase0 (`P1-VIS-HIDDEN`, `P1-VIS-COLLAPSE`, `P1-VIS-BOOL`, **`P1-VIS-TB`**, **`P1-VIS-IMG`**). `IsLayoutCollapsed` / `IsWidgetVisible` + panel arrange skip Collapsed only; **Hidden** keeps the slot with `W.Visible=False`. **Button** / **UniformGrid** / **TextBlock** / **Image** sync legacy **`Visible` bool** to **`Visibility`** (`False`→**Collapsed**). **`InvalidateParentLayout`** rearranges parents on child Visibility change. **Still open:** remove `Visible` bool entirely. ~~`IsHitTestVisible`~~ → **3.24.0**. StackPanel **exists** (Phase 2).
 
 **Historical report (pre-3.3.0):** **`Visibility`** / **`Collapsed`** were **partially** implemented and **inconsistent** across controls.
 
@@ -1389,7 +1389,7 @@ bVisible = (Value = VisibilityVisible)   ' Hidden and Collapsed both → W.Visib
 | **P0 / Phase 1** | Fix **`SetVisibility` / layout integration** — panels call **`UIElement.Visibility`** during **Measure/Arrange**; Collapsed → desired size 0 |
 | **P1 / Phase 2** | **`StackPanel`** — Vertical + Horizontal; first real panel after Grid |
 | **P1** | Apply Visibility DP to **all** current controls (Border, TextBlock, Image, Button, …) via base class |
-| **P2** | **`IsHitTestVisible`** when Hidden (optional) |
+| **P2** | ~~**`IsHitTestVisible`** when Hidden (optional)~~ → **3.24.0** (general DP; Hidden still uses widget Visible) |
 
 **POS migration:**
 

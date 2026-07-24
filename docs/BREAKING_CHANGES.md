@@ -5,6 +5,15 @@
 
 ---
 
+## [3.24.0] — 2026-07-24 — IsHitTestVisible
+
+### Added
+- **`IsHitTestVisible`** Boolean DP on **FrameworkElement** (default **True**) — maps to Cairo **`ImplementsHitTest`** so visible elements can ignore mouse input.
+- Public wrappers on **Button**, **StackPanel**, **TextBlock**, **Image**; Button `MouseDown` also respects the flag.
+- Phase0 **P1-HITTEST**. Suite **88**.
+
+- DLL version **3.24.0**.
+
 ## [3.23.0] — 2026-07-24 — TextBlock / Image Visibility
 
 ### Added

@@ -141,6 +141,14 @@ End Property
         Visibility = m_Layout.Visibility
     End Property
 
+    Public Property Get IsHitTestVisible() As Boolean
+        IsHitTestVisible = m_Layout.IsHitTestVisible
+    End Property
+
+    Public Property Let IsHitTestVisible(ByVal Value As Boolean)
+        m_Layout.IsHitTestVisible = Value
+    End Property
+
     Public Property Get MinWidth() As Double
         MinWidth = m_Layout.MinWidth
     End Property

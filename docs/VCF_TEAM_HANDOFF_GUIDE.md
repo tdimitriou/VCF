@@ -245,8 +245,9 @@ Phase 2a — VCF parallel (local gates only: Phase0 + DeNovoSmoke; no DeNovo.vbp
   **Attached layout invalidate** — ~~SetValue/binding → InvalidateParentLayout + P4-BIND-LAY~~ (**3.22.0** / suite **85**)
   **TextBlock / Image Visibility** — ~~Hidden/Collapsed + Visible bool sync + P1-VIS-TB / P1-VIS-IMG~~ (**3.23.0** / suite **87**)
   **Doc drift cleanup** — ~~stale “still deferred” notes + thin CHANGELOG~~ (**3.23.0** docs)
+  **IsHitTestVisible** — ~~FE DP + ImplementsHitTest + P1-HITTEST~~ (**3.24.0** / suite **88**)
   **Full WPF DP precedence stack** — **deferred** roadmap epic (not now) — [VCF_DP_PRECEDENCE_ROADMAP.md](./VCF_DP_PRECEDENCE_ROADMAP.md) (~2–3 mo core)
-  **Overlaps next** — full DP precedence stack; or POS Phase 2b pin; or **B-CHROME** / **IsHitTestVisible**
+  **Overlaps next** — full DP precedence stack; or POS Phase 2b pin; or **B-CHROME**
   **B-RESZ** / **B-NAV** — ~~Phase0 benches~~
   **ListView bind hotspot** — ~~B-BIND-DENSE~~ (clone preserves bindings; 21×6 gate)
   **Margin/Padding family 1** — ~~ListView Margin=0 Padding=4,1,4,1~~ (**P2a-PAD**)

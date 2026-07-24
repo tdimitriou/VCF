@@ -68,6 +68,7 @@ Public Name As String
             Call .Register("Margin", vbObject, "Thickness", , NewDependencyPropertyMetadata(True, False, False))
             Call .Register("Visible", vbBoolean)
             Call .Register("Visibility", vbLong, , , , NewDependencyPropertyMetadata(False, True, False))
+            Call .Register("IsHitTestVisible", vbBoolean, , , , NewDependencyPropertyMetadata(False, False, False))
             
             .SetValue "Style", Nothing
             .SetCurrentValue "Width", 0#
@@ -75,6 +76,7 @@ Public Name As String
             .SetCurrentValue "Margin", NewThickness(0)
             .SetCurrentValue "Visible", True
             .SetCurrentValue "Visibility", CLng(VisibilityVisible)
+            .SetCurrentValue "IsHitTestVisible", True
         
             ' Initialize the default CurrentValues of the Dependency Properties
             ' just in case the default style is not present.
@@ -299,6 +301,14 @@ End Function
 
     Public Property Let Visible(ByVal Value As Boolean)
         Call m_DependencyProperties.SetValue("Visible", Value)
+    End Property
+
+    Public Property Get IsHitTestVisible() As Boolean
+        IsHitTestVisible = CBool(m_DependencyProperties.GetValue("IsHitTestVisible"))
+    End Property
+
+    Public Property Let IsHitTestVisible(ByVal Value As Boolean)
+        Call m_DependencyProperties.SetValue("IsHitTestVisible", Value)
     End Property
     
     Public Property Get ForeColor() As Long
@@ -553,6 +563,8 @@ Catch:
                 End If
                 ApplyVisibility W, CLng(Property.GetValue)
                 InvalidateParentLayout Me
+            Case "IsHitTestVisible"
+                ApplyIsHitTestVisible W, CBool(Property.GetValue)
         End Select
         
         If Parent Is Nothing Then Exit Sub

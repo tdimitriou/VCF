@@ -33,6 +33,7 @@ Public Sub RunAll()
     If Not Phase1Bench_VisibleBoolCollapsed() Then Failed = Failed + 1
     If Not Phase1Bench_TextBlockVisibility() Then Failed = Failed + 1
     If Not Phase1Bench_ImageVisibility() Then Failed = Failed + 1
+    If Not Phase1Bench_IsHitTestVisible() Then Failed = Failed + 1
     If Not Phase1Bench_BorderWidthXaml() Then Failed = Failed + 1
     If Not Phase1Bench_BorderMeasure() Then Failed = Failed + 1
     If Not Phase1Bench_MinWidthFloor() Then Failed = Failed + 1
@@ -111,7 +112,7 @@ Public Sub RunAll()
 
     ' Report only ? do not RemoveAll / release KeepAlive here (Button ItemsHost
     ' Terminate after MsgBox silently crashes the IDE).
-    Debug.Print "=== Done: " & (87 - Failed) & " passed, " & Failed & " failed ==="
+    Debug.Print "=== Done: " & (88 - Failed) & " passed, " & Failed & " failed ==="
     If Failed > 0 Then
         MsgBox Failed & " Phase 0/1/2/3/4/5/6/7/2a test(s) failed. See Immediate window and " & LOG_FILE, vbExclamation, "Phase0"
     Else
@@ -560,6 +561,49 @@ Fail:
     Phase1Bench_ImageVisibility = False
     On Error Resume Next
     KeepAlive Img
+    Err.Clear
+End Function
+
+' IsHitTestVisible=False clears ImplementsHitTest (clicks pass through); still Visible.
+Public Function Phase1Bench_IsHitTestVisible() As Boolean
+    Dim B As Button
+    Dim Tb As TextBlock
+
+    On Error GoTo Fail
+
+    Set B = New Button
+    B.Content = "Hit"
+    If Not B.IsHitTestVisible Then Err.Raise vbObjectError, , "Button default IsHitTestVisible expected True"
+    If Not B.Widget.ImplementsHitTest Then Err.Raise vbObjectError, , "Button default ImplementsHitTest expected True"
+
+    B.IsHitTestVisible = False
+    If B.IsHitTestVisible Then Err.Raise vbObjectError, , "IsHitTestVisible=False did not stick"
+    If B.Widget.ImplementsHitTest Then Err.Raise vbObjectError, , "ImplementsHitTest must be False when IsHitTestVisible=False"
+    If Not B.Widget.Visible Then Err.Raise vbObjectError, , "IsHitTestVisible must not hide the widget"
+
+    B.IsHitTestVisible = True
+    If Not B.Widget.ImplementsHitTest Then Err.Raise vbObjectError, , "ImplementsHitTest must restore True"
+
+    Set Tb = New TextBlock
+    Tb.Text = "Pass"
+    If Not Tb.IsHitTestVisible Then Err.Raise vbObjectError, , "TextBlock default IsHitTestVisible expected True"
+    Tb.IsHitTestVisible = False
+    If Tb.Widget.ImplementsHitTest Then Err.Raise vbObjectError, , "TextBlock ImplementsHitTest must be False"
+
+    KeepAlive B
+    KeepAlive Tb
+    LogResult "P1-HITTEST", 0, "OK IsHitTestVisible toggles ImplementsHitTest"
+    Debug.Print "PASS  P1-HITTEST IsHitTestVisible + ImplementsHitTest"
+    Phase1Bench_IsHitTestVisible = True
+    Exit Function
+
+Fail:
+    LogResult "P1-HITTEST", 0, "FAIL: " & Err.Description
+    Debug.Print "FAIL  P1-HITTEST - " & Err.Description
+    Phase1Bench_IsHitTestVisible = False
+    On Error Resume Next
+    KeepAlive B
+    KeepAlive Tb
     Err.Clear
 End Function
 

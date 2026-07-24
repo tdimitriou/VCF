@@ -88,6 +88,21 @@ Public Property Let Visibility(ByVal Value As Visibility)
     ApplyVisibilityToWidget
 End Property
 
+Public Property Get IsHitTestVisible() As Boolean
+    If Host.DependencyProperties.Exists("IsHitTestVisible") Then
+        IsHitTestVisible = CBool(Host.DependencyProperties.GetValue("IsHitTestVisible"))
+    Else
+        IsHitTestVisible = True
+    End If
+End Property
+
+Public Property Let IsHitTestVisible(ByVal Value As Boolean)
+    If Host.DependencyProperties.Exists("IsHitTestVisible") Then
+        Host.DependencyProperties.SetValue "IsHitTestVisible", Value
+    End If
+    ApplyIsHitTestVisibleToWidget
+End Property
+
 Public Property Get MinWidth() As Double
     MinWidth = CoerceLayoutDouble(Host.DependencyProperties, "MinWidth", 0#)
 End Property
@@ -317,7 +332,7 @@ End Sub
 
 Public Function HandlesLayoutProperty(ByVal PropertyName As String) As Boolean
     Select Case PropertyName
-        Case "Width", "Height", "Margin", "Visibility", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "HorizontalAlignment", "VerticalAlignment"
+        Case "Width", "Height", "Margin", "Visibility", "IsHitTestVisible", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "HorizontalAlignment", "VerticalAlignment"
             HandlesLayoutProperty = True
     End Select
 End Function
@@ -336,6 +351,8 @@ Public Sub OnLayoutPropertyChanged( _
             ApplyVisibilityToWidget
             InvalidateMeasure
             If Not Host Is Nothing Then InvalidateParentLayout Host
+        Case "IsHitTestVisible"
+            ApplyIsHitTestVisibleToWidget
         Case "Width", "Height", "Margin", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "HorizontalAlignment", "VerticalAlignment"
             InvalidateMeasure
             OnHostResize Children, HostWidget, OverrideHostWidth, OverrideHostHeight
@@ -355,6 +372,7 @@ Private Sub SetDefaultLayoutValues()
         If .Exists("HorizontalAlignment") Then .SetCurrentValue "HorizontalAlignment", "Stretch"
         If .Exists("VerticalAlignment") Then .SetCurrentValue "VerticalAlignment", "Stretch"
         If .Exists("Visibility") Then .SetCurrentValue "Visibility", CLng(VisibilityVisible)
+        If .Exists("IsHitTestVisible") Then .SetCurrentValue "IsHitTestVisible", True
         If .Exists("Margin") Then
             Dim DefaultMargin As Thickness
             Set DefaultMargin = NewThickness(0)
@@ -365,6 +383,10 @@ End Sub
 
 Private Sub ApplyVisibilityToWidget()
     ApplyVisibility Widget, Visibility
+End Sub
+
+Private Sub ApplyIsHitTestVisibleToWidget()
+    ApplyIsHitTestVisible Widget, IsHitTestVisible
 End Sub
 
 Private Property Get Host() As IDependencyObject

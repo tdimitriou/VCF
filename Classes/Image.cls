@@ -48,8 +48,10 @@ Public Name As String
             Call .Register("DataContext", vbObject, , , , NewDependencyPropertyMetadata(False, False, True))
             Call .Register("Visible", vbBoolean)
             Call .Register("Visibility", vbLong, , , , NewDependencyPropertyMetadata(False, True, False))
+            Call .Register("IsHitTestVisible", vbBoolean, , , , NewDependencyPropertyMetadata(False, False, False))
             .SetCurrentValue "Visible", True
             .SetCurrentValue "Visibility", CLng(VisibilityVisible)
+            .SetCurrentValue "IsHitTestVisible", True
         End With
         
         m_KeepAspectRatio = True
@@ -235,6 +237,14 @@ Public Name As String
     Public Property Let Visible(ByVal Value As Boolean)
         Call m_DependencyProperties.SetValue("Visible", Value)
     End Property
+
+    Public Property Get IsHitTestVisible() As Boolean
+        IsHitTestVisible = CBool(m_DependencyProperties.GetValue("IsHitTestVisible"))
+    End Property
+
+    Public Property Let IsHitTestVisible(ByVal Value As Boolean)
+        Call m_DependencyProperties.SetValue("IsHitTestVisible", Value)
+    End Property
 '#End Region
 
 '#Region IVIsualChild Interface Implementation
@@ -297,6 +307,8 @@ End Sub
                 End If
                 ApplyVisibility W, CLng(Property.GetValue)
                 InvalidateParentLayout Me
+            Case "IsHitTestVisible"
+                ApplyIsHitTestVisible W, CBool(Property.GetValue)
         End Select
 
         If Parent Is Nothing Then Exit Sub

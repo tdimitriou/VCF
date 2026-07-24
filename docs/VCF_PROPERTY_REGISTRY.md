@@ -181,6 +181,7 @@ Register **once** in `DependencyPropertyRegistry` module:
 | `DataContext` | Object | Yes | Rebind all BindingExpressions on change |
 | `Name` | String | No | x:Name registry |
 | `Visibility` | Visibility enum | No | Visible/Hidden/Collapsed — affects measure when Collapsed |
+| `IsHitTestVisible` | Boolean | No | Default True — maps to Cairo `ImplementsHitTest` (**3.24.0**) |
 | `IsEnabled` | Boolean | No | Phase 6+ |
 
 ### 3.3 Resources & styling

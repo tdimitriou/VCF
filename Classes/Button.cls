@@ -178,7 +178,7 @@ Attribute TmrRelease.VB_VarHelpID = -1
     Public Property Let IsMouseOver(ByVal Value As Boolean)
         If m_IsMouseOver = Value Then Exit Property
         m_IsMouseOver = Value
-        ' Non-DP trigger condition (3.2.1). Replaces ApplyStyle on hover ù that path
+        ' Non-DP trigger condition (3.2.1). Replaces ApplyStyle on hover ? that path
         ' reapplied the full style and refreshed as a side effect; Notify alone no-ops
         ' when no PropertyTrigger watches IsMouseOver, so Refresh here restores enter paint.
         modStyleTriggerEngine.NotifyConditionPropertyChanged Me, "IsMouseOver"
@@ -271,6 +271,14 @@ Attribute TmrRelease.VB_VarHelpID = -1
 
     Public Property Let Visibility(ByVal Value As Visibility)
         m_Layout.Visibility = Value
+    End Property
+
+    Public Property Get IsHitTestVisible() As Boolean
+        IsHitTestVisible = m_Layout.IsHitTestVisible
+    End Property
+
+    Public Property Let IsHitTestVisible(ByVal Value As Boolean)
+        m_Layout.IsHitTestVisible = Value
     End Property
 
     Public Property Get MinWidth() As Double
@@ -714,6 +722,7 @@ End Sub
     
     Private Sub W_MouseDown(Button As Integer, Shift As Integer, ByVal x As Single, ByVal y As Single)
         If Not W.Enabled Then Exit Sub
+        If Not IsHitTestVisible Then Exit Sub
         
         IsMouseDown = (Button = 1)
         Call W_Resize
@@ -743,7 +752,7 @@ End Sub
     Private Sub W_MouseLeave(ByVal MouseEnterWidget As vbRichClient5.cWidgetBase)
         If Not W.Enabled Then Exit Sub
         
-        ' Still over Image/TextBlock/overlay content ó do not clear hover/click chrome.
+        ' Still over Image/TextBlock/overlay content ? do not clear hover/click chrome.
         If WidgetIsUnderThisButton(MouseEnterWidget) Then Exit Sub
         
         IsMouseOver = False

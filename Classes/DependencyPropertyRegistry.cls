@@ -151,6 +151,7 @@ Private Sub RegisterFrameworkElementType()
         Array("Height", vbDouble, vbNullString, vbNullString, True, False, False, OneWay), _
         Array("Margin", vbObject, "Thickness", vbNullString, True, False, False, OneWay), _
         Array("Visibility", vbLong, vbNullString, vbNullString, False, True, False, OneWay), _
+        Array("IsHitTestVisible", vbBoolean, vbNullString, vbNullString, False, False, False, OneWay), _
         Array("MinWidth", vbDouble, vbNullString, vbNullString, True, False, False, OneWay), _
         Array("MinHeight", vbDouble, vbNullString, vbNullString, True, False, False, OneWay), _
         Array("MaxWidth", vbDouble, vbNullString, vbNullString, True, False, False, OneWay), _
