@@ -150,7 +150,7 @@ End Sub
 
 Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
 
-    If KeyCode = vbKeyEscape Then Unload Form
+    If KeyCode = vbKeyEscape Then Form.Unload
 
 End Sub
 
