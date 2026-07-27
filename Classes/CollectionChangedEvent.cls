@@ -41,10 +41,9 @@ Public Sub Unregister()
 End Sub
 
 Public Sub OnCollectionChanged(ByVal e As CollectionChangedEventArgs)
-    If Not m_IsRegistered Then
-        Err.Raise vbObjectError, , "Event not Registered"
-        Exit Sub
-    End If
+    On Error Resume Next
+    If Not m_IsRegistered Then Exit Sub
+    If m_SenderPtr = 0 Then Exit Sub
     
     Dim Sender As Object
     Set Sender = GetSender
@@ -55,6 +54,8 @@ Public Sub OnCollectionChanged(ByVal e As CollectionChangedEventArgs)
 End Sub
 
 Private Function GetSender() As Object
+    On Error Resume Next
+    If m_SenderPtr = 0 Then Exit Function
     Set GetSender = API.ObjFromPtr(m_SenderPtr)
 End Function
 

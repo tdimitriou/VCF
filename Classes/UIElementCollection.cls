@@ -23,6 +23,15 @@ Private m_ParentPtr As Long
 Private Sub Class_Initialize()
     Set m_List = New ObservableCollection
 End Sub
+
+Private Sub Class_Terminate()
+    ' Zero parent before dropping the list: End/Stop can Release children after
+    ' parents, and CollectionChanged/Parent via ObjFromPtr then raise Err 91
+    ' (VB runtime dialog titled Demac.VCF, vbExclamation) - not our MsgBox calls.
+    On Error Resume Next
+    m_ParentPtr = 0
+    Set m_List = Nothing
+End Sub
 '#End Region
 
 '#Region Public Methods
@@ -75,6 +84,21 @@ Friend Sub ClearSilent()
     m_List.ClearSilent
 End Sub
 
+' Drop all child refs with no CollectionChanged / Parent fan-out.
+' Call only after modWindowTeardown.Prepare* has cleared WithEvents sinks.
+Friend Sub AbandonAll()
+    On Error Resume Next
+    m_List.ClearSilent
+    m_ParentPtr = 0
+End Sub
+
+' Pop one child with no CollectionChanged / Parent fan-out.
+Friend Function DetachAt(ByVal Index As Long) As Object
+    If Index < 0 Or Index > m_List.Count - 1 Then Exit Function
+    Set DetachAt = m_List(Index)
+    m_List.RemoveAtSilent Index
+End Function
+
 Public Function Contains(Value As Object) As Boolean
     Contains = m_List.Contains(Value)
 End Function
@@ -104,6 +128,7 @@ Public Property Set Item(ByVal Index As Long, Value As Object)
 End Property
 
 Public Property Get Parent() As Object
+    On Error Resume Next
     If m_ParentPtr = 0 Then Exit Property
     Set Parent = API.ObjFromPtr(m_ParentPtr)
 End Property
@@ -118,6 +143,11 @@ Public Sub Initialize(Parent As Object)
     
     m_ParentPtr = ObjPtr(Parent)
 End Sub
+
+' Drop weak parent without touching the parent object (hold / End teardown).
+Friend Sub SeverParent()
+    m_ParentPtr = 0
+End Sub
 '#End Region
 
 '#Region ObservableCollection Events
@@ -125,7 +155,9 @@ Private Sub m_List_CollectionChanged(Sender As Object, e As CollectionChangedEve
     Dim Item As Variant
     Dim UIElement As IUIElement
     Dim Index As Long
-    
+
+    ' End-time Release order is undefined; Parent ObjFromPtr may be a zombie.
+    On Error Resume Next
     
     Select Case e.Action
         Case CollectionChangedActionAdd

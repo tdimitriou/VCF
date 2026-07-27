@@ -1,0 +1,7 @@
+<Border Width="240" Height="180">
+	<Border Width="200" Height="140">
+		<Border Width="160" Height="100">
+			<TextBlock Margin="8,8,0,0" Width="120" Height="24" Text="Inherit"/>
+		</Border>
+	</Border>
+</Border>

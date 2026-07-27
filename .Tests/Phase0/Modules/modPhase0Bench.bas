@@ -4112,7 +4112,7 @@ Public Function Phase2aBench_ViewNavLeak() As Boolean
     If TbA.Text = "LeakedA" Then Err.Raise vbObjectError, , "ViewA binding leaked after DetachBindingsTree"
     If TbB.Text = "LeakedB" Then Err.Raise vbObjectError, , "ViewB binding leaked after DetachBindingsTree"
 
-    Win.Dispose
+    Win.Unload
     On Error Resume Next
     Cairo.WidgetForms.RemoveAll
     On Error GoTo Fail
@@ -4137,7 +4137,7 @@ Fail:
     On Error Resume Next
     If Not ExprA Is Nothing Then ExprA.Detach
     If Not ExprB Is Nothing Then ExprB.Detach
-    If Not Win Is Nothing Then Win.Dispose
+    If Not Win Is Nothing Then Win.Unload
     Cairo.WidgetForms.RemoveAll
     Set Shell = Nothing
     Set AppHost = Nothing
@@ -4171,7 +4171,7 @@ Public Function Phase2aBench_WindowChrome() As Boolean
         Err.Raise vbObjectError, , "Borderless Form.BorderStyle expected 0 after NewWindow, got " & Win.Form.BorderStyle
     End If
 
-    Win.Dispose
+    Win.Unload
     Set Borderless = Nothing
     Set Win = Nothing
     On Error Resume Next
@@ -4190,7 +4190,7 @@ Public Function Phase2aBench_WindowChrome() As Boolean
         Err.Raise vbObjectError, , "Bordered Form.BorderStyle expected 2 after NewWindow, got " & Win.Form.BorderStyle
     End If
 
-    Win.Dispose
+    Win.Unload
     Set Bordered = Nothing
     Set AppHost = Nothing
     On Error Resume Next
@@ -4207,7 +4207,7 @@ Fail:
     Dim FailDesc As String
     FailDesc = Err.Description
     On Error Resume Next
-    If Not Win Is Nothing Then Win.Dispose
+    If Not Win Is Nothing Then Win.Unload
     Cairo.WidgetForms.RemoveAll
     Set Borderless = Nothing
     Set Bordered = Nothing

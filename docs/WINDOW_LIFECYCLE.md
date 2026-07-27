@@ -80,13 +80,22 @@ On `NewWindow`:
 - `Application.Current.Base.Windows.Add ObjPtr(Shell), Shell` keeps the **app shell class** alive while the Cairo form exists.
 - A local `Dim w As New ShellWindow` is **not** sufficient on its own.
 
-On `Form_Unload` (`Window.cls`):
+**Consumer API:** `Window.Unload` then `Set Shell = Nothing` / `VCF.ClearApplication`.
 
-- `DetachBindingsTree` — tear down bindings while targets are valid
-- Subclass unhook
-- `Windows.Remove` shell entry
+`Window.Unload` sequence:
 
-**Consumer:** Do **not** call manual `DetachBindingsTree` before `Cairo.WidgetForms.RemoveAll` when using current VCF — `Form_Unload` handles it.
+1. `LockRefresh` + `DetachBindingsTree` while Form/tree still live
+2. `PrepareWindowChildren` — drop `WithEvents W` / Button timers while widgets exist
+3. Transfer children to framework hold (no Release)
+4. `Form.Unload` → unhook + `Windows.Remove`
+5. `Set Form` / `WRoot = Nothing`
+6. `DrainHold` — releases **only** a single held control (safe). Multiple ItemsControls are **deferred** (Release hangs vs compiled DLL; evidence in `%TEMP%\VCF_Unload.log`)
+
+Do **not** call manual `DetachBindingsTree` or suite `Children.Clear` for cleanup — `Unload` owns it.
+
+**Removed:** `Window.Dispose` (registry-only; raced / duplicated unload).
+
+**Open:** safe Release of ItemsControl+Button graphs vs compiled ActiveX (IDE End may still freeze after MsgBox while deferred holds exist).
 
 ---
 

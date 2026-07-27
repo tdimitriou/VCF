@@ -127,6 +127,7 @@ Class=DependencyPropertyRegistry; Classes\DependencyPropertyRegistry.cls
 Class=FrameworkElement; Classes\FrameworkElement.cls
 Module=modLayoutEngine; Modules\modLayoutEngine.bas
 Module=modBindingExpressions; Modules\modBindingExpressions.bas
+Module=modWindowTeardown; Modules\modWindowTeardown.bas
 Module=modCollectionNotifications; Modules\modCollectionNotifications.bas
 Module=modItemTemplateEngine; Modules\modItemTemplateEngine.bas
 Class=ControlTemplate; Classes\ControlTemplate.cls

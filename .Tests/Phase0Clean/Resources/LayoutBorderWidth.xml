@@ -1,0 +1,3 @@
+<Border Width="320" Height="120" CornerRadius="8">
+	<TextBlock Margin="8,8,0,0" Width="100" Height="24" Text="Border"/>
+</Border>

@@ -1,0 +1,11 @@
+<!-- Panel resize gate (P7d-LAY-PANEL): star columns fill host; no canvas scale. -->
+<Grid Width="400" Height="300">
+	<Grid.ColumnDefinitions>
+		<ColumnDefinition Width="*"/>
+		<ColumnDefinition Width="*"/>
+	</Grid.ColumnDefinitions>
+	<Border Name="LeftColumn" Grid.Column="0" Margin="0,0,4,0">
+		<ListView Name="LinesList" Margin="4"/>
+	</Border>
+	<Border Name="RightColumn" Grid.Column="1" Margin="4,0,0,0"/>
+</Grid>

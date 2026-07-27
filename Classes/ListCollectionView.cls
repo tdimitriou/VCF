@@ -34,6 +34,15 @@ Private m_IsInitialized         As Boolean
     End Sub
 '#End Region
 
+
+'#Region Class Events
+    Private Sub Class_Terminate()
+        On Error Resume Next
+        m_SourcePtr = 0
+        m_IsInitialized = False
+    End Sub
+'#End Region
+
 '#Region Public Methods Inherited
     Public Sub Add(Value)
         If Source Is Nothing Then Err.Raise vbObjectError, TypeName(Me), "Not Initialized properly"
@@ -112,6 +121,8 @@ Attribute Item.VB_UserMemId = 0
     
 '#Region Public Properties
     Public Property Get Source() As ObservableCollection
+        On Error Resume Next
+        If m_SourcePtr = 0 Then Exit Property
         Set Source = API.ObjFromPtr(m_SourcePtr)
     End Property
     

@@ -33,6 +33,10 @@ Public Function GetDefaultView(ByVal Collection As ObservableCollection) As List
 End Function
 
 Friend Sub DestroyDefaultView(ByVal Ptr As Long)
+    ' Called from ObservableCollection.Class_Terminate during IDE/DLL unload.
+    ' Views or the SortedDictionary may already be torn down → Err 91 without handler
+    ' surfaces as a Demac.VCF runtime dialog storm on Stop.
+    On Error Resume Next
     If Views Is Nothing Then Exit Sub
     If Not Views.Exists(Ptr) Then Exit Sub
     Views.Remove Ptr

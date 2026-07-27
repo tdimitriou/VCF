@@ -36,6 +36,7 @@ End Sub
 
 Private Sub Class_Terminate()
     On Error Resume Next
+    ' DestroyDefaultView must tolerate DLL/IDE teardown (statics half-dead → Err 91).
     If m_Ptr <> 0 Then modStaticClasses.CollectionViewSource.DestroyDefaultView m_Ptr
     If Not m_CollectionChangedEvent Is Nothing Then m_CollectionChangedEvent.Unregister
 End Sub
@@ -331,6 +332,12 @@ End Sub
 
 Friend Sub ClearSilent()
     Set m_List = New_c.ArrayList(vbVariant)
+End Sub
+
+' Remove one element with no CollectionChanged (teardown / DrainHold).
+Friend Sub RemoveAtSilent(ByVal Index As Long)
+    If Index < 0 Or Index > m_List.Count - 1 Then Exit Sub
+    Call m_List.Remove(Index)
 End Sub
 
 Public Function CollectionChangedEvent() As CollectionChangedEvent

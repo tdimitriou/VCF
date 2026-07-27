@@ -1114,3 +1114,13 @@ Handler:
         modStyleApplyLog.LogErrorAndReraise "Button", "ActiveStyle_StyleChanged"
     End Sub
 
+    Friend Sub PrepareForUnload()
+        On Error Resume Next
+        Set TmrRelease = Nothing
+        Set m_CmdCanExecuteEvent = Nothing
+        Set ActiveStyle = Nothing
+        Set m_OverlayWidget = Nothing
+        Set m_TemplateRoot = Nothing
+        Set W = Nothing
+    End Sub
+

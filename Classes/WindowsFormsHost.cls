@@ -154,7 +154,8 @@ Public Name As String
 
     Private Sub Class_Terminate()
         On Error Resume Next
-        If Not m_Children Is Nothing Then m_Children.Clear
+        ' Clear fires CollectionChanged; silent drop avoids Parent fan-out on End.
+        If Not m_Children Is Nothing Then m_Children.ClearSilent
     End Sub
 
 '#End Region

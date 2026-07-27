@@ -56,12 +56,29 @@ Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long,
     End Sub
     
     Private Sub Form_Unload(Cancel As Integer)
+        ' Single teardown path for Window. Callers use Window.Unload -> Form.Unload.
+        ' Order: detach bindings while sinks/tree are valid, then unhook, then registry.
         On Error Resume Next
-        
+
+        If Not WRoot Is Nothing Then WRoot.LockRefresh = True
+
         modBindingExpressions.DetachBindingsTree Me
-        
-        m_Subclass.UnHook
-        If m_BasePtr <> 0 Then Application.Current.Base.Windows.Remove m_BasePtr
+
+        If Not m_Subclass Is Nothing Then
+            m_Subclass.UnHook
+            Set m_Subclass = Nothing
+        End If
+
+        If m_BasePtr <> 0 Then
+            If Not Application.Current Is Nothing Then
+                If Not Application.Current.Base Is Nothing Then
+                    If Application.Current.Base.Windows.Exists(m_BasePtr) Then
+                        Application.Current.Base.Windows.Remove m_BasePtr
+                    End If
+                End If
+            End If
+            m_BasePtr = 0
+        End If
     End Sub
 '#End Region
 
@@ -242,11 +259,48 @@ Public Event WindowProc(Result As Long, ByVal Msg As Long, ByVal wParam As Long,
         ShowDialog = m_DialogResult
     End Function
     
-    Public Sub Dispose()
+    ' Preferred shutdown vs compiled DLL:
+    ' 1) Detach bindings while tree+Form still live
+    ' 2) Release children NOW (Form still alive) � post-unload Release AVs;
+    '    hold-bag only deferred that hang to IDE End after MsgBox
+    ' 3) Form.Unload -> Form_Unload (unhook, Windows.Remove)
+    ' 4) Drop Form/WRoot so Set Shell = Nothing is cheap
+    ' Prepare sinks -> transfer children to hold -> Form.Unload -> drain hold.
+    ' (Direct Release before/after Form.Unload freezes vs compiled DLL on P7c Buttons.)
+    Public Sub Unload()
         On Error Resume Next
-        
-        If m_BasePtr <> 0 Then If Application.Current.Base.Windows.Exists(m_BasePtr) Then Application.Current.Base.Windows.Remove m_BasePtr
-    
+
+        modWindowTeardown.LogStep "Window.Unload: enter"
+        Debug.Print "Window.Unload: enter"
+
+        If Not WRoot Is Nothing Then WRoot.LockRefresh = True
+
+        modWindowTeardown.LogStep "Window.Unload: detach"
+        modBindingExpressions.DetachBindingsTree Me
+
+        modWindowTeardown.LogStep "Window.Unload: prepare sinks"
+        modWindowTeardown.PrepareWindowChildren Me
+
+        modWindowTeardown.LogStep "Window.Unload: transfer children"
+        If Not m_Children Is Nothing Then modWindowTeardown.TransferAll m_Children
+        m_DeferredLayout = False
+
+        ' Disarm+Release while Form/Cairo still alive. After Form.Unload this hangs
+        ' (compiled DLL); deferring to IDE End only moves the same hang.
+        modWindowTeardown.LogStep "Window.Unload: DrainHoldForce (pre-Form)"
+        modWindowTeardown.DrainHoldForce
+        modWindowTeardown.LogStep "Window.Unload: DrainHoldPermanent (pre-Form)"
+        modWindowTeardown.DrainHoldPermanent
+
+        modWindowTeardown.LogStep "Window.Unload: Form.Unload"
+        If Not Form Is Nothing Then Form.Unload
+
+        modWindowTeardown.LogStep "Window.Unload: drop Form"
+        Set WRoot = Nothing
+        Set Form = Nothing
+
+        modWindowTeardown.LogStep "Window.Unload: done"
+        Debug.Print "Window.Unload: done"
     End Sub
 '#End Region
 

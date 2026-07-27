@@ -646,3 +646,9 @@ End Sub
         ApplyStyle
     End Sub
 
+    Friend Sub PrepareForUnload()
+        On Error Resume Next
+        Set ActiveStyle = Nothing
+        Set W = Nothing
+    End Sub
+

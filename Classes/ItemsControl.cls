@@ -471,6 +471,9 @@ End Sub
 Private Sub m_Children_CollectionChanged(Sender As Object, e As CollectionChangedEventArgs)
     Dim Child As Object
 
+    On Error Resume Next
+    If W Is Nothing Then Exit Sub
+
     If Not e.OldItems Is Nothing Then
         For Each Child In e.OldItems
             If TypeOf Child Is IControl Then
@@ -606,5 +609,85 @@ End Sub
 
 Private Sub ActiveStyle_StyleChanged()
     ApplyStyle
+End Sub
+
+' Drop WithEvents sinks while Cairo widget is still valid (compiled-DLL teardown).
+' Do not Set m_Children = Nothing here — that Releases the host tree early and hangs.
+Friend Sub PrepareForUnload()
+    On Error Resume Next
+    Set m_ItemsSource = Nothing
+    Set ActiveStyle = Nothing
+    Set W = Nothing
+End Sub
+
+' Never Release item visuals or ItemsHost after Form.Unload — that hangs.
+' Park them in HoldPermanent; only the ItemsControl shell is Released by DrainHoldForce.
+Friend Sub DisarmForRelease()
+    Dim Kids As UIElementCollection
+    Dim Ch As Object
+    Dim Ug As UniformGrid
+    Dim Sp As StackPanel
+
+    On Error Resume Next
+
+    modWindowTeardown.LogStep "Disarm enter"
+    Set m_ItemsSource = Nothing
+    Set ActiveStyle = Nothing
+    Set W = Nothing
+    modWindowTeardown.LogStep "Disarm sinks cleared"
+
+    If m_ItemsHost Is Nothing Then GoTo ClearSelf
+
+    If TypeOf m_ItemsHost Is UniformGrid Then
+        Set Ug = m_ItemsHost
+        Set Kids = Ug.Children
+        Do While Not Kids Is Nothing
+            If Kids.Count <= 0 Then Exit Do
+            Set Ch = Kids.DetachAt(0)
+            modWindowTeardown.LogStep "Disarm item park " & TypeName(Ch)
+            ' No PrepareTree here — sinks were cleared before Form.Unload; doing it after hangs.
+            modWindowTeardown.HoldPermanent Ch
+            Set Ch = Nothing
+            modWindowTeardown.LogStep "Disarm item parked"
+        Loop
+        modWindowTeardown.LogStep "Disarm items done"
+        ' Do not Ug.PrepareForUnload here — hangs after item park (VCF_Unload.log).
+    ElseIf TypeOf m_ItemsHost Is StackPanel Then
+        Set Sp = m_ItemsHost
+        Set Kids = Sp.Children
+        Do While Not Kids Is Nothing
+            If Kids.Count <= 0 Then Exit Do
+            Set Ch = Kids.DetachAt(0)
+            modWindowTeardown.LogStep "Disarm item park " & TypeName(Ch)
+            modWindowTeardown.HoldPermanent Ch
+            Set Ch = Nothing
+            modWindowTeardown.LogStep "Disarm item parked"
+        Loop
+        modWindowTeardown.LogStep "Disarm items done"
+    End If
+
+ClearSelf:
+    modWindowTeardown.LogStep "Disarm ClearSelf ItemVisuals"
+    Set m_ItemVisuals = Nothing
+    Set m_ItemTemplate = Nothing
+    modWindowTeardown.LogStep "Disarm ClearSelf ItemVisuals done"
+
+    If Not m_Children Is Nothing Then
+        Do While m_Children.Count > 0
+            Set Ch = m_Children.DetachAt(0)
+            modWindowTeardown.LogStep "Disarm host park " & TypeName(Ch)
+            ' Park host as-is; PrepareForUnload on emptied UniformGrid hangs.
+            modWindowTeardown.HoldPermanent Ch
+            Set Ch = Nothing
+            modWindowTeardown.LogStep "Disarm host parked"
+        Loop
+    End If
+
+    modWindowTeardown.LogStep "Disarm ClearSelf refs"
+    Set m_ItemsHost = Nothing
+    Set m_Children = Nothing
+    Set m_Layout = Nothing
+    Set m_Bindings = Nothing
+    modWindowTeardown.LogStep "Disarm ClearSelf done"
 End Sub
 '#End Region

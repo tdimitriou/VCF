@@ -22,6 +22,8 @@ Public Property Get DependencyProperties() As DependencyProperties
 End Property
 
 Public Property Get Parent() As IDependencyObject
+    On Error Resume Next
+    If m_ParentPtr = 0 Then Exit Property
     Set Parent = API.ObjFromPtr(m_ParentPtr)
 End Property
 
@@ -30,6 +32,8 @@ Public Property Set Parent(ByVal Value As IDependencyObject)
 End Property
 
 Public Property Get Children() As Object
+    On Error Resume Next
+    If m_ChildrenPtr = 0 Then Exit Property
     Set Children = API.ObjFromPtr(m_ChildrenPtr)
 End Property
 

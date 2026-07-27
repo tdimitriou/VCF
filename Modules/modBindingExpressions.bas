@@ -63,24 +63,28 @@ Public Sub DetachTargetBindings(ByVal Target As IDependencyObject)
 End Sub
 
 ' Detach every binding in the visual tree while targets/sources are still valid.
+' Post-order (children first, then node): leaf bindings still see a live parent
+' DataContext/sources; parent detach after children avoids child refresh against a
+' cleared inheritable context. (Pre-order detach did not match unload semantics.)
 Public Sub DetachBindingsTree(ByVal Root As Object)
     On Error Resume Next
     If Root Is Nothing Then Exit Sub
-    
-    DetachBindingsOnNode Root
-    
+
     If TypeOf Root Is IControl Then
         Dim Ctrl As IControl
         Dim Child As Object
         Dim Kids As UIElementCollection
         Set Ctrl = Root
-        ' TextBlock/Image etc. return Children = Nothing ? For Each Nothing AVs in VB6/Cairo.
+        ' TextBlock/Image etc. return Children = Nothing - For Each Nothing AVs in VB6/Cairo.
         Set Kids = Ctrl.Children
-        If Kids Is Nothing Then Exit Sub
-        For Each Child In Kids
-            DetachBindingsTree Child
-        Next
+        If Not Kids Is Nothing Then
+            For Each Child In Kids
+                DetachBindingsTree Child
+            Next
+        End If
     End If
+
+    DetachBindingsOnNode Root
 End Sub
 
 Private Sub DetachBindingsOnNode(ByVal Root As Object)
