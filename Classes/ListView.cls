@@ -18,6 +18,9 @@ Implements IControl
 Implements IUIElement
 Implements IItemsControl
 
+Event MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
+Event QueryRowLevel(ByVal Index As Long, Level As Long)
+
 Private WithEvents W                            As cWidgetBase
 Attribute W.VB_VarHelpID = -1
 Private WithEvents ActiveStyle As Style
@@ -98,6 +101,34 @@ Private ItemTemplates                           As List
     Public Property Let RowHeight(ByVal Value As Long)
         m_Base.RowHeight = Value
     End Property
+    
+    Public Property Get FixedRowHeight() As Boolean
+        FixedRowHeight = m_Base.FixedRowHeight
+    End Property
+    
+    Public Property Let FixedRowHeight(ByVal Value As Boolean)
+        m_Base.FixedRowHeight = Value
+    End Property
+    
+    Public Property Get RowIndentPerLevel() As Long
+        RowIndentPerLevel = m_Base.RowIndentPerLevel
+    End Property
+    
+    Public Property Let RowIndentPerLevel(ByVal Value As Long)
+        m_Base.RowIndentPerLevel = Value
+    End Property
+    
+    Public Sub InvalidateRowHeights()
+        m_Base.InvalidateRowHeights
+    End Sub
+    
+    Public Function MeasuredRowHeight(ByVal Index As Long) As Long
+        MeasuredRowHeight = m_Base.MeasuredRowHeight(Index)
+    End Function
+    
+    Public Function MeasuredRowLevel(ByVal Index As Long) As Long
+        MeasuredRowLevel = m_Base.MeasuredRowLevel(Index)
+    End Function
     
     Public Property Get Bindings() As VCF.List
         Set Bindings = m_Bindings
@@ -388,6 +419,14 @@ Private ItemTemplates                           As List
 '#End Region
 
 '#Region ListViewBase Events
+    Private Sub m_Base_MeasureRow(ByVal Index As Long, ByVal ItemWidth As Single, RowHeight As Single)
+        RaiseEvent MeasureRow(Index, ItemWidth, RowHeight)
+    End Sub
+    
+    Private Sub m_Base_QueryRowLevel(ByVal Index As Long, Level As Long)
+        RaiseEvent QueryRowLevel(Index, Level)
+    End Sub
+    
     Private Sub m_Base_DimensionsAdjusted()
             Dim Child As Object
                     
@@ -552,19 +591,24 @@ Private ItemTemplates                           As List
             
         Dim BgColor As Long
         Dim BgAlpha As Single
-        Dim TxtColor As Long
+        Dim SelColor As Long
+        Dim HoverColor As Long
         
+        SelColor = m_SelectedBackground
+        If W.SelectionColor <> -1 Then SelColor = W.SelectionColor
+        HoverColor = W.HoverColor
+        If HoverColor = -1 Then HoverColor = SelColor
+        
+        ' Selection always wins; hover only while pointer is over the list (avoids sticky blue).
         If Index = m_Base.ListIndex Then
-            BgColor = m_SelectedBackground
+            BgColor = SelColor
             BgAlpha = Alpha
+        ElseIf Index = m_Base.HoverIndex And W.MouseOver Then
+            BgColor = HoverColor
+            BgAlpha = Alpha * 0.25
         Else
-            If Index = m_Base.HoverIndex Then
-                BgColor = m_SelectedBackground
-                BgAlpha = 0.1
-            Else
-                BgColor = m_Background
-                BgAlpha = Alpha
-            End If
+            BgColor = m_Background
+            BgAlpha = Alpha
         End If
         
         CC.Rectangle 0, 0, Width, Height
