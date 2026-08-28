@@ -16,3 +16,6 @@ Designer/.Net/obj/
 
 # User-specific
 *.vbproj.user
+
+# Raw agent transcript dumps (bulky, unreviewed; curated notes live in docs/ai-history)
+docs/_raw-ai-export/
