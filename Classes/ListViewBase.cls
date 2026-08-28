@@ -135,6 +135,7 @@ Public Property Get ListCount() As Long
 End Property
 Public Property Let ListCount(ByVal NewValue As Long)
   If NewValue < 0 Then Exit Property
+  If NewValue = mListCount Then Exit Property
   
   If NewValue < mListCount Then mHoverIndex = -1
   mListCount = NewValue
@@ -143,7 +144,7 @@ Public Property Let ListCount(ByVal NewValue As Long)
   W_Resize
 End Property
 
-Friend Sub SetListCountSilent(ByVal NewValue As Long)
+Public Sub SetListCountSilent(ByVal NewValue As Long)
   If NewValue < 0 Then Exit Sub
   If NewValue < mListCount Then mHoverIndex = -1
   mListCount = NewValue
@@ -184,7 +185,7 @@ Public Property Let ListIndex(ByVal NewValue As Long)
   W.RaiseBubblingEvent Me, "Click"
 End Property
 
-Friend Sub SetListIndexSilent(ByVal NewValue As Long)
+Public Sub SetListIndexSilent(ByVal NewValue As Long)
   If NewValue < -1 Then Exit Sub
   If mListCount > 0 Then
     If NewValue > mListCount - 1 Then NewValue = mListCount - 1
@@ -193,7 +194,6 @@ Friend Sub SetListIndexSilent(ByVal NewValue As Long)
   End If
   If mListIndex = NewValue Then Exit Sub
   mListIndex = NewValue
-  If Not W Is Nothing Then W.Refresh
 End Sub
 
 Public Property Get HoverIndex() As Long
@@ -716,6 +716,7 @@ End Sub
 Public Sub AdjustDimensions()
 Dim Rows As Long, Cols As Long, Zoom As Single
 Dim R As Long
+Dim maxScroll As Long, s As Long, viewH As Long
 
   If VScrollBar Is Nothing Or HScrollBar Is Nothing Then Exit Sub
   If VScrollBar.Widget Is Nothing Or HScrollBar.Widget Is Nothing Then Exit Sub
@@ -738,8 +739,14 @@ Dim R As Long
     mVisibleRows = CountVisibleRowsAt(ScrollIndex, GetViewportHeight())
     If mVisibleRows < 1 And mListCount > 0 Then mVisibleRows = 1
     If mVisibleRows > 1 Then VScrollBar.LargeChange = mVisibleRows
-    If mListCount > 0 Then
-      VScrollBar.Max = mListCount - 1
+    ' Show scrollbar only when content taller than viewport.
+    If mListCount > 0 And mTotalRowHeight > GetViewportHeight() Then
+      viewH = GetViewportHeight()
+      maxScroll = 0
+      For s = 0 To mListCount - 1
+        If (mTotalRowHeight - RowTopAt(s)) > viewH Then maxScroll = s
+      Next s
+      VScrollBar.Max = maxScroll
       Rows = mListCount - 1
     Else
       VScrollBar.Max = 0
@@ -1466,26 +1473,39 @@ Private Sub EnsureVisibleSelectionVariable()
   Dim viewH As Long
   Dim relTop As Long
   Dim relBottom As Long
+  Dim Target As Long
+  Dim MaxScroll As Long
 
   RebuildRowMetricsIfNeeded
   viewH = GetViewportHeight()
+  If viewH < 1 Then Exit Sub
+  If VScrollBar Is Nothing Then Exit Sub
 
-  If mListIndex < ScrollIndex Then
-    VScrollBar.Value = mListIndex
+  Target = VScrollBar.Value
+  MaxScroll = VScrollBar.Max
+  If MaxScroll < 0 Then MaxScroll = 0
+
+  ' Walk Target only (no VScrollBar.Value writes) so Change/Refresh does not flash every row.
+  If mListIndex < Target Then
+    Target = mListIndex
+  Else
+    Do While True
+      relTop = RowTopAt(mListIndex) - RowTopAt(Target)
+      relBottom = relTop + RowHeightAt(mListIndex)
+      If relTop >= 0 And relBottom <= viewH Then Exit Do
+      If relBottom > viewH And Target < MaxScroll Then
+        Target = Target + 1
+      ElseIf relTop < 0 And Target > 0 Then
+        Target = Target - 1
+      Else
+        Exit Do
+      End If
+    Loop
   End If
 
-  Do While VScrollBar.Value <= VScrollBar.Max
-    relTop = RowTopAt(mListIndex) - RowTopAt(ScrollIndex)
-    relBottom = relTop + RowHeightAt(mListIndex)
-    If relTop >= 0 And relBottom <= viewH Then Exit Do
-    If relBottom > viewH And VScrollBar.Value < VScrollBar.Max Then
-      VScrollBar.Value = VScrollBar.Value + 1
-    ElseIf relTop < 0 And VScrollBar.Value > 0 Then
-      VScrollBar.Value = VScrollBar.Value - 1
-    Else
-      Exit Do
-    End If
-  Loop
+  If Target < 0 Then Target = 0
+  If Target > MaxScroll Then Target = MaxScroll
+  If Target <> VScrollBar.Value Then VScrollBar.Value = Target
 End Sub
 
 Private Sub DrawVariableHeightRows(CC As cCairoContext, ByVal Width As Single, ByVal Alpha As Single)
